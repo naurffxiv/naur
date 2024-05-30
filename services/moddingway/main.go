@@ -11,8 +11,7 @@ import (
 )
 
 func main() {
-	// TODO: change back to DISCORD_TOKEN before pushing
-	discordToken, ok := os.LookupEnv("DISCORD_TOKEN2")
+	discordToken, ok := os.LookupEnv("DISCORD_TOKEN")
 	if !ok {
 		panic("You must supply a DISCORD_TOKEN to start!")
 	}
