@@ -237,7 +237,8 @@ var PurgeCommand = &discordgo.ApplicationCommand{
 		{
 			Type:        discordgo.ApplicationCommandOptionInteger,
 			Name:        "message-number",
-			Description: "Number of messages to purge",
+			Description: "Number of messages to purge (100 max)",
+			MaxValue:    100,
 			Required:    true,
 		},
 	},
