@@ -22,3 +22,14 @@ func (d *Discord) Start() error {
 	d.Session = s
 	return nil
 }
+
+func StartInteraction(s *discordgo.Session, i *discordgo.Interaction, message string) error {
+	err := s.InteractionRespond(i, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content: message,
+			Flags:   discordgo.MessageFlagsEphemeral,
+		},
+	})
+	return err
+}
