@@ -20,7 +20,7 @@ func (d *Discord) AddCommands(s *discordgo.Session, event *discordgo.Ready) {
 
 	for _, discordGuild := range event.Guilds {
 
-		// Function definitions
+		// Adding slash commands to a list to prepare in bulk
 		var commands []*discordgo.ApplicationCommand
 		commands = append(commands,
 			KickCommand,
