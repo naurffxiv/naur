@@ -101,7 +101,7 @@ var UnmuteCommand = &discordgo.ApplicationCommand{
 		{
 			Type:        discordgo.ApplicationCommandOptionUser,
 			Name:        "user",
-			Description: "User being muted",
+			Description: "User being unmuted",
 			Required:    true,
 		},
 		{
