@@ -80,7 +80,7 @@ var MuteCommand = &discordgo.ApplicationCommand{
 		{
 			Type:        discordgo.ApplicationCommandOptionString,
 			Name:        "duration",
-			Description: "Duration of mute (e.g \"1m\", \"1h\", \"1d\")",
+			Description: "Duration of mute (e.g \"1m, 1h, 1d\")",
 			Required:    true,
 		},
 		{
@@ -115,7 +115,7 @@ var UnmuteCommand = &discordgo.ApplicationCommand{
 var BanCommand = &discordgo.ApplicationCommand{
 	Name:                     "ban",
 	DefaultMemberPermissions: &adminPermission,
-	Description:              "Ban the specified user.",
+	Description:              "Ban the specified user and notify the user why via DMs.",
 	Options: []*discordgo.ApplicationCommandOption{
 		{
 			Type:        discordgo.ApplicationCommandOptionUser,
@@ -206,7 +206,7 @@ var SlowmodeCommand = &discordgo.ApplicationCommand{
 		{
 			Type:        discordgo.ApplicationCommandOptionString,
 			Name:        "duration",
-			Description: "Duration of slowmode (e.g \"1m\", \"1h\", \"1d\")",
+			Description: "Duration of slowmode (e.g \"1m, 1h, 1d\")",
 			Required:    true,
 		},
 	},
