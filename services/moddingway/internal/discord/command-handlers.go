@@ -62,7 +62,7 @@ var KickCommand = &discordgo.ApplicationCommand{
 			Type:        discordgo.ApplicationCommandOptionString,
 			Name:        "reason",
 			Description: "Reason for kick",
-			Required:    false,
+			Required:    true,
 		},
 	},
 }
@@ -88,7 +88,7 @@ var MuteCommand = &discordgo.ApplicationCommand{
 			Type:        discordgo.ApplicationCommandOptionString,
 			Name:        "reason",
 			Description: "Reason for mute",
-			Required:    false,
+			Required:    true,
 		},
 	},
 }
@@ -107,8 +107,8 @@ var UnmuteCommand = &discordgo.ApplicationCommand{
 		{
 			Type:        discordgo.ApplicationCommandOptionString,
 			Name:        "reason",
-			Description: "Reason for mute",
-			Required:    false,
+			Description: "Reason for unmute",
+			Required:    true,
 		},
 	},
 }
@@ -128,7 +128,7 @@ var BanCommand = &discordgo.ApplicationCommand{
 			Type:        discordgo.ApplicationCommandOptionString,
 			Name:        "reason",
 			Description: "Reason for ban",
-			Required:    false,
+			Required:    true,
 		},
 	},
 }
@@ -148,7 +148,7 @@ var UnbanCommand = &discordgo.ApplicationCommand{
 			Type:        discordgo.ApplicationCommandOptionString,
 			Name:        "reason",
 			Description: "Reason for unban",
-			Required:    false,
+			Required:    true,
 		},
 	},
 }
@@ -161,7 +161,13 @@ var RemoveNicknameCommand = &discordgo.ApplicationCommand{
 		{
 			Type:        discordgo.ApplicationCommandOptionUser,
 			Name:        "user",
-			Description: "User whose nickname to rename",
+			Description: "User whose nickname to remove",
+			Required:    true,
+		},
+		{
+			Type:        discordgo.ApplicationCommandOptionString,
+			Name:        "reason",
+			Description: "Reason for nickname removal",
 			Required:    true,
 		},
 	},
@@ -182,6 +188,12 @@ var SetNicknameCommand = &discordgo.ApplicationCommand{
 			Type:        discordgo.ApplicationCommandOptionString,
 			Name:        "nickname",
 			Description: "Nickname to rename user to",
+			Required:    true,
+		},
+		{
+			Type:        discordgo.ApplicationCommandOptionString,
+			Name:        "reason",
+			Description: "Reason for nickname change",
 			Required:    true,
 		},
 	},
