@@ -35,6 +35,8 @@ func (d *Discord) AddCommands(s *discordgo.Session, event *discordgo.Ready) {
 			SlowmodeCommand,
 			SlowmodeOffCommand,
 			PurgeCommand,
+			ExileCommand,
+			UnexileCommand,
 		)
 
 		fmt.Printf("Adding commands...\n")
@@ -241,6 +243,46 @@ var PurgeCommand = &discordgo.ApplicationCommand{
 	},
 }
 
+var ExileCommand = &discordgo.ApplicationCommand{
+	Name:                     "exile",
+	DefaultMemberPermissions: &banPermission,
+	Description:              "Exile the specified user.",
+	Options: []*discordgo.ApplicationCommandOption{
+		{
+			Type:        discordgo.ApplicationCommandOptionUser,
+			Name:        "user",
+			Description: "User being exiled",
+			Required:    true,
+		},
+		{
+			Type:        discordgo.ApplicationCommandOptionString,
+			Name:        "reason",
+			Description: "Reason for exile",
+			Required:    true,
+		},
+	},
+}
+
+var UnexileCommand = &discordgo.ApplicationCommand{
+	Name:                     "unexile",
+	DefaultMemberPermissions: &banPermission,
+	Description:              "unexile the specified user.",
+	Options: []*discordgo.ApplicationCommandOption{
+		{
+			Type:        discordgo.ApplicationCommandOptionUser,
+			Name:        "user",
+			Description: "User being unexiled",
+			Required:    true,
+		},
+		{
+			Type:        discordgo.ApplicationCommandOptionString,
+			Name:        "reason",
+			Description: "Reason for unexile",
+			Required:    true,
+		},
+	},
+}
+
 // InteractionCreate executes the respective function based on what
 // slash command was used
 func (d *Discord) InteractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -263,5 +305,9 @@ func (d *Discord) InteractionCreate(s *discordgo.Session, i *discordgo.Interacti
 		d.SlowmodeOff(s, i)
 	case "purge":
 		d.Purge(s, i)
+	case "exile":
+		d.Exile(s, i)
+	case "unexile":
+		d.Unexile(s, i)
 	}
 }

@@ -92,3 +92,21 @@ func (d *Discord) SlowmodeOff(s *discordgo.Session, i *discordgo.InteractionCrea
 func (d *Discord) Purge(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	return
 }
+
+// Exile attempts to add the exile role to the user, effectively soft-banning them.
+// Fields:
+//
+//	user:		User
+//	reason:		string
+func (d *Discord) Exile(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	return
+}
+
+// Unexile attempts to remove the exile role from the user.
+// Fields:
+//
+//	user:		User
+//	reason:		string
+func (d *Discord) Unexile(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	return
+}
