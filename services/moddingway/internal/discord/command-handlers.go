@@ -83,9 +83,9 @@ var MuteCommand = &discordgo.ApplicationCommand{
 			Required:    true,
 		},
 		{
-			Type:        discordgo.ApplicationCommandOptionInteger,
+			Type:        discordgo.ApplicationCommandOptionString,
 			Name:        "duration",
-			Description: "Duration in minutes",
+			Description: "Duration of mute (e.g \"1m\", \"1h\", \"1d\")",
 			Required:    true,
 		},
 		{
@@ -145,7 +145,7 @@ var UnbanCommand = &discordgo.ApplicationCommand{
 		{
 			Type:        discordgo.ApplicationCommandOptionUser,
 			Name:        "user",
-			Description: "User being unbanned",
+			Description: "User being unbanned (Discord ID)",
 			Required:    true,
 		},
 		{
@@ -209,9 +209,9 @@ var SlowmodeCommand = &discordgo.ApplicationCommand{
 	Description:              "Add slowmode to current channel.",
 	Options: []*discordgo.ApplicationCommandOption{
 		{
-			Type:        discordgo.ApplicationCommandOptionInteger,
+			Type:        discordgo.ApplicationCommandOptionString,
 			Name:        "duration",
-			Description: "Slowmode interval duration in seconds",
+			Description: "Duration of slowmode (e.g \"1m\", \"1h\", \"1d\")",
 			Required:    true,
 		},
 	},
