@@ -19,64 +19,30 @@ func (d *Discord) AddCommands(s *discordgo.Session, event *discordgo.Ready) {
 	fmt.Printf("Initializing Discord...\n")
 
 	for _, discordGuild := range event.Guilds {
-		fmt.Printf("Adding kick command...\n")
-		_, err := s.ApplicationCommandCreate(event.User.ID, discordGuild.ID, KickCommand)
-		if err != nil {
-			fmt.Printf("Could not add kick command: %v\n", err)
-		}
 
-		fmt.Printf("Adding mute command...\n")
-		_, err = s.ApplicationCommandCreate(event.User.ID, discordGuild.ID, MuteCommand)
-		if err != nil {
-			fmt.Printf("Could not add mute command: %v\n", err)
-		}
+		// Function definitions
+		var commands []*discordgo.ApplicationCommand
+		commands = append(commands,
+			KickCommand,
+			MuteCommand,
+			UnmuteCommand,
+			BanCommand,
+			UnbanCommand,
+			RemoveNicknameCommand,
+			SetNicknameCommand,
+			SlowmodeCommand,
+			SlowmodeOffCommand,
+			PurgeCommand,
+		)
 
-		fmt.Printf("Adding unmute command...\n")
-		_, err = s.ApplicationCommandCreate(event.User.ID, discordGuild.ID, UnmuteCommand)
-		if err != nil {
-			fmt.Printf("Could not add unmute command: %v\n", err)
+		fmt.Printf("Adding commands...\n")
+		commandList, err := s.ApplicationCommandBulkOverwrite(event.User.ID, discordGuild.ID, commands)
+		fmt.Printf("List of successfully created commands:\n")
+		for _, command := range commandList {
+			fmt.Printf("\t%v\n", command.Name)
 		}
-
-		fmt.Printf("Adding ban command...\n")
-		_, err = s.ApplicationCommandCreate(event.User.ID, discordGuild.ID, BanCommand)
 		if err != nil {
-			fmt.Printf("Could not add ban command: %v\n", err)
-		}
-
-		fmt.Printf("Adding unban command...\n")
-		_, err = s.ApplicationCommandCreate(event.User.ID, discordGuild.ID, UnbanCommand)
-		if err != nil {
-			fmt.Printf("Could not add unban command: %v\n", err)
-		}
-
-		fmt.Printf("Adding removenickname command...\n")
-		_, err = s.ApplicationCommandCreate(event.User.ID, discordGuild.ID, RemoveNicknameCommand)
-		if err != nil {
-			fmt.Printf("Could not add removenickname command: %v\n", err)
-		}
-
-		fmt.Printf("Adding setnickname command...\n")
-		_, err = s.ApplicationCommandCreate(event.User.ID, discordGuild.ID, SetNicknameCommand)
-		if err != nil {
-			fmt.Printf("Could not add setnickname command: %v\n", err)
-		}
-
-		fmt.Printf("Adding slowmode command...\n")
-		_, err = s.ApplicationCommandCreate(event.User.ID, discordGuild.ID, SlowmodeCommand)
-		if err != nil {
-			fmt.Printf("Could not add slowmode command: %v\n", err)
-		}
-
-		fmt.Printf("Adding slowmodeoff command...\n")
-		_, err = s.ApplicationCommandCreate(event.User.ID, discordGuild.ID, SlowmodeOffCommand)
-		if err != nil {
-			fmt.Printf("Could not add slowmodeoff command: %v\n", err)
-		}
-
-		fmt.Printf("Adding purge command...\n")
-		_, err = s.ApplicationCommandCreate(event.User.ID, discordGuild.ID, PurgeCommand)
-		if err != nil {
-			fmt.Printf("Could not add purge command: %v\n", err)
+			fmt.Printf("Could not add some commands: %v \n", err)
 		}
 	}
 }
