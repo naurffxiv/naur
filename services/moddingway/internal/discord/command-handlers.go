@@ -8,12 +8,7 @@ import (
 
 // Set up vars for the DefaultMemberPermissions field in each command definition
 var (
-	// I am too dumb and tired to figure out how to set permission restrictions for the roles without these vars.. sorry..
-	kickPermission    int64 = discordgo.PermissionKickMembers
-	mutePermission    int64 = discordgo.PermissionModerateMembers
-	banPermission     int64 = discordgo.PermissionBanMembers
-	channelPermission int64 = discordgo.PermissionManageChannels
-	messagePermission int64 = discordgo.PermissionManageMessages
+	adminPermission int64 = discordgo.PermissionAdministrator
 )
 
 // AddCommands registers the slash commands with Discord
@@ -53,7 +48,7 @@ func (d *Discord) AddCommands(s *discordgo.Session, event *discordgo.Ready) {
 
 var KickCommand = &discordgo.ApplicationCommand{
 	Name:                     "kick",
-	DefaultMemberPermissions: &kickPermission,
+	DefaultMemberPermissions: &adminPermission,
 	Description:              "Kick the specified user and notify the user why via DMs.",
 	Options: []*discordgo.ApplicationCommandOption{
 		{
@@ -73,7 +68,7 @@ var KickCommand = &discordgo.ApplicationCommand{
 
 var MuteCommand = &discordgo.ApplicationCommand{
 	Name:                     "mute",
-	DefaultMemberPermissions: &mutePermission,
+	DefaultMemberPermissions: &adminPermission,
 	Description:              "Mute the specified user.",
 	Options: []*discordgo.ApplicationCommandOption{
 		{
@@ -99,7 +94,7 @@ var MuteCommand = &discordgo.ApplicationCommand{
 
 var UnmuteCommand = &discordgo.ApplicationCommand{
 	Name:                     "unmute",
-	DefaultMemberPermissions: &mutePermission,
+	DefaultMemberPermissions: &adminPermission,
 	Description:              "Unmute the specified user.",
 	Options: []*discordgo.ApplicationCommandOption{
 		{
@@ -119,7 +114,7 @@ var UnmuteCommand = &discordgo.ApplicationCommand{
 
 var BanCommand = &discordgo.ApplicationCommand{
 	Name:                     "ban",
-	DefaultMemberPermissions: &banPermission,
+	DefaultMemberPermissions: &adminPermission,
 	Description:              "Ban the specified user.",
 	Options: []*discordgo.ApplicationCommandOption{
 		{
@@ -139,7 +134,7 @@ var BanCommand = &discordgo.ApplicationCommand{
 
 var UnbanCommand = &discordgo.ApplicationCommand{
 	Name:                     "unban",
-	DefaultMemberPermissions: &banPermission,
+	DefaultMemberPermissions: &adminPermission,
 	Description:              "Unban the specified user.",
 	Options: []*discordgo.ApplicationCommandOption{
 		{
@@ -159,7 +154,7 @@ var UnbanCommand = &discordgo.ApplicationCommand{
 
 var RemoveNicknameCommand = &discordgo.ApplicationCommand{
 	Name:                     "removenickname",
-	DefaultMemberPermissions: &mutePermission,
+	DefaultMemberPermissions: &adminPermission,
 	Description:              "Remove the nickname of the specified user.",
 	Options: []*discordgo.ApplicationCommandOption{
 		{
@@ -179,7 +174,7 @@ var RemoveNicknameCommand = &discordgo.ApplicationCommand{
 
 var SetNicknameCommand = &discordgo.ApplicationCommand{
 	Name:                     "setnickname",
-	DefaultMemberPermissions: &mutePermission,
+	DefaultMemberPermissions: &adminPermission,
 	Description:              "Change the nickname of the specified user.",
 	Options: []*discordgo.ApplicationCommandOption{
 		{
@@ -205,7 +200,7 @@ var SetNicknameCommand = &discordgo.ApplicationCommand{
 
 var SlowmodeCommand = &discordgo.ApplicationCommand{
 	Name:                     "slowmode",
-	DefaultMemberPermissions: &channelPermission,
+	DefaultMemberPermissions: &adminPermission,
 	Description:              "Add slowmode to current channel.",
 	Options: []*discordgo.ApplicationCommandOption{
 		{
@@ -219,13 +214,13 @@ var SlowmodeCommand = &discordgo.ApplicationCommand{
 
 var SlowmodeOffCommand = &discordgo.ApplicationCommand{
 	Name:                     "slowmodeoff",
-	DefaultMemberPermissions: &channelPermission,
+	DefaultMemberPermissions: &adminPermission,
 	Description:              "Remove slowmode from current channel.",
 }
 
 var PurgeCommand = &discordgo.ApplicationCommand{
 	Name:                     "purge",
-	DefaultMemberPermissions: &messagePermission,
+	DefaultMemberPermissions: &adminPermission,
 	Description:              "Delete a number of messages from a channel.",
 	Options: []*discordgo.ApplicationCommandOption{
 		{
@@ -246,7 +241,7 @@ var PurgeCommand = &discordgo.ApplicationCommand{
 
 var ExileCommand = &discordgo.ApplicationCommand{
 	Name:                     "exile",
-	DefaultMemberPermissions: &banPermission,
+	DefaultMemberPermissions: &adminPermission,
 	Description:              "Exile the specified user.",
 	Options: []*discordgo.ApplicationCommandOption{
 		{
@@ -266,7 +261,7 @@ var ExileCommand = &discordgo.ApplicationCommand{
 
 var UnexileCommand = &discordgo.ApplicationCommand{
 	Name:                     "unexile",
-	DefaultMemberPermissions: &banPermission,
+	DefaultMemberPermissions: &adminPermission,
 	Description:              "unexile the specified user.",
 	Options: []*discordgo.ApplicationCommandOption{
 		{
