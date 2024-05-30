@@ -6,6 +6,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+// Set up vars for the DefaultMemberPermissions field in each command definition
 var (
 	// I am too dumb and tired to figure out how to set permission restrictions for the roles without these vars.. sorry..
 	kickPermission    int64 = discordgo.PermissionKickMembers
@@ -15,12 +16,13 @@ var (
 	messagePermission int64 = discordgo.PermissionManageMessages
 )
 
+// AddCommands registers the slash commands with Discord
 func (d *Discord) AddCommands(s *discordgo.Session, event *discordgo.Ready) {
 	fmt.Printf("Initializing Discord...\n")
 
 	for _, discordGuild := range event.Guilds {
 
-		// Adding slash commands to a list to prepare in bulk
+		// Adding commands to a list to prepare in bulk
 		var commands []*discordgo.ApplicationCommand
 		commands = append(commands,
 			KickCommand,
@@ -239,6 +241,8 @@ var PurgeCommand = &discordgo.ApplicationCommand{
 	},
 }
 
+// InteractionCreate executes the respective function based on what
+// slash command was used
 func (d *Discord) InteractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	switch i.ApplicationCommandData().Name {
 	case "kick":

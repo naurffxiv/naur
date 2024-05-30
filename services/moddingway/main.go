@@ -30,6 +30,8 @@ func main() {
 	start(d)
 }
 
+// start adds all the commands and connects the bot to Discord.
+// Listens for CTRL+C then terminates the connection.
 func start(d *discord.Discord) {
 	d.Session.AddHandler(d.AddCommands)
 	err := d.Session.Open()
