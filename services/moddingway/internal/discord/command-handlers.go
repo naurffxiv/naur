@@ -252,6 +252,12 @@ var ExileCommand = &discordgo.ApplicationCommand{
 		},
 		{
 			Type:        discordgo.ApplicationCommandOptionString,
+			Name:        "duration",
+			Description: "Duration of exile (e.g \"1m, 1h, 1d\")",
+			Required:    true,
+		},
+		{
+			Type:        discordgo.ApplicationCommandOptionString,
 			Name:        "reason",
 			Description: "Reason for exile",
 			Required:    true,

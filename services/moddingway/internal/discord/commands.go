@@ -88,7 +88,7 @@ func (d *Discord) SlowmodeOff(s *discordgo.Session, i *discordgo.InteractionCrea
 // Fields:
 //
 //	channel:		Channel
-//	message-number:	integer
+//	message-number:		integer
 func (d *Discord) Purge(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	return
 }
@@ -97,6 +97,7 @@ func (d *Discord) Purge(s *discordgo.Session, i *discordgo.InteractionCreate) {
 // Fields:
 //
 //	user:		User
+//	duration:	string
 //	reason:		string
 func (d *Discord) Exile(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	return
