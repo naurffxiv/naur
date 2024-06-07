@@ -32,6 +32,10 @@ func (d *Discord) AddCommands(s *discordgo.Session, event *discordgo.Ready) {
 			PurgeCommand,
 			ExileCommand,
 			UnexileCommand,
+			AddWarningCommand,
+			ClearWarningsCommand,
+			DeleteWarningCommand,
+			ShowAllWarningsCommand,
 		)
 
 		fmt.Printf("Adding commands...\n")
@@ -285,6 +289,68 @@ var UnexileCommand = &discordgo.ApplicationCommand{
 	},
 }
 
+var AddWarningCommand = &discordgo.ApplicationCommand{
+	Name:                     "warn",
+	DefaultMemberPermissions: &adminPermission,
+	Description:              "Warn the specified user.",
+	Options: []*discordgo.ApplicationCommandOption{
+		{
+			Type:        discordgo.ApplicationCommandOptionUser,
+			Name:        "user",
+			Description: "User being warned",
+			Required:    true,
+		},
+		{
+			Type:        discordgo.ApplicationCommandOptionString,
+			Name:        "reason",
+			Description: "Reason for warning",
+			Required:    true,
+		},
+	},
+}
+
+var ClearWarningsCommand = &discordgo.ApplicationCommand{
+	Name:                     "clearwarnings",
+	DefaultMemberPermissions: &adminPermission,
+	Description:              "Clear all warnings for a specified user.",
+	Options: []*discordgo.ApplicationCommandOption{
+		{
+			Type:        discordgo.ApplicationCommandOptionUser,
+			Name:        "user",
+			Description: "User being cleared of warnings",
+			Required:    true,
+		},
+	},
+}
+
+var DeleteWarningCommand = &discordgo.ApplicationCommand{
+	Name:                     "deletewarning",
+	DefaultMemberPermissions: &adminPermission,
+	Description:              "Delete a warning.",
+	Options: []*discordgo.ApplicationCommandOption{
+		{
+			Type:        discordgo.ApplicationCommandOptionInteger,
+			Name:        "warning_id",
+			Description: "Warning to be deleted",
+			Required:    true,
+		},
+	},
+}
+
+var ShowAllWarningsCommand = &discordgo.ApplicationCommand{
+	Name:                     "warnings",
+	DefaultMemberPermissions: &adminPermission,
+	Description:              "Show all warnings for a specified user.",
+	Options: []*discordgo.ApplicationCommandOption{
+		{
+			Type:        discordgo.ApplicationCommandOptionUser,
+			Name:        "user",
+			Description: "Target user's warnings being shown",
+			Required:    true,
+		},
+	},
+}
+
 // InteractionCreate executes the respective function based on what
 // slash command was used
 func (d *Discord) InteractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -311,5 +377,13 @@ func (d *Discord) InteractionCreate(s *discordgo.Session, i *discordgo.Interacti
 		d.Exile(s, i)
 	case "unexile":
 		d.Unexile(s, i)
+	case "warn":
+		d.Warn(s, i)
+	case "clearwarnings":
+		d.ClearWarnings(s, i)
+	case "deletewarning":
+		d.DeleteWarning(s, i)
+	case "warnings":
+		d.ShowAllWarnings(s, i)
 	}
 }

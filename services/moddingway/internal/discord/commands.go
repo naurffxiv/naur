@@ -111,3 +111,36 @@ func (d *Discord) Exile(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func (d *Discord) Unexile(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	return
 }
+
+// Warn attempts to warn a user.
+// fields:
+//
+//	user:		User
+//	reason:		string
+func (d *Discord) Warn(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	return
+}
+
+// ClearWarnings attempts to clear all warnings for a user.
+// fields:
+//
+//	user:		User
+func (d *Discord) ClearWarnings(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	return
+}
+
+// DeleteWarning attempts to delete a warning a user.
+// fields:
+//
+//	warning_id:	integer
+func (d *Discord) DeleteWarning(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	return
+}
+
+// ShowAllWarnings attempts to show all warnings for a user.
+// fields:
+//
+//	user:		User
+func (d *Discord) ShowAllWarnings(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	return
+}
