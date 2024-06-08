@@ -1,6 +1,8 @@
 package discord
 
 import (
+	"fmt"
+
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -110,6 +112,25 @@ func (d *Discord) Exile(s *discordgo.Session, i *discordgo.InteractionCreate) {
 //	reason:		string
 func (d *Discord) Unexile(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	return
+}
+
+// SetModLoggingChannel sets the specified channel to the moderation log channel
+// All logged commands will be logged to this channel.
+// Fields:
+//
+//	channel:	Channel
+func (d *Discord) SetModLoggingChannel(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	options := i.ApplicationCommandData().Options
+	channelID := options[0].ChannelValue(nil).ID
+	d.ModLoggingChannelID = channelID
+
+	tempstr := fmt.Sprintf("Mod logging channel set to: <#%v>", channelID)
+
+	err := StartInteraction(s, i.Interaction, tempstr)
+	if err != nil {
+		fmt.Printf("Unable to send ephemeral message: %v\n", err)
+	}
+	fmt.Printf("Set the moderation logging channel to: %v\n", channelID)
 }
 
 // Warn attempts to warn a user.
