@@ -2,6 +2,7 @@ package discord
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -9,7 +10,11 @@ import (
 type Discord struct {
 	Token               string
 	Session             *discordgo.Session
+	Ready               sync.WaitGroup
 	ModLoggingChannelID string
+
+	// The structure of the following map is Roles[guild_id][role_name]
+	Roles map[string]map[string]*discordgo.Role
 }
 
 // Start sets up the token and intents of the bot before it logs in
@@ -30,6 +35,35 @@ func (d *Discord) Start() error {
 
 	d.Session = s
 	return nil
+}
+
+// DiscordReady initializes the bot and blocks the bot from proceeding until
+// initialization finishes
+func (d *Discord) DiscordReady(s *discordgo.Session, event *discordgo.Ready) {
+	defer d.Ready.Done()
+	d.AddCommands(s, event)
+	d.MapExistingRoles(s, event)
+}
+
+// MapExistingRoles takes the existing roles from all guilds the bot is in
+// and populates the Roles map
+func (d *Discord) MapExistingRoles(s *discordgo.Session, event *discordgo.Ready) {
+	fmt.Printf("Mapping existing roles...\n")
+
+	d.Roles = make(map[string]map[string]*discordgo.Role)
+
+	fmt.Printf("Found the following roles:\n")
+	for _, discordGuild := range event.Guilds {
+		guildID := discordGuild.ID
+		existingRoles := discordGuild.Roles
+		d.Roles[guildID] = make(map[string]*discordgo.Role)
+		fmt.Printf("Guild %v:\n", guildID)
+		for _, role := range existingRoles {
+			d.Roles[guildID][role.Name] = role
+			fmt.Printf("%v, ", role.Name)
+		}
+		fmt.Printf("\n")
+	}
 }
 
 // StartInteraction is a helper function that responds to the user who invoked
