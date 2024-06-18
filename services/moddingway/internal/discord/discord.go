@@ -3,6 +3,7 @@ package discord
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -86,4 +87,34 @@ func ContinueInteraction(s *discordgo.Session, i *discordgo.Interaction, message
 		Flags:   discordgo.MessageFlagsEphemeral,
 	})
 	return err
+}
+
+// RespondToInteraction is a helper function that decides whether StartInteraction
+// or ContinueInteraction should be used
+func RespondToInteraction(s *discordgo.Session, i *discordgo.Interaction, message string, isFirstInteraction *bool) error {
+	interactionTimestamp, err := discordgo.SnowflakeTimestamp(i.ID)
+	if err != nil {
+		return err
+	}
+	if *isFirstInteraction {
+		if (3 * time.Second) <= time.Now().Sub(interactionTimestamp) {
+			return fmt.Errorf("initial interaction timeout")
+		}
+		err := StartInteraction(s, i, message)
+		if err != nil {
+			fmt.Printf("Unable to send initial ephemeral message: %v\n", err)
+		} else {
+			*isFirstInteraction = false
+		}
+		return err
+	} else {
+		if (15 * time.Minute) <= time.Now().Sub(interactionTimestamp) {
+			return fmt.Errorf("followup interaction timeout")
+		}
+		err := ContinueInteraction(s, i, message)
+		if err != nil {
+			fmt.Printf("Unable to send follow-up ephemeral message: %v\n", err)
+		}
+		return err
+	}
 }
