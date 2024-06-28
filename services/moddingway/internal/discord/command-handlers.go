@@ -360,6 +360,22 @@ func (d *Discord) GetUserHelper(state *InteractionState, userID string) (*discor
 	return member, nil
 }
 
+func CalculateDuration(state *InteractionState, startTime time.Time, stringDuration string) (time.Duration, error) {
+	duration, err := parseDuration(stringDuration)
+	if err != nil {
+		tempstr := fmt.Sprintf("Could not parse duration: %v\nNothing has been done", err)
+		RespondAndAppendLog(state, tempstr)
+		return 0, err
+	}
+	return duration, nil
+}
+
+func ClearEmbedDescription(logMsg *discordgo.Message) {
+	if logMsg != nil {
+		logMsg.Embeds[0].Description = ""
+	}
+}
+
 var KickCommand = &discordgo.ApplicationCommand{
 	Name:                     "kick",
 	DefaultMemberPermissions: &adminPermission,
@@ -712,4 +728,70 @@ func (d *Discord) InteractionCreate(s *discordgo.Session, i *discordgo.Interacti
 	case "strikes":
 		d.ShowAllStrikes(s, i)
 	}
+}
+
+// RoleRemoveAddHelper removes a role `roleIDToRemove` and then adds a role `roleIDToAdd` to the user `userID`
+func (d *Discord) RoleRemoveAddHelper(state *InteractionState, userID string, roleToRemove string, roleToAdd string) error {
+	roleIDToRemove := d.Roles[state.interaction.GuildID][roleToRemove].ID
+	roleIDToAdd := d.Roles[state.interaction.GuildID][roleToAdd].ID
+
+	// Attempt to remove role first
+	err := state.session.GuildMemberRoleRemove(state.interaction.GuildID, userID, roleIDToRemove)
+	if err != nil {
+		// Abort entire process if role removal fails
+		tempstr := fmt.Sprintf("Could not remove the role <@&%v> from user <@%v>", roleIDToAdd, userID)
+		fmt.Printf("%v: %v\n", tempstr, err)
+		RespondAndAppendLog(state, tempstr)
+		return err
+	} else {
+		// Otherwise add role
+		err = state.session.GuildMemberRoleAdd(state.interaction.GuildID, userID, roleIDToAdd)
+		if err != nil {
+			tempstr := fmt.Sprintf("Could not give user <@%v> role <@&%v>", userID, roleIDToAdd)
+			fmt.Printf("%v: %v\n", tempstr, err)
+			RespondAndAppendLog(state, tempstr)
+			return err
+		} else {
+			return nil
+		}
+	}
+}
+
+func (d *Discord) ExileUser(state *InteractionState, userID string, reason string) error {
+	// Check user for specified roles
+	roleToRemove := "Verified"
+	roleToAdd := "Exiled"
+	err := d.CheckUserForRoles(state, userID, []string{roleToRemove}, []string{roleToAdd})
+	if err != nil {
+		d.EditLogMsg(state.logMsg)
+		fmt.Printf("Unable to exile user <@%v>: %v\n", userID, err)
+		return err
+	}
+
+	// Remove verified role and add exiled role
+	return d.RoleRemoveAddHelper(state, userID, roleToRemove, roleToAdd)
+}
+
+func (d *Discord) UnexileUser(state *InteractionState, userID string, reason string) error {
+	// Check user for specified roles
+	roleToRemove := "Exiled"
+	roleToAdd := "Verified"
+	err := d.CheckUserForRoles(state, userID, []string{roleToRemove}, []string{roleToAdd})
+	if err != nil {
+		d.EditLogMsg(state.logMsg)
+		fmt.Printf("Unable to unexile user <@%v>: %v\n", userID, err)
+		return err
+	}
+
+	// Remove exile role and add verified role
+	err = d.RoleRemoveAddHelper(state, userID, roleToRemove, roleToAdd)
+	if err != nil {
+		d.EditLogMsg(state.logMsg)
+		fmt.Printf("Unable to unexile user <@%v>: %v\n", userID, err)
+		return err
+	}
+
+	tempstr := fmt.Sprintf("User <@%v> has been successfully unexiled", userID)
+	RespondAndAppendLog(state, tempstr)
+	return nil
 }

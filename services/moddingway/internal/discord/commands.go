@@ -103,7 +103,93 @@ func (d *Discord) Purge(s *discordgo.Session, i *discordgo.InteractionCreate) {
 //	duration:	string
 //	reason:		string
 func (d *Discord) Exile(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	return
+	optionMap := mapOptions(i)
+	logMsg, _ := d.LogCommand(i.Interaction)
+
+	state := &InteractionState{
+		session:     s,
+		interaction: i,
+		logMsg:      logMsg,
+		isFirst:     true,
+	}
+
+	var duration time.Duration
+	var err error
+
+	// Calculate duration of exile if argument is not empty
+	startTime := time.Now()
+	durationArg, hasDuration := optionMap["duration"]
+	if hasDuration {
+		duration, err = CalculateDuration(state, startTime, durationArg.StringValue())
+		if err != nil {
+			return
+		}
+	}
+
+	userToExile := optionMap["user"].UserValue(nil)
+
+	err = d.ExileUser(state, userToExile.ID, optionMap["reason"].StringValue())
+	if err != nil {
+		return
+	}
+
+	if hasDuration {
+		// Inform invoker and edit log message of successful exile
+		endTime := startTime.Add(duration)
+		tempstr := fmt.Sprintf(
+			"User <@%v> has been exiled until <t:%v>",
+			userToExile.ID,
+			endTime.Unix(),
+		)
+		RespondAndAppendLog(state, tempstr)
+
+		// DM user regarding the exile, doesn't matter if DM fails
+		tempstr = fmt.Sprintf("You are being exiled from `%v` until <t:%v> for the following reason:\n> %v",
+			GuildName,
+			endTime.Unix(),
+			optionMap["reason"].StringValue(),
+		)
+		d.SendDMToUser(state, userToExile.ID, tempstr)
+		d.EditLogMsg(logMsg)
+
+		time.Sleep(duration)
+
+		// Reuse the original embed format but clear existing info
+		ClearEmbedDescription(logMsg)
+		AppendLogMsgDescription(logMsg, fmt.Sprintf("Exile duration for <@%v> is over", userToExile.ID))
+		UpdateLogMsgTimestamp(logMsg)
+		if logMsg != nil {
+			d.SendEmbed(d.ModLoggingChannelID, logMsg.Embeds[0])
+		}
+
+		// Unexile user
+		reason := "Exile duration has finished."
+		err = d.UnexileUser(state, userToExile.ID, reason)
+		if err != nil {
+			return
+		}
+		// DM user regarding the unexile, doesn't matter if DM fails
+		tempstr = fmt.Sprintf("You have been unexiled from `%v` for the following reason:\n> %v",
+			GuildName,
+			reason,
+		)
+		d.SendDMToUser(state, userToExile.ID, tempstr)
+		d.EditLogMsg(state.logMsg)
+	} else {
+		tempstr := fmt.Sprintf(
+			"User <@%v> has been exiled indefinitely",
+			userToExile.ID,
+		)
+		RespondAndAppendLog(state, tempstr)
+
+		// DM user regarding the exile, doesn't matter if DM fails
+		tempstr = fmt.Sprintf("You are being exiled from `%v` indefinitely for the following reason:\n> %v",
+			GuildName,
+			optionMap["reason"].StringValue(),
+		)
+		d.SendDMToUser(state, userToExile.ID, tempstr)
+		d.EditLogMsg(logMsg)
+	}
 }
 
 // Unexile attempts to remove the exile role from the user.
@@ -112,7 +198,30 @@ func (d *Discord) Exile(s *discordgo.Session, i *discordgo.InteractionCreate) {
 //	user:		User
 //	reason:		string
 func (d *Discord) Unexile(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	return
+	optionMap := mapOptions(i)
+	logMsg, _ := d.LogCommand(i.Interaction)
+
+	state := &InteractionState{
+		session:     s,
+		interaction: i,
+		logMsg:      logMsg,
+		isFirst:     true,
+	}
+
+	exiledUser := optionMap["user"].UserValue(nil)
+
+	// Unexile user
+	err := d.UnexileUser(state, exiledUser.ID, optionMap["reason"].StringValue())
+	if err != nil {
+		return
+	}
+	// DM user regarding the unexile, doesn't matter if DM fails
+	tempstr := fmt.Sprintf("You have been unexiled from `%v` for the following reason:\n> %v",
+		GuildName,
+		optionMap["reason"].StringValue(),
+	)
+	d.SendDMToUser(state, exiledUser.ID, tempstr)
+	d.EditLogMsg(state.logMsg)
 }
 
 // SetModLoggingChannel sets the specified channel to the moderation log channel
