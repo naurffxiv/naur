@@ -766,8 +766,8 @@ func (d *Discord) RoleRemoveAddHelper(state *InteractionState, userID string, ro
 
 func (d *Discord) ExileUser(state *InteractionState, userID string, reason string) error {
 	// Check user for specified roles
-	roleToRemove := "Verified"
-	roleToAdd := "Exiled"
+	roleToRemove := VerifiedRole
+	roleToAdd := ExiledRole
 	err := d.CheckUserForRoles(state, userID, []string{roleToRemove}, []string{roleToAdd})
 	if err != nil {
 		d.EditLogMsg(state.logMsg)
@@ -781,8 +781,8 @@ func (d *Discord) ExileUser(state *InteractionState, userID string, reason strin
 
 func (d *Discord) UnexileUser(state *InteractionState, userID string, reason string) error {
 	// Check user for specified roles
-	roleToRemove := "Exiled"
-	roleToAdd := "Verified"
+	roleToRemove := ExiledRole
+	roleToAdd := VerifiedRole
 	err := d.CheckUserForRoles(state, userID, []string{roleToRemove}, []string{roleToAdd})
 	if err != nil {
 		d.EditLogMsg(state.logMsg)
