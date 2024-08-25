@@ -2,6 +2,7 @@ package discord
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"slices"
 	"strconv"
@@ -27,7 +28,7 @@ var (
 
 // AddCommands registers the slash commands with Discord
 func (d *Discord) AddCommands(s *discordgo.Session, event *discordgo.Ready) {
-	fmt.Printf("Initializing Discord...\n")
+	log.Printf("Initializing Discord...\n")
 	foundTargetGuild := false
 	for _, discordGuild := range event.Guilds {
 		if discordGuild.ID == d.GuildID {
@@ -49,23 +50,24 @@ func (d *Discord) AddCommands(s *discordgo.Session, event *discordgo.Ready) {
 				// ClearStrikesCommand,
 				// DeleteStrikeCommand,
 				// ShowAllStrikesCommand,
+				DownloadLogsCommand,
 			)
-	
-			fmt.Printf("Adding commands...\n")
+
+			log.Printf("Adding commands...\n")
 			commandList, err := s.ApplicationCommandBulkOverwrite(event.User.ID, discordGuild.ID, commands)
-			fmt.Printf("List of successfully created commands:\n")
+			log.Printf("List of successfully created commands:\n")
 			for _, command := range commandList {
-				fmt.Printf("\t%v\n", command.Name)
+				log.Printf("\t%v\n", command.Name)
 			}
 			if err != nil {
-				fmt.Printf("Could not add some commands: %v \n", err)
+				log.Printf("Could not add some commands: %v \n", err)
 			}
 		}
 	}
 
 	if !foundTargetGuild {
 		d.Session.Close()
-		panic("Bot is not present in the specified guild.")
+		log.Panic("Bot is not present in the specified guild.")
 	}
 }
 
@@ -81,7 +83,7 @@ func (d *Discord) GetUserInGuild(guild_id string, user string) (*discordgo.Membe
 func (d *Discord) SendEmbed(channelID string, embed *discordgo.MessageEmbed) (*discordgo.Message, error) {
 	msg, err := d.Session.ChannelMessageSendEmbed(channelID, embed)
 	if err != nil {
-		fmt.Printf("Failed to log: %v\n", err)
+		log.Printf("Failed to log: %v\n", err)
 		return nil, err
 	}
 	return msg, nil
@@ -93,7 +95,7 @@ func (d *Discord) SendEmbed(channelID string, embed *discordgo.MessageEmbed) (*d
 func (d *Discord) LogCommand(i *discordgo.Interaction) (*discordgo.Message, error) {
 	if len(d.ModLoggingChannelID) == 0 {
 		err := fmt.Errorf("log channel not set")
-		fmt.Printf("Failed to log: %v\n", err)
+		log.Printf("Failed to log: %v\n", err)
 		return nil, err
 	}
 	options := i.ApplicationCommandData().Options
@@ -169,12 +171,12 @@ func parseDuration(userInput string) (time.Duration, error) {
 		groups := r.FindStringSubmatch(durationString)
 		if len(groups) < 2 {
 			err := fmt.Errorf("invalid format")
-			fmt.Printf("Failed to parse duration: %v\n", err)
+			log.Printf("Failed to parse duration: %v\n", err)
 			return 0, err
 		}
 		num, err := strconv.ParseInt(groups[1], 10, 64)
 		if err != nil {
-			fmt.Printf("Failed to parse duration: %v\n", err)
+			log.Printf("Failed to parse duration: %v\n", err)
 			return 0, err
 		}
 
@@ -191,7 +193,7 @@ func parseDuration(userInput string) (time.Duration, error) {
 			factor = time.Hour * 24
 		default:
 			err = fmt.Errorf("invalid unit")
-			fmt.Printf("Failed to parse duration: %v\n", err)
+			log.Printf("Failed to parse duration: %v\n", err)
 			return 0, err
 		}
 
@@ -205,7 +207,7 @@ func parseDuration(userInput string) (time.Duration, error) {
 		}
 		if duration < 0 {
 			err = fmt.Errorf("negative duration")
-			fmt.Printf("Failed to parse duration: %v\n", err)
+			log.Printf("Failed to parse duration: %v\n", err)
 			return 0, err
 		}
 
@@ -241,7 +243,7 @@ func (d *Discord) EditLogMsg(logMsg *discordgo.Message) {
 	if logMsg != nil {
 		_, err := d.Session.ChannelMessageEditEmbed(d.ModLoggingChannelID, logMsg.ID, logMsg.Embeds[0])
 		if err != nil {
-			fmt.Printf("Unable to edit log message: %v\n", err)
+			log.Printf("Unable to edit log message: %v\n", err)
 		}
 	}
 }
@@ -257,7 +259,7 @@ func UpdateLogMsgTimestamp(logMsg *discordgo.Message) {
 func RespondAndAppendLog(state *InteractionState, message string) {
 	err := RespondToInteraction(state.session, state.interaction.Interaction, message, &state.isFirst)
 	if err != nil {
-		fmt.Printf("Unable to respond to interaction: %v\n", err)
+		log.Printf("Unable to respond to interaction: %v\n", err)
 	}
 	AppendLogMsgDescription(state.logMsg, message)
 }
@@ -268,14 +270,14 @@ func (d *Discord) SendDMToUser(state *InteractionState, userID string, message s
 	channel, err := state.session.UserChannelCreate(userID)
 	if err != nil {
 		tempstr := fmt.Sprintf("Could not create a DM with user %v", userID)
-		fmt.Printf("%v: %v\n", tempstr, err)
+		log.Printf("%v: %v\n", tempstr, err)
 		RespondAndAppendLog(state, tempstr)
 		return err
 	} else {
 		_, err = state.session.ChannelMessageSend(channel.ID, message)
 		if err != nil {
 			tempstr := fmt.Sprintf("Could not send a DM to user <@%v>", userID)
-			fmt.Printf("%v: %v\n", tempstr, err)
+			log.Printf("%v: %v\n", tempstr, err)
 			RespondAndAppendLog(state, tempstr)
 			return err
 		}
@@ -358,7 +360,7 @@ func (d *Discord) GetUserHelper(state *InteractionState, userID string) (*discor
 	member, err := d.GetUserInGuild(state.interaction.GuildID, userID)
 	if err != nil {
 		tempstr := fmt.Sprintf("Could not find user <@%v> in guild", userID)
-		fmt.Printf("%v: %v\n", tempstr, err)
+		log.Printf("%v: %v\n", tempstr, err)
 		RespondAndAppendLog(state, tempstr)
 		return nil, err
 	}
@@ -653,6 +655,13 @@ var ShowAllStrikesCommand = &discordgo.ApplicationCommand{
 	},
 }
 
+var DownloadLogsCommand = &discordgo.ApplicationCommand{
+	Name:                     "logs",
+	DefaultMemberPermissions: &adminPermission,
+	Description:              "Downloads log file from current application",
+	Options:                  []*discordgo.ApplicationCommandOption{},
+}
+
 // InteractionCreate executes the respective function based on what
 // slash command was used
 func (d *Discord) InteractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -683,6 +692,8 @@ func (d *Discord) InteractionCreate(s *discordgo.Session, i *discordgo.Interacti
 		d.DeleteStrike(s, i)
 	case "strikes":
 		d.ShowAllStrikes(s, i)
+	case "logs":
+		d.DownloadLogs(s, i)
 	}
 }
 
@@ -696,7 +707,7 @@ func (d *Discord) RoleRemoveAddHelper(state *InteractionState, userID string, ro
 	if err != nil {
 		// Abort entire process if role removal fails
 		tempstr := fmt.Sprintf("Could not remove the role <@&%v> from user <@%v>", roleIDToAdd, userID)
-		fmt.Printf("%v: %v\n", tempstr, err)
+		log.Printf("%v: %v\n", tempstr, err)
 		RespondAndAppendLog(state, tempstr)
 		return err
 	} else {
@@ -704,7 +715,7 @@ func (d *Discord) RoleRemoveAddHelper(state *InteractionState, userID string, ro
 		err = state.session.GuildMemberRoleAdd(state.interaction.GuildID, userID, roleIDToAdd)
 		if err != nil {
 			tempstr := fmt.Sprintf("Could not give user <@%v> role <@&%v>", userID, roleIDToAdd)
-			fmt.Printf("%v: %v\n", tempstr, err)
+			log.Printf("%v: %v\n", tempstr, err)
 			RespondAndAppendLog(state, tempstr)
 			return err
 		} else {
@@ -720,7 +731,7 @@ func (d *Discord) ExileUser(state *InteractionState, userID string, reason strin
 	err := d.CheckUserForRoles(state, userID, []string{roleToRemove}, []string{roleToAdd})
 	if err != nil {
 		d.EditLogMsg(state.logMsg)
-		fmt.Printf("Unable to exile user <@%v>: %v\n", userID, err)
+		log.Printf("Unable to exile user <@%v>: %v\n", userID, err)
 		return err
 	}
 
@@ -735,7 +746,7 @@ func (d *Discord) UnexileUser(state *InteractionState, userID string) error {
 	err := d.CheckUserForRoles(state, userID, []string{roleToRemove}, []string{roleToAdd})
 	if err != nil {
 		d.EditLogMsg(state.logMsg)
-		fmt.Printf("Unable to unexile user <@%v>: %v\n", userID, err)
+		log.Printf("Unable to unexile user <@%v>: %v\n", userID, err)
 		return err
 	}
 
@@ -743,7 +754,7 @@ func (d *Discord) UnexileUser(state *InteractionState, userID string) error {
 	err = d.RoleRemoveAddHelper(state, userID, roleToRemove, roleToAdd)
 	if err != nil {
 		d.EditLogMsg(state.logMsg)
-		fmt.Printf("Unable to unexile user <@%v>: %v\n", userID, err)
+		log.Printf("Unable to unexile user <@%v>: %v\n", userID, err)
 		return err
 	}
 

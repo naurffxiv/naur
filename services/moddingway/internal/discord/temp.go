@@ -13,7 +13,7 @@ import (
 func (d *Discord) tempRoleRemoveAddHelper(userID string, guildID string, roleToRemove string, roleToAdd string) error {
 	roleIDToRemove := d.Roles[guildID][roleToRemove].ID
 	roleIDToAdd := d.Roles[guildID][roleToAdd].ID
-	
+
 	err := d.Session.GuildMemberRoleRemove(guildID, userID, roleIDToRemove)
 	if err != nil {
 		return err
@@ -74,7 +74,7 @@ func (d *Discord) TempUnexileUser(userID string, guildID string) error {
 	}
 
 	return d.tempRoleRemoveAddHelper(userID, guildID, roleToRemove, roleToAdd)
-	
+
 }
 
 func CreateMemberEmbed(member *discordgo.Member, description string, footer string) *discordgo.MessageEmbed {
@@ -89,7 +89,7 @@ func CreateMemberEmbed(member *discordgo.Member, description string, footer stri
 	} else {
 		return &discordgo.MessageEmbed{
 			Author: &discordgo.MessageEmbedAuthor{
-				Name: member.User.Username,
+				Name:    member.User.Username,
 				IconURL: member.AvatarURL(""),
 			},
 			Description: description,

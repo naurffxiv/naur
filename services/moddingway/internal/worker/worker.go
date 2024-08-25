@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"strings"
@@ -21,11 +22,11 @@ func main() {
 	}
 
 	dbArgs := database.DbInfo{
-		Host: env.GetEnv("POSTGRES_HOST"),
-		Port: env.GetEnv("POSTGRES_PORT"),
-		User: env.GetEnv("POSTGRES_USER"),
+		Host:     env.GetEnv("POSTGRES_HOST"),
+		Port:     env.GetEnv("POSTGRES_PORT"),
+		User:     env.GetEnv("POSTGRES_USER"),
 		Password: env.GetEnv("POSTGRES_PASSWORD"),
-		DbName: env.GetEnv("POSTGRES_DB"),
+		DbName:   env.GetEnv("POSTGRES_DB"),
 	}
 
 	d := &discord.Discord{}
@@ -46,8 +47,8 @@ func main() {
 		d.Init(discordToken)
 	}
 
-	if !env.Ok { 
-		panic(fmt.Errorf("You must supply a %s to start!", env.EnvName))
+	if !env.Ok {
+		log.Panic(fmt.Errorf("You must supply a %s to start!", env.EnvName))
 	}
 
 	d.Conn = database.ConnectToDatabase(dbArgs)
@@ -66,9 +67,9 @@ func main() {
 			}
 		}
 	}()
-	
+
 	// listen for interrupts and gracefully exit
-	fmt.Println("Worker is ready. Press CTRL+C to exit.")
+	log.Println("Worker is ready. Press CTRL+C to exit.")
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-ctx.Done()
 	stop()
@@ -77,7 +78,7 @@ func main() {
 	d.Conn.Close()
 }
 
-// scheduledFunctions is the collection of functions that are to be run at the specified interval. 
+// scheduledFunctions is the collection of functions that are to be run at the specified interval.
 func scheduledFunctions(d *discord.Discord) {
 	autoUnexile(d)
 }
@@ -85,18 +86,18 @@ func scheduledFunctions(d *discord.Discord) {
 // startDiscord connects the bot to Discord
 // Waits for the functions to be run on ready before returning
 func startDiscord(d *discord.Discord) {
-	fmt.Printf("Starting Discord...\n")
+	log.Printf("Starting Discord...\n")
 
 	err := d.Start()
 	if err != nil {
-		panic(fmt.Errorf("Could not instantiate Discord: %w", err))
+		log.Panic(fmt.Errorf("Could not instantiate Discord: %w", err))
 	}
 
 	d.Ready.Add(1)
 	d.Session.AddHandler(d.DiscordReady)
 	err = d.Session.Open()
 	if err != nil {
-		panic(fmt.Errorf("Could not open Discord session: %f", err))
+		log.Panicf("Could not open Discord session: %f", err)
 	}
 
 	d.Ready.Wait()

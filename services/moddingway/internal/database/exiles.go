@@ -12,15 +12,15 @@ type AddExileEntryArgs struct {
 	DbUserID    int
 	Reason      string
 	ExileStatus enum.ExileStatus
-	StartTime 	string
-	EndTime 	string
+	StartTime   string
+	EndTime     string
 }
 
 func AddExileEntryTimed(conn *pgxpool.Pool, p AddExileEntryArgs) (int, error) {
 	query := `INSERT INTO exiles (userID, reason, exileStatus, startTimestamp, endTimestamp)
 	VALUES ($1, $2, $3, $4, $5)
 	RETURNING exileID`
-	
+
 	var exileID int
 	err := conn.QueryRow(
 		context.Background(),
@@ -31,7 +31,7 @@ func AddExileEntryTimed(conn *pgxpool.Pool, p AddExileEntryArgs) (int, error) {
 		p.StartTime,
 		p.EndTime,
 	).Scan(&exileID)
-	
+
 	if err != nil {
 		return -1, err
 	}
@@ -43,7 +43,7 @@ func AddExileEntryIndefinite(conn *pgxpool.Pool, p AddExileEntryArgs) (int, erro
 	query := `INSERT INTO exiles (userID, reason, exileStatus, startTimestamp)
 	VALUES ($1, $2, $3, $4)
 	RETURNING exileID`
-	
+
 	var exileID int
 	err := conn.QueryRow(
 		context.Background(),
@@ -53,7 +53,7 @@ func AddExileEntryIndefinite(conn *pgxpool.Pool, p AddExileEntryArgs) (int, erro
 		p.ExileStatus,
 		p.StartTime,
 	).Scan(&exileID)
-	
+
 	if err != nil {
 		return -1, err
 	}
@@ -64,11 +64,11 @@ func AddExileEntryIndefinite(conn *pgxpool.Pool, p AddExileEntryArgs) (int, erro
 // PendingUnexile is the information returned for each exile from GetPendingUnexiles
 // this information is used in unexiling a user
 type PendingUnexile struct {
-	ExileID         int
-	DbUserID        string
-	ExileStatus     enum.ExileStatus
-	DiscordUserID   string
-	DiscordGuildID  string
+	ExileID        int
+	DbUserID       string
+	ExileStatus    enum.ExileStatus
+	DiscordUserID  string
+	DiscordGuildID string
 }
 
 // Gets all exiles where the exileStatus is timedExile end timestamp is larger than the current time

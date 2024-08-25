@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/naurffxiv/moddingway/internal/database"
@@ -13,7 +14,7 @@ func autoUnexile(d *discord.Discord) {
 	pendingUnexiles, err := database.GetPendingUnexiles(d.Conn)
 	if err != nil {
 		tempstr := "Unable to get pending unexiles"
-		fmt.Printf("%v\n", tempstr)
+		log.Printf("%v\n", tempstr)
 		return
 	}
 
@@ -47,8 +48,8 @@ func processPendingUnexile(d *discord.Discord, pending database.PendingUnexile) 
 
 	// make log message look pretty
 	logMsg.Author = &discordgo.MessageEmbedAuthor{
-		Name: member.User.Username,
-		IconURL: member.AvatarURL(""), 
+		Name:    member.User.Username,
+		IconURL: member.AvatarURL(""),
 	}
 
 	// unexile the user
@@ -82,9 +83,9 @@ func removeExileEntryWrapper(d *discord.Discord, logMsg *discordgo.MessageEmbed,
 
 func printAndAppend(logMsg *discordgo.MessageEmbed, str string, err error) {
 	if err == nil {
-		fmt.Printf("%v\n", str)
+		log.Printf("%v\n", str)
 	} else {
-		fmt.Printf("%v: %v\n", str, err)
+		log.Printf("%v: %v\n", str, err)
 	}
 	logMsg.Description += fmt.Sprintf("%v\n", str)
 }

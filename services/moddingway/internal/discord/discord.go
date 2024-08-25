@@ -2,6 +2,7 @@ package discord
 
 import (
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -15,7 +16,7 @@ type Discord struct {
 	Ready               sync.WaitGroup
 	GuildID             string
 	ModLoggingChannelID string
-	Conn				*pgxpool.Pool
+	Conn                *pgxpool.Pool
 
 	// The structure of the following map is Roles[guild_id][role_name]
 	Roles map[string]map[string]*discordgo.Role
@@ -58,21 +59,21 @@ func (d *Discord) DiscordReady(s *discordgo.Session, event *discordgo.Ready) {
 // MapExistingRoles takes the existing roles from all guilds the bot is in
 // and populates the Roles map
 func (d *Discord) MapExistingRoles(s *discordgo.Session, event *discordgo.Ready) {
-	fmt.Printf("Mapping existing roles...\n")
+	log.Printf("Mapping existing roles...\n")
 
 	d.Roles = make(map[string]map[string]*discordgo.Role)
 
-	fmt.Printf("Found the following roles:\n")
+	log.Printf("Found the following roles:\n")
 	for _, discordGuild := range event.Guilds {
 		guildID := discordGuild.ID
 		existingRoles := discordGuild.Roles
 		d.Roles[guildID] = make(map[string]*discordgo.Role)
-		fmt.Printf("Guild %v:\n", guildID)
+		log.Printf("Guild %v:\n", guildID)
 		for _, role := range existingRoles {
 			d.Roles[guildID][role.Name] = role
-			fmt.Printf("%v, ", role.Name)
+			log.Printf("%v, ", role.Name)
 		}
-		fmt.Printf("\n")
+		log.Printf("\n")
 	}
 }
 
