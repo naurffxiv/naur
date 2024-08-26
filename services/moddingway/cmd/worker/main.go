@@ -13,6 +13,7 @@ import (
 	"github.com/naurffxiv/moddingway/internal/database"
 	"github.com/naurffxiv/moddingway/internal/discord"
 	"github.com/naurffxiv/moddingway/internal/util"
+	"github.com/naurffxiv/moddingway/internal/worker"
 )
 
 func main() {
@@ -80,7 +81,7 @@ func main() {
 
 // scheduledFunctions is the collection of functions that are to be run at the specified interval.
 func scheduledFunctions(d *discord.Discord) {
-	autoUnexile(d)
+	worker.AutoUnexile(d)
 }
 
 // startDiscord connects the bot to Discord

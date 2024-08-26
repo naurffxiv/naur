@@ -3,7 +3,7 @@ services:
     container_name: app
     build:
       context: .
-      dockerfile: ./docker/App.Dockerfile
+      dockerfile: ./cmd/app/Dockerfile
     environment:
       POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_PORT: ${POSTGRES_PORT:-5432}
@@ -18,7 +18,7 @@ services:
     container_name: worker
     build:
       context: .
-      dockerfile: ./docker/Worker.Dockerfile
+      dockerfile: ./cmd/worker/Dockerfile
     environment:
       POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_PORT: ${POSTGRES_PORT:-5432}

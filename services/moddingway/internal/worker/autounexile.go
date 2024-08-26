@@ -1,4 +1,4 @@
-package main
+package worker
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	"github.com/naurffxiv/moddingway/internal/enum"
 )
 
-func autoUnexile(d *discord.Discord) {
+func AutoUnexile(d *discord.Discord) {
 	pendingUnexiles, err := database.GetPendingUnexiles(d.Conn)
 	if err != nil {
 		tempstr := "Unable to get pending unexiles"
