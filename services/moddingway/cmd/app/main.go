@@ -2,11 +2,9 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"strings"
 	"syscall"
 
@@ -23,11 +21,7 @@ func main() {
 	d := &discord.Discord{}
 
 	// configure logging
-	os.Mkdir("logs", os.ModePerm) //nolint:errcheck
-	logFile, _ := os.Create(filepath.Join("logs", "appLogs.log"))
-	defer logFile.Close()
-	multi := io.MultiWriter(logFile, os.Stdout)
-	log.SetOutput(multi)
+	log.SetOutput(os.Stdout)
 	log.Println("Logging configuration set")
 
 	discordToken := env.GetEnv("DISCORD_TOKEN")
