@@ -35,7 +35,7 @@ jobs:
           images: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=sha,prefix=app
+            type=sha,prefix=app-
             type=raw,value=latest,prefix=app,enable={{is_default_branch}}
 
       - name: Build and push app image
@@ -54,7 +54,7 @@ jobs:
           images: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=sha,prefix=app
+            type=sha,prefix=worker-
             type=raw,value=latest,prefix=worker,enable={{is_default_branch}}
 
       - name: Build and push worker image
