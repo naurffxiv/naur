@@ -29,20 +29,39 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract metadata (tags, labels) for Docker
-        id: meta
+        id: app-meta
         uses: docker/metadata-action@v5
         with:
           images: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=sha
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=app
+            type=raw,value=latest,prefix=app,enable={{is_default_branch}}
 
-      - name: Build and push Docker image
+      - name: Build and push app image
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./docker/App.Dockerfile
+          file: ./cmd/app/Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.app-meta.outputs.tags }}
+          labels: ${{ steps.app-meta.outputs.labels }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: worker-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=app
+            type=raw,value=latest,prefix=worker,enable={{is_default_branch}}
+
+      - name: Build and push worker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./cmd/worker/Dockerfile
+          push: true
+          tags: ${{ steps.worker-meta.outputs.tags }}
+          labels: ${{ steps.worker-meta.outputs.labels }}
