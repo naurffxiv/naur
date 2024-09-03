@@ -31,4 +31,14 @@ CREATE TABLE IF NOT EXISTS exiles (
 	CONSTRAINT fk_user FOREIGN KEY(userID) REFERENCES users(userID)
 );
 
+CREATE TABLE IF NOT EXISTS strikes (
+	strikeID INT GENERATED ALWAYS AS IDENTITY,
+	userID INT NOT null,
+	reason TEXT,
+	createTimestamp TIMESTAMP,
+	PRIMARY KEY(strikeID), 
+	CONSTRAINT fk_user FOREIGN KEY(userID) REFERENCES users(userID)
+);
+
+
 COMMIT;
