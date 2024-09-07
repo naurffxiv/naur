@@ -226,6 +226,7 @@ func mapOptions(i *discordgo.InteractionCreate) map[string]*discordgo.Applicatio
 
 // AppendLogMsgDescription appends an existing logMsg with the specified text
 func AppendLogMsgDescription(logMsg *discordgo.Message, s string) {
+	log.Println(s)
 	if logMsg != nil {
 		logMsg.Embeds[0].Description += fmt.Sprintf("\n%v", s)
 	}
