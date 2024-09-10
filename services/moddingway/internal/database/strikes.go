@@ -40,11 +40,10 @@ type Strike struct {
 	StrikeID       int
 	Reason         string
 	DiscordUserID  string
-	DiscordGuildID string
 }
 
 func ListUserStrikes(conn *pgxpool.Pool, userID int) ([]Strike, error) {
-	query := `SELECT s.strikeID, s.reason, u.discordUserID, u.discordGuildID
+	query := `SELECT s.strikeID, s.reason, u.discordUserID
 	FROM strikes s
 	JOIN users u ON s.userID = u.userID
 	WHERE s.userID = $1;`
@@ -62,7 +61,6 @@ func ListUserStrikes(conn *pgxpool.Pool, userID int) ([]Strike, error) {
 			&currRow.StrikeID,
 			&currRow.Reason,
 			&currRow.DiscordUserID,
-			&currRow.DiscordGuildID,
 		)
 		if err != nil {
 			return nil, err
