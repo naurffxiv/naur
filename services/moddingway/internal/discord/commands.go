@@ -319,6 +319,8 @@ func (d *Discord) Strike(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	logMsg.Embeds[0].Footer = &discordgo.MessageEmbedFooter{Text: fmt.Sprintf("Strike ID: %v", strikeID)}
 
 	RespondAndAppendLog(state, tempstr)
+
+	d.EditLogMsg(state.logMsg)
 }
 
 // ClearStrikes attempts to clear all strikes for a user.
