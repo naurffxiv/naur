@@ -311,7 +311,7 @@ func (d *Discord) Strike(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	tempstr := fmt.Sprintf(
-		"User <@%v> has been given a strike. This is strike number %v",
+		"User <@%v> has been given a strike. This is strike number %v.",
 		userToExile.ID,
 		strikeCount,
 	)
