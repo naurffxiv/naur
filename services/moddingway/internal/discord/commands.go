@@ -282,14 +282,14 @@ func (d *Discord) Strike(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		isFirst:     true,
 	}
 
-	userToExile := optionMap["user"].UserValue(nil)
+	userToStrike := optionMap["user"].UserValue(nil)
 
-	dbUserID, err := database.GetUser(d.Conn, userToExile.ID, i.GuildID)
+	dbUserID, err := database.GetUser(d.Conn, userToStrike.ID, i.GuildID)
 	if err != nil {
 		log.Println("User not found in database, adding user...")
-		dbUserID, err = database.AddUser(d.Conn, userToExile.ID, i.GuildID)
+		dbUserID, err = database.AddUser(d.Conn, userToStrike.ID, i.GuildID)
 		if err != nil {
-			tempstr := fmt.Sprintf("Unable to add user <@%v> to the database", userToExile.ID)
+			tempstr := fmt.Sprintf("Unable to add user <@%v> to the database", userToStrike.ID)
 			log.Printf("%v: %v\n", tempstr, err)
 			RespondAndAppendLog(state, tempstr)
 			return
@@ -312,7 +312,7 @@ func (d *Discord) Strike(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	tempstr := fmt.Sprintf(
 		"User <@%v> has been given a strike. This is strike number %v.",
-		userToExile.ID,
+		userToStrike.ID,
 		strikeCount,
 	)
 
