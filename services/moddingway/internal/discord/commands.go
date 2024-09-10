@@ -272,7 +272,55 @@ func (d *Discord) Unexile(s *discordgo.Session, i *discordgo.InteractionCreate) 
 //	user:		User
 //	reason:		string
 func (d *Discord) Strike(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	optionMap := mapOptions(i)
+	logMsg, _ := d.LogCommand(i.Interaction)
 
+	state := &InteractionState{
+		session:     s,
+		interaction: i,
+		logMsg:      logMsg,
+		isFirst:     true,
+	}
+
+	userToStrike := optionMap["user"].UserValue(nil)
+
+	dbUserID, err := database.GetUser(d.Conn, userToStrike.ID, i.GuildID)
+	if err != nil {
+		log.Println("User not found in database, adding user...")
+		dbUserID, err = database.AddUser(d.Conn, userToStrike.ID, i.GuildID)
+		if err != nil {
+			tempstr := fmt.Sprintf("Unable to add user <@%v> to the database", userToStrike.ID)
+			log.Printf("%v: %v\n", tempstr, err)
+			RespondAndAppendLog(state, tempstr)
+			return
+		}
+	}
+
+	strikeEntryArgs := database.AddStrikeEntryArgs{
+		DbUserID:   dbUserID,
+		Reason:     optionMap["reason"].StringValue(),
+		StrikeTime: time.Now().UTC().Format(time.RFC3339),
+	}
+
+	strikeID, strikeCount, err := database.AddStrike(d.Conn, strikeEntryArgs)
+	if err != nil {
+		tempstr := "Unable to add entry to the database"
+		log.Printf("%v: %v\n", tempstr, err)
+		RespondAndAppendLog(state, tempstr)
+		return
+	}
+
+	tempstr := fmt.Sprintf(
+		"User <@%v> has been given a strike. This is strike number %v.",
+		userToStrike.ID,
+		strikeCount,
+	)
+
+	logMsg.Embeds[0].Footer = &discordgo.MessageEmbedFooter{Text: fmt.Sprintf("Strike ID: %v", strikeID)}
+
+	RespondAndAppendLog(state, tempstr)
+
+	d.EditLogMsg(state.logMsg)
 }
 
 // ClearStrikes attempts to clear all strikes for a user.
