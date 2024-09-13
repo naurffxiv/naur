@@ -31,9 +31,10 @@ func processPendingUnexile(d *discord.Discord, pending database.PendingUnexile) 
 	footer := fmt.Sprintf("Exile ID: %v", pending.ExileID)
 	logMsg := discord.CreateMemberEmbed(nil, description, footer)
 
-	// send the embed before returning in any branch of code
+	// remove exile entry and send the embed before returning in any branch of code
 	// return value and error not needed
 	defer func() {
+		removeExileEntryWrapper(d, logMsg, pending.ExileID)
 		_, _ = d.SendEmbed(d.ModLoggingChannelID, logMsg)
 	}()
 
@@ -42,7 +43,6 @@ func processPendingUnexile(d *discord.Discord, pending database.PendingUnexile) 
 	if err != nil {
 		tempstr := fmt.Sprintf("Could not find user <@%v> in guild", pending.DiscordUserID)
 		printAndAppend(logMsg, tempstr, err)
-		removeExileEntryWrapper(d, logMsg, pending.ExileID)
 		return
 	}
 
@@ -61,8 +61,15 @@ func processPendingUnexile(d *discord.Discord, pending database.PendingUnexile) 
 		return
 	}
 
+	// send DM to user regarding unexile
+	message := fmt.Sprintf("You have been unexiled from %v.", discord.GuildName)
+	err = d.TempSendDMToUser(pending.DiscordUserID, message)
+	if err != nil {
+		tempstr := fmt.Sprintf("Unable to send DM to user regarding unexile: %v", err)
+		printAndAppend(logMsg, tempstr, err)
+	}
+
 	logMsg.Description += "Successfully unexiled user\n"
-	removeExileEntryWrapper(d, logMsg, pending.ExileID)
 }
 
 func updateExileStatusWrapper(d *discord.Discord, logMsg *discordgo.MessageEmbed, exileID int, exileStatus enum.ExileStatus) {
