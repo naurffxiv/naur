@@ -34,6 +34,7 @@ def create_exile_commands(bot: Bot) -> None:
 # NB this feels very messy, fragile, and easy to mess up
 # There might be a better way to wrap all this in something cleaner and better reusable
 async def run_command_with_logging(interaction, command: Coroutine, *args):
+    """Wrap a call to business logic with an automatic creation of a message inside the server's logging channel"""
     embed = discord.Embed()
     try:
         embed.set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar.url)
