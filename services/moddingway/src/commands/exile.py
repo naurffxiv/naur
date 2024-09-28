@@ -1,12 +1,11 @@
 import discord
 from discord.ext.commands import Bot
 from settings import get_settings
-from services.exile_service import exile_user
+from services.exile_service import exile_user, unexile_user
 from collections.abc import Coroutine
 
 settings = get_settings()
 
-# TODO proper permissions on commands
 def create_unexile_command(bot: Bot) -> None:
     @bot.tree.command()
     @discord.app_commands.describe(
@@ -14,6 +13,8 @@ def create_unexile_command(bot: Bot) -> None:
     )
     async def unexile(interaction: discord.Interaction, user: discord.Member):
         """Exile the specified user."""
+
+        await run_command_with_logging(interaction, unexile_user, user)
 
         await interaction.response.send_message(f"Successfully unexiled {user.mention}", ephemeral=True)
 

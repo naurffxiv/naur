@@ -18,3 +18,6 @@ async def exile_user(logging_embed: discord.Embed, user: discord.User, duration:
 
     # message user?
     log_info_and_embed(logging_embed, logger, "Job's done")
+
+async def unexile_user(logging_embed: discord.Embed, user: discord.User):
+    pass
