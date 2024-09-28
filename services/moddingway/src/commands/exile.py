@@ -6,7 +6,7 @@ from collections.abc import Coroutine
 
 settings = get_settings()
 
-def create_unexile_command(bot: Bot) -> None:
+def create_exile_commands(bot: Bot) -> None:
     @bot.tree.command()
     @discord.app_commands.describe(
         user="User being exiled"
@@ -17,8 +17,7 @@ def create_unexile_command(bot: Bot) -> None:
         await run_command_with_logging(interaction, unexile_user, user)
 
         await interaction.response.send_message(f"Successfully unexiled {user.mention}", ephemeral=True)
-
-def create_exile_command(bot: Bot) -> None:
+    
     @bot.tree.command()
     @discord.app_commands.describe(
         user="User being exiled",
@@ -31,7 +30,6 @@ def create_exile_command(bot: Bot) -> None:
         await run_command_with_logging(interaction, exile_user, user, duration, reason)
 
         await interaction.response.send_message(f"Successfully exiled {user.mention}", ephemeral=True)
-
 
 # NB this feels very messy, fragile, and easy to mess up
 # There might be a better way to wrap all this in something cleaner and better reusable

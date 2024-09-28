@@ -1,7 +1,7 @@
 import discord
 from discord.ext.commands import Bot
 from settings import get_settings
-from commands.exile import create_exile_command, create_unexile_command
+from commands.exile import create_exile_commands
 import logging
 
 settings = get_settings()
@@ -10,10 +10,7 @@ logger = logging.getLogger(__name__)
 
 class ModdingwayBot(Bot):
     async def setup_hook(self):
-        logger.debug("setting up commands")
-        create_unexile_command(self)
-        create_exile_command(self)
-        logger.debug("finished setting up commands")
+        self._register_commands()
 
         guild = discord.Object(id=settings.guild_id)
         self.tree.copy_global_to(guild=guild)
@@ -21,3 +18,6 @@ class ModdingwayBot(Bot):
     
     async def on_ready(self):
         logger.info(f'Logged in as {self.user} (ID: {self.user.id})')
+    
+    def _register_commands(self):
+        create_exile_commands(self)
