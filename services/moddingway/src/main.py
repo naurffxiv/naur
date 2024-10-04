@@ -6,13 +6,12 @@ import logging
 settings = get_settings()
 
 # TODO:
-# update readme for python
 # create requirements.txt
-# python linting of some kind
 # Permissions on commands
 # database directory for interacting with DB
 # dockerize
 # implementation logic
+# error handling at the app level
 
 
 if __name__ == "__main__":

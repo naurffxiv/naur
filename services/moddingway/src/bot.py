@@ -1,7 +1,7 @@
 import discord
 from discord.ext.commands import Bot
 from settings import get_settings
-from commands.exile import create_exile_commands
+from commands.exile_commands import create_exile_commands
 import logging
 
 settings = get_settings()
