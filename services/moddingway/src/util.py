@@ -1,6 +1,7 @@
 import discord
 from collections.abc import Coroutine
 from settings import get_settings
+import enums
 
 settings = get_settings()
 
@@ -46,3 +47,32 @@ async def run_command_with_logging(interaction, command: Coroutine, *args):
         embed.add_field(name="Error", value=e)
     finally:
         await log_channel.send(embed=embed)
+
+
+async def add_and_remove_role(
+    member: discord.Member, role_to_add: enums.Role, role_to_remove: enums.Role
+):
+    discord_role_to_add = next(
+        (role for role in member.guild.roles if role.name == role_to_add.value), None
+    )
+    discord_role_to_remove = next(
+        (role for role in member.guild.roles if role.name == role_to_remove.value), None
+    )
+    if discord_role_to_add is None:
+        # This role does not exist, likely a misconfiguration of the server
+        raise Exception(f"Role {role_to_add.value} not found in server")
+
+    if discord_role_to_remove is None:
+        # This role does not exist, likely a misconfiguration of the server
+        raise Exception(f"Role {role_to_remove.value} not found in server")
+
+    await member.remove_roles(discord_role_to_remove)
+    await member.add_roles(discord_role_to_add)
+
+
+def user_has_role(user: discord.Member, role: enums.Role) -> bool:
+    return any(
+        discord_role
+        for discord_role in user.guild.roles
+        if discord_role.name == role.value
+    )
