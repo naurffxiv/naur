@@ -15,9 +15,9 @@ class ModdingwayBot(Bot):
         guild = discord.Object(id=settings.guild_id)
         self.tree.copy_global_to(guild=guild)
         await self.tree.sync(guild=guild)
-    
+
     async def on_ready(self):
-        logger.info(f'Logged in as {self.user} (ID: {self.user.id})')
-    
+        logger.info(f"Logged in as {self.user} (ID: {self.user.id})")
+
     def _register_commands(self):
         create_exile_commands(self)
