@@ -7,7 +7,6 @@ settings = get_settings()
 
 # TODO:
 # create requirements.txt
-# Permissions on commands
 # database directory for interacting with DB
 # dockerize
 # implementation logic
