@@ -2,7 +2,6 @@ import discord
 from collections.abc import Coroutine
 from settings import get_settings
 import enums
-import asyncio
 
 settings = get_settings()
 
@@ -70,10 +69,8 @@ async def add_and_remove_role(
         # This role does not exist, likely a misconfiguration of the server
         raise Exception(f"Role {role_to_remove.value} not found in server")
 
-    remove_await = member.remove_roles(discord_role_to_remove)
-    add_await = member.add_roles(discord_role_to_add)
-
-    await asyncio.gather([remove_await, add_await])
+    await member.remove_roles(discord_role_to_remove)
+    await member.add_roles(discord_role_to_add)
 
 
 def user_has_role(user: discord.Member, role: enums.Role) -> bool:
