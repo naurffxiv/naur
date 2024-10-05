@@ -52,12 +52,15 @@ async def run_command_with_logging(interaction, command: Coroutine, *args):
 async def add_and_remove_role(
     member: discord.Member, role_to_add: enums.Role, role_to_remove: enums.Role
 ):
-    discord_role_to_add = next(
-        (role for role in member.guild.roles if role.name == role_to_add.value), None
-    )
-    discord_role_to_remove = next(
-        (role for role in member.guild.roles if role.name == role_to_remove.value), None
-    )
+    discord_role_to_add = None
+    discord_role_to_remove = None
+
+    for role in member.guild.roles:
+        if role.name == role_to_add.value:
+            discord_role_to_add = role
+        if role.name == role_to_remove.value:
+            discord_role_to_remove = role
+
     if discord_role_to_add is None:
         # This role does not exist, likely a misconfiguration of the server
         raise Exception(f"Role {role_to_add.value} not found in server")
