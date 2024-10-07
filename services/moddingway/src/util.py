@@ -52,7 +52,7 @@ async def add_and_remove_role(
 def user_has_role(user: discord.Member, role: Role) -> bool:
     return any(
         discord_role
-        for discord_role in user.guild.roles
+        for discord_role in user.roles
         if discord_role.name == role.value
     )
 

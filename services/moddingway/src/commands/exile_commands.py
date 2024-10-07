@@ -17,10 +17,10 @@ def create_exile_commands(bot: Bot) -> None:
         """Unexile the specified user."""
 
         async with create_logging_embed(interaction) as logging_embed:
-            await unexile_user(logging_embed, user)
+            error_message = await unexile_user(logging_embed, user)
 
             await interaction.response.send_message(
-                f"Successfully unexiled {user.mention}", ephemeral=True
+                error_message or f"Successfully unexiled {user.mention}", ephemeral=True
             )
 
     @bot.tree.command()
@@ -46,8 +46,11 @@ def create_exile_commands(bot: Bot) -> None:
                     ephemeral=True,
                 )
                 return
-            await exile_user(logging_embed, user, exile_duration, reason)
+
+            error_message = await exile_user(
+                logging_embed, user, exile_duration, reason
+            )
 
             await interaction.response.send_message(
-                f"Successfully exiled {user.mention}", ephemeral=True
+                error_message or f"Successfully exiled {user.mention}", ephemeral=True
             )

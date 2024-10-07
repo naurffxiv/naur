@@ -15,19 +15,15 @@ async def exile_user(
     user: discord.Member,
     duration: Optional[datetime.timedelta],
     reason: str,
-):
-    # change user role
-    await add_and_remove_role(
-        user, role_to_add=Role.EXILED, role_to_remove=Role.VERIFIED
-    )
-
-    # message user
-    await send_dm(
-        user, f"You are being exiled from NAUR FFXIV for the following reason: {reason}"
-    )
-    # Look up
-
-    log_info_and_embed(logging_embed, logger, f"because {reason}")
+) -> Optional[str]:
+    if not user_has_role(user, Role.VERIFIED):
+        error_message = "User is not currently verified, no action will be taken"
+        log_info_and_embed(
+            logging_embed,
+            logger,
+            error_message,
+        )
+        return error_message
 
     # look up user in DB
     db_user = users_database.get_user(user.id)
@@ -53,7 +49,8 @@ async def exile_user(
     exile = Exile(None, db_user.user_id, reason, exile_status.value, start_timestamp, end_timestamp)
     exile_id = exiles_database.add_exile(exile)
 
-    log_info_and_embed(logging_embed, logger, f"Created exile with ID {exile_id}")
+    logger.info(f"Created exile with ID {exile_id}")
+
     # change user role
     await add_and_remove_role(
         user, role_to_add=Role.EXILED, role_to_remove=Role.VERIFIED
@@ -66,14 +63,15 @@ async def exile_user(
     )
 
 
-async def unexile_user(logging_embed: discord.Embed, user: discord.User):
+async def unexile_user(logging_embed: discord.Embed, user: discord.User) -> Optional[str]:
     if not user_has_role(user, Role.EXILED):
+        error_message = "User is not currently exiled, no action will be taken"
         log_info_and_embed(
             logging_embed,
             logger,
-            "User is not currently exiled, no action will be taken",
+            error_message,
         )
-        return
+        return error_message
 
     # unexile user
     await add_and_remove_role(user, Role.VERIFIED, Role.EXILED)
