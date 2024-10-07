@@ -46,7 +46,14 @@ async def exile_user(
         end_timestamp = start_timestamp + duration
         exile_status = ExileStatus.TIMED_EXILED
 
-    exile = Exile(None, db_user.user_id, reason, exile_status.value, start_timestamp, end_timestamp)
+    exile = Exile(
+        None,
+        db_user.user_id,
+        reason,
+        exile_status.value,
+        start_timestamp,
+        end_timestamp,
+    )
     exile_id = exiles_database.add_exile(exile)
 
     logger.info(f"Created exile with ID {exile_id}")
@@ -63,7 +70,9 @@ async def exile_user(
     )
 
 
-async def unexile_user(logging_embed: discord.Embed, user: discord.User) -> Optional[str]:
+async def unexile_user(
+    logging_embed: discord.Embed, user: discord.User
+) -> Optional[str]:
     if not user_has_role(user, Role.EXILED):
         error_message = "User is not currently exiled, no action will be taken"
         log_info_and_embed(
@@ -88,5 +97,5 @@ async def unexile_user(logging_embed: discord.Embed, user: discord.User) -> Opti
         log_info_and_embed(logging_embed, logger, f"User record created in database")
 
         db_user = User(db_user_id, user.id, None, None)
-    
+
     exiles_database.remove_user_exiles(db_user.user_id)
