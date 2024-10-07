@@ -1,9 +1,9 @@
 import discord
 from settings import get_settings
-import enums
 import re
 from typing import Optional
 from datetime import timedelta
+from enums import Role
 
 settings = get_settings()
 
@@ -26,7 +26,7 @@ async def send_dm(member: discord.Member, messageContent: str):
 
 
 async def add_and_remove_role(
-    member: discord.Member, role_to_add: enums.Role, role_to_remove: enums.Role
+    member: discord.Member, role_to_add: Role, role_to_remove: Role
 ):
     discord_role_to_add = None
     discord_role_to_remove = None
@@ -49,7 +49,7 @@ async def add_and_remove_role(
     await member.add_roles(discord_role_to_add)
 
 
-def user_has_role(user: discord.Member, role: enums.Role) -> bool:
+def user_has_role(user: discord.Member, role: Role) -> bool:
     return any(
         discord_role
         for discord_role in user.guild.roles
@@ -83,3 +83,7 @@ def calculate_time_delta(delta_string: Optional[str]) -> Optional[timedelta]:
         return delta
 
     return None
+async def is_user_moderator(interaction: discord.Interaction):
+    return user_has_role(interaction.user, Role.ADMINISTRATION) or user_has_role(
+        interaction.user, Role.MANAGEMENT
+    )

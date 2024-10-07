@@ -1,6 +1,7 @@
 from enum import StrEnum, IntEnum
 
 
+
 class Role(StrEnum):
     EXILED = "Exiled"
     VERIFIED = "Verified"

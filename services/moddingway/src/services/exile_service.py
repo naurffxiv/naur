@@ -25,6 +25,9 @@ async def exile_user(
     await send_dm(
         user, f"You are being exiled from NAUR FFXIV for the following reason: {reason}"
     )
+    # Look up
+
+    log_info_and_embed(logging_embed, logger, f"because {reason}")
 
     # look up user in DB
     db_user = users_database.get_user(user.id)
@@ -51,6 +54,16 @@ async def exile_user(
     exile_id = exiles_database.add_exile(exile)
 
     log_info_and_embed(logging_embed, logger, f"Created exile with ID {exile_id}")
+    # change user role
+    await add_and_remove_role(
+        user, role_to_add=Role.EXILED, role_to_remove=Role.VERIFIED
+    )
+
+    # message user
+    await send_dm(
+        user,
+        f"You are being exiled from NA Ultimate Raiding - FF XIV for the following reason: \n> {reason}",
+    )
 
 
 async def unexile_user(logging_embed: discord.Embed, user: discord.User):
