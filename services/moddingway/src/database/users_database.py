@@ -10,7 +10,7 @@ def get_user(discord_user_id: int) -> Optional[User]:
 
     with conn.get_cursor() as cursor:
         query = """
-        SELECT u.userid, u.discorduserid, u.discordguildid, u.ismod FROM users u
+        SELECT u.userid, u.discordUserId, u.discordGuildId, u.isMod FROM users u
         where u.discorduserid = %s
         """
 
@@ -28,9 +28,9 @@ def add_user(discord_user_id: int) -> int:
 
     with conn.get_cursor() as cursor:
         query = """
-            INSERT INTO users (discorduserid, discordguildid, ismod)
+            INSERT INTO users (discordUserId, discordGuildId, isMod)
             VALUES (%s, %s, false)
-            RETURNING userid
+            RETURNING userId
         """
 
         params = (str(discord_user_id), str(settings.guild_id))
@@ -38,4 +38,4 @@ def add_user(discord_user_id: int) -> int:
         cursor.execute(query, params)
 
         res = cursor.fetchone()
-        return res
+        return res[0]

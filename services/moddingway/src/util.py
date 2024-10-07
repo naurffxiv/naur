@@ -1,6 +1,9 @@
 import discord
 from settings import get_settings
 import enums
+import re
+from typing import Optional
+from datetime import timedelta
 
 settings = get_settings()
 
@@ -52,3 +55,31 @@ def user_has_role(user: discord.Member, role: enums.Role) -> bool:
         for discord_role in user.guild.roles
         if discord_role.name == role.value
     )
+
+
+def calculate_time_delta(delta_string: Optional[str]) -> Optional[timedelta]:
+    if not delta_string:
+        return None
+
+    regex = "(\d\d?)([smhd])"  # Matches (digit, digit?)(letter in [s, m, h, d])
+
+    result = re.search(regex, delta_string)
+
+    if result:
+        duration = int(result.group(1))
+        unit = result.group(2)
+
+        delta = None
+
+        if unit == "s":
+            delta = timedelta(seconds=duration)
+        elif unit == "m":
+            delta = timedelta(minutes=duration)
+        elif unit == "h":
+            delta = timedelta(hours=duration)
+        elif unit == "d":
+            delta = timedelta(days=duration)
+
+        return delta
+
+    return None
