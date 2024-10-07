@@ -23,11 +23,15 @@ async def exile_user(
     # add exile entry into DB
 
     # change user role
-    await add_and_remove_role(user, role_to_add=Role.EXILED, role_to_remove=Role.VERIFIED)
-
+    await add_and_remove_role(
+        user, role_to_add=Role.EXILED, role_to_remove=Role.VERIFIED
+    )
 
     # message user
-    await send_dm(user, f"You are being exiled from NAUR FFXIV for the following reason: {reason}")
+    await send_dm(
+        user,
+        f"You are being exiled from NA Ultimate Raiding - FF XIV for the following reason: \n> {reason}",
+    )
 
 
 async def unexile_user(logging_embed: discord.Embed, user: discord.User):
