@@ -24,3 +24,16 @@ def add_exile(exile: Exile) -> int:
         res = cursor.fetchone()
 
         return res[0]
+
+
+def remove_user_exiles(user_id):
+    conn = DatabaseConnection()
+
+    with conn.get_cursor() as cursor:
+        query = """
+        delete from exiles e where e.userId = %s
+        """
+
+        params = (user_id, )
+
+        cursor.execute(query, params)
