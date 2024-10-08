@@ -8,9 +8,7 @@ settings = get_settings()
 
 # TODO:
 # create requirements.txt
-# database directory for interacting with DB
 # dockerize
-# implementation logic
 # error handling at the app level
 
 
@@ -21,6 +19,8 @@ if __name__ == "__main__":
     intents = discord.Intents.default()
     bot = ModdingwayBot(command_prefix="/", intents=intents)
 
-    DatabaseConnection().connect()
+    database_connection = DatabaseConnection()
+    database_connection.connect()
+    database_connection.create_tables()
 
     bot.run(settings.discord_token)

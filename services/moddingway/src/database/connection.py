@@ -1,7 +1,9 @@
 import psycopg2
 from psycopg2.extensions import cursor
 import logging
+import os
 from settings import get_settings
+
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
@@ -34,6 +36,18 @@ class DatabaseConnection:
             self._connection.set_session(autocommit=True)
         except Exception as e:
             logger.error(f"Failed to connect to database: {e}", exc_info=e)
+
+    def create_tables(self):
+        """
+        Created the tables the application relies on. This only needs to be run on startup
+        """
+        with self.get_cursor() as cursor:
+            script_file_path = os.path.join("postgres", "create_tables.sql")
+            with open(script_file_path, 'r') as fd:
+                
+                script = fd.read()
+                cursor.execute(script)
+
 
     # TODO: properly spin down DB connection on exit
 
