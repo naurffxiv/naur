@@ -31,9 +31,9 @@ def local() -> Settings:
         guild_id=int(os.environ["GUILD_ID"]),
         logging_channel_id=int(os.environ["MOD_LOGGING_CHANNEL_ID"]),
         log_level=logging.DEBUG,
-        postgres_host="localhost",
-        postgres_port="5432",
-        postgres_username="moddingwayLocalDB",
+        postgres_host=os.environ.get("POSTGRES_HOST", "localhost"),
+        postgres_port=os.environ.get("POSTGRES_PORT", "5432"),
+        postgres_username=os.environ["POSTGRES_USER"],
         postgres_password=os.environ["POSTGRES_PASSWORD"]
     )
 
