@@ -1,7 +1,7 @@
-include:
-  - path: 
-      - docker-compose.yml
-      - postgres.override.yml
+# include:
+#   - path: 
+#       - postgres.override.yml
+
 services:
   postgres_local:
     container_name: postgres_db

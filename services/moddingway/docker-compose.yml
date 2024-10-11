@@ -1,3 +1,7 @@
+include:
+  - path: 
+      - postgres.yml
+
 services:
   app:
     container_name: app
@@ -29,3 +33,20 @@ services:
       DEBUG: ${DEBUG:-false}
       GUILD_ID: ${GUILD_ID}
       MOD_LOGGING_CHANNEL_ID: ${MOD_LOGGING_CHANNEL_ID}
+
+  python-app:
+    container_name: pythonBot
+    build:
+      context: .
+      dockerfile: ./src/Dockerfile
+    environment:
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-moddingway}
+      DISCORD_TOKEN: ${DISCORD_TOKEN}
+      GUILD_ID: ${GUILD_ID}
+      MOD_LOGGING_CHANNEL_ID: ${MOD_LOGGING_CHANNEL_ID}
+    depends_on:
+      - postgres_local
