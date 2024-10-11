@@ -22,10 +22,10 @@ test-build:
 	docker compose -f postgres.yml down
 	docker compose -f postgres.yml up --build
 
-python-build:
+python-docker-build:
 	docker-compose build python-app
 
-python-run:
+python-docker-run:
 	docker-compose run python-app
 
-.PHONY: format start stop install python-build
+.PHONY: format start stop install

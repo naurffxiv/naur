@@ -28,5 +28,17 @@ To run a dockerized version of our postgres database locally, run `docker compos
 
 ## Development recommendations
 
-#### Black Formatter
+### First time setup
+When you first are setting up the application, copy the file titled `.env_example` to be `.env`, and configure the missing enviornment variables. To add the bot account to your server, you can follow the [discord.py instructions](https://discordpy.readthedocs.io/en/stable/discord.html). The server that you use for development also will need to have a channel where the bot will output logging messages, and will need to have the following roles set up
+* Exiled
+* Verified
+* Administration
+* Management
+
+In addition, you will need to give yourself either the `Administration` or `Management` role in order to properly run all commands. 
+
+### Black Formatter
 Files in this repo will be run through the [Black Formatter](https://black.readthedocs.io/en/stable/). To minimize merge conflicts, it is recommended to run this formatter on your code before submitting. Most IDEs will have an extension for black, and it is recommended to use those
+
+### Running in Docker
+If you want to run the app in a container, you can build the container using the command `make python-docker-build` and then run the application via `python-docker-run`. If you run the application this way, make sure you configure the application to use the container's name (by default `postgres_db`) rather than `localhost`, which is the configuration for local development
