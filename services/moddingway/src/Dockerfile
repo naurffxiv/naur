@@ -1,6 +1,6 @@
 FROM python:3.11
 
-# install requiremed packages
+# install required packages
 RUN --mount=type=bind,source=requirements.txt,target=/tmp/requirements.txt \
     pip install --requirement /tmp/requirements.txt
 
