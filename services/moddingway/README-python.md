@@ -24,7 +24,7 @@ Postgres-related information is configured in the environment variables instead 
 
 Defaults are also set for `POSTGRES_PORT` (5432) and `POSTGRES_DB` (moddingway) if those two are not set.
 
-To run a dockerized version of our postgres database locally, run `docker compose -f postgres.yml up postgres_local`. To run this, you will need to install and run [docker desktop](https://www.docker.com/products/docker-desktop/) on your local machine. The python bot will create the tables it needs when you first run it
+To run a dockerized version of our postgres database locally, run `make database-run`. To run this, you will need to install and run [docker desktop](https://www.docker.com/products/docker-desktop/) on your local machine. The python bot will create the tables it needs when you first run it
 
 ## Development recommendations
 
@@ -41,4 +41,4 @@ In addition, you will need to give yourself either the `Administration` or `Mana
 Files in this repo will be run through the [Black Formatter](https://black.readthedocs.io/en/stable/). To minimize merge conflicts, it is recommended to run this formatter on your code before submitting. Most IDEs will have an extension for black, and it is recommended to use those
 
 ### Running in Docker
-If you want to run the app in a container, you can build the container using the command `make python-docker-build` and then run the application via `python-docker-run`. If you run the application this way, make sure you configure the application to use the container's name (by default `postgres_db`) rather than `localhost`, which is the configuration for local development
+If you want to run the app in a container, you run the application via `make python-run`. This command will also create a container for the postgres database, and will override the postgres host environment variable to correctly allow the two containers to interact with each other

@@ -48,5 +48,12 @@ services:
       DISCORD_TOKEN: ${DISCORD_TOKEN}
       GUILD_ID: ${GUILD_ID}
       MOD_LOGGING_CHANNEL_ID: ${MOD_LOGGING_CHANNEL_ID}
-    depends_on:
-      - postgres_local
+
+  python-app-local:
+      extends:
+        service: python-app
+      environment:
+        POSTGRES_HOST: postgres_local
+      depends_on:
+        postgres_local:
+          condition: service_healthy
