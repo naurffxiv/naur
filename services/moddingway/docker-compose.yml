@@ -50,10 +50,10 @@ services:
       MOD_LOGGING_CHANNEL_ID: ${MOD_LOGGING_CHANNEL_ID}
 
   python-app-local:
-      extends:
-        service: python-app
-      environment:
-        POSTGRES_HOST: postgres_local
-      depends_on:
-        postgres_local:
-          condition: service_healthy
+    extends:
+      service: python-app
+    environment:
+      POSTGRES_HOST: postgres_local
+    depends_on:
+      postgres_local:
+        condition: service_healthy
