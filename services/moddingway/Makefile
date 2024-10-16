@@ -25,4 +25,14 @@ test-build:
 	docker compose -f postgres.yml down
 	docker compose -f postgres.yml up --build
 
+python-build:
+	docker compose build python-app
+
+python-run:
+	docker compose down
+	docker compose up python-app-local
+
+database-run:
+	docker compose -f postgres.yml up -d
+
 .PHONY: format start stop install clean
