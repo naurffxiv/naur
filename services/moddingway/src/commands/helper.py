@@ -1,5 +1,3 @@
-import sys
-from typing import Optional
 from contextlib import asynccontextmanager
 import discord
 from discord.ext.commands import Bot
