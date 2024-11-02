@@ -1,4 +1,3 @@
-from discord.ext.commands import Bot
 from .autounexile import autounexile_users
 
 
