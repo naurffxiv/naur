@@ -4,6 +4,7 @@ from discord.ext.commands import Bot
 from settings import get_settings
 from util import EmbedField, create_interaction_embed_context
 import logging
+import time
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
@@ -35,13 +36,13 @@ def create_bot_errors(bot: Bot) -> None:
     async def on_app_command_error(interaction: discord.Interaction, error):
         # Check if the error is due to a cooldown
         if isinstance(error, discord.app_commands.CommandOnCooldown):
-            hours_left = int(error.retry_after / 3600)
+            remaining_time = int(error.retry_after) + int(time.time())
             await interaction.response.send_message(
-                f"This command is on cooldown. Please try again in {hours_left} hour(s).",
+                f"This command is on cooldown. Time remaining: <t:{remaining_time}:R>",
                 ephemeral=True,
             )
         else:
-            logger.error(f"An unexpected error has occured {error}")
+            logger.error(f"An unexpected error has occurred {error}")
 
 
 @asynccontextmanager
