@@ -436,18 +436,18 @@ guilds:
         type: "Prog"
       - name: "M8S C4X"
         type: "C4X"
-  - ids: [1080]
-    name: "Recollection (Extreme)"
+  - ids: [1081]
+    name: "The Minstrel's Ballad: Necron's Embrace"
     defaultRoles: false
     difficulty: "Extreme"
     roles:
-      - name: "EX4 Cleared"
+      - name: "EX5 Cleared"
         type: "Cleared"
-      - name: "EX4 Reclear"
+      - name: "EX5 Reclear"
         type: "Reclear"
-      - name: "EX4 Prog"
+      - name: "EX5 Prog"
         type: "Prog"
-      - name: "EX4 C4X"
+      - name: "EX5 C4X"
         type: "C4X"
   reconfigureRoles:
   - from: "Please Do Other Content"
