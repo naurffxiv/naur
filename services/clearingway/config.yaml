@@ -449,6 +449,19 @@ guilds:
         type: "Prog"
       - name: "EX5 C4X"
         type: "C4X"
+  - ids: [1082]
+    name: "The Windward Wilds (Extreme)"
+    defaultRoles: false
+    difficulty: "Extreme"
+    roles:
+      - name: "EX6 Cleared"
+        type: "Cleared"
+      - name: "EX6 Reclear"
+        type: "Reclear"
+      - name: "EX6 Prog"
+        type: "Prog"
+      - name: "EX6 C4X"
+        type: "C4X"
   reconfigureRoles:
   - from: "Please Do Other Content"
     hoist: true
