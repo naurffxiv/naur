@@ -1,193 +1,41 @@
 channels:
-- id: "991199065196990585"
-  name: "APD PF check"
-  duty: "Dragonsong's Reprise (Ultimate)"
-  dataCentres: [Aether, Crystal, Primal, Dynamis]
-- id: "1003797164222337094"
-  name: "UPR ucob pf check"
-  duty: "The Unending Coil of Bahamut (Ultimate)"
-  dataCentres: [Primal]
-- id: "1003797182639525899"
-  name: "UPR uwu pf check"
-  duty: "The Weapon's Refrain (Ultimate)"
-  dataCentres: [Primal]
-- id: "1003797201895571508"
-  name: "UPR tea pf check"
-  duty: "The Epic of Alexander (Ultimate)"
-  dataCentres: [Primal]
-- id: "1003797214491066498"
-  name: "UPR dsr pf check"
-  duty: "Dragonsong's Reprise (Ultimate)"
-  dataCentres: [Primal]
-- id: "1066846031867809894"
-  name: "UPR top pf check"
-  duty: "The Omega Protocol (Ultimate)"
-  dataCentres: [Primal]
-- id: "1037081516523651132"
-  name: "UDR ucob pf check"
-  duty: "The Unending Coil of Bahamut (Ultimate)"
-  dataCentres: [Dynamis]
-- id: "1037081529366630451"
-  name: "UDR uwu pf check"
-  duty: "The Weapon's Refrain (Ultimate)"
-  dataCentres: [Dynamis]
-- id: "1037081703283433502"
-  name: "UDR tea pf check"
-  duty: "The Epic of Alexander (Ultimate)"
-  dataCentres: [Dynamis]
-- id: "1037081714683547718"
-  name: "UDR dsr pf check"
-  duty: "Dragonsong's Reprise (Ultimate)"
-  dataCentres: [Dynamis]
-- id: "1061465824780628038"
-  name: "TOP aether"
-  duty: "The Omega Protocol (Ultimate)"
-  dataCentres: [Aether]
-- id: "1061465841843044393"
-  name: "TOP primal"
-  duty: "The Omega Protocol (Ultimate)"
-  dataCentres: [Primal]
-- id: "1061465854748926012"
-  name: "TOP crystal"
-  duty: "The Omega Protocol (Ultimate)"
-  dataCentres: [Crystal]
-- id: "1061465866039984238"
-  name: "TOP dynamis"
-  duty: "The Omega Protocol (Ultimate)"
-  dataCentres: [Dynamis]
-- id: "989246195857756220"
-  name: "UAR uwu-check"
-  duty: "The Weapon's Refrain (Ultimate)"
-  dataCentres: [Aether]
-- id: "989246217076736030"
-  name: "UAR ucob-check"
-  duty: "The Unending Coil of Bahamut (Ultimate)"
-  dataCentres: [Aether]
-- id: "989246232994140242"
-  name: "UAR tea-check"
-  duty: "The Epic of Alexander (Ultimate)"
-  dataCentres: [Aether]
-- id: "989246259359547402"
-  name: "UAR dru-check"
-  duty: "Dragonsong's Reprise (Ultimate)"
-  dataCentres: [Aether]
-- id: "989246280461074512"
-  name: "UAR top-check"
-  duty: "The Omega Protocol (Ultimate)"
-  dataCentres: [Aether]
-- id: "1106427289908035654"
-  name: "Mala top check"
-  duty: "The Omega Protocol (Ultimate)"
-  dataCentres: [Aether]
-- id: "1106427303573065818"
-  name: "Mala dsr check"
-  duty: "Dragonsong's Reprise (Ultimate)"
-  dataCentres: [Aether]
-- id: "1106427382392442941"
-  name: "Mala tea check"
-  duty: "The Epic of Alexander (Ultimate)"
-  dataCentres: [Aether]
-- id: "1106427321893793853"
-  name: "Mala uwu check"
-  duty: "The Weapon's Refrain (Ultimate)"
-  dataCentres: [Aether]
-- id: "1106427345746804757"
-  name: "Mala ucob check"
-  duty: "The Unending Coil of Bahamut (Ultimate)"
-  dataCentres: [Aether]
-- id: "1112960917051809792"
-  name: "Mala pf check 1"
-  duty: "Anabaseios: The Ninth Circle (Savage)"
-  dataCentres: [Aether, Crystal, Primal, Dynamis]
-- id: "1112960959196176474"
-  name: "Mala pf check 2"
-  duty: "Anabaseios: The Tenth Circle (Savage)"
-  dataCentres: [Aether, Crystal, Primal, Dynamis]
-- id: "1112960989508403300"
-  name: "Mala pf check 3"
-  duty: "Anabaseios: The Eleventh Circle (Savage)"
-  dataCentres: [Aether, Crystal, Primal, Dynamis]
-- id: "1112961011788566558"
-  name: "Mala pf check 4"
-  duty: "Anabaseios: The Twelfth Circle (Savage)"
-  dataCentres: [Aether, Crystal, Primal, Dynamis]
-- id: "1120053963673309245"
-  name: "Savage Learning Academy p9s"
-  duty: "Anabaseios: The Ninth Circle (Savage)"
-  dataCentres: [Aether, Crystal, Primal, Dynamis]
-- id: "1120053976369471539"
-  name: "Savage Learning Academy p10s"
-  duty: "Anabaseios: The Tenth Circle (Savage)"
-  dataCentres: [Aether, Crystal, Primal, Dynamis]
-- id: "1120053989896097882"
-  name: "Savage Learning Academy p11s"
-  duty: "Anabaseios: The Eleventh Circle (Savage)"
-  dataCentres: [Aether, Crystal, Primal, Dynamis]
-- id: "1120054005419221063"
-  name: "Savage Learning Academy p12s"
-  duty: "Anabaseios: The Twelfth Circle (Savage)"
-  dataCentres: [Aether, Crystal, Primal, Dynamis]
-- id: "1168327640638296065"
-  name: "golden sheep top check"
-  duty: "The Omega Protocol (Ultimate)"
-  dataCentres: [Aether, Crystal, Primal, Dynamis]
-- id: "1168327674708631633"
-  name: "golden sheep dsr check"
-  duty: "Dragonsong's Reprise (Ultimate)"
-  dataCentres: [Aether, Crystal, Primal, Dynamis]
-- id: "1168327701694783498"
-  name: "golden sheep tea check"
-  duty: "The Epic of Alexander (Ultimate)"
-  dataCentres: [Aether, Crystal, Primal, Dynamis]
-- id: "1168327733357576283"
-  name: "golden sheep uwu check"
-  duty: "The Weapon's Refrain (Ultimate)"
-  dataCentres: [Aether, Crystal, Primal, Dynamis]
-- id: "1168327757374181446"
-  name: "golden sheep ucob check"
-  duty: "The Unending Coil of Bahamut (Ultimate)"
-  dataCentres: [Aether, Crystal, Primal, Dynamis]
-- id: "1172326220352987257"
+- id: "1350638986271523018"
   name: "naur ucob check"
   duty: "The Unending Coil of Bahamut (Ultimate)"
   dataCentres: [Aether, Crystal, Dynamis, Primal]
-- id: "1172326251118198814"
+- id: "1350640606220910763"
   name: "naur uwu check"
   duty: "The Weapon's Refrain (Ultimate)"
   dataCentres: [Aether, Crystal, Dynamis, Primal]
-- id: "1172326284257407027"
+- id: "1350641049910906987"
   name: "naur tea check"
   duty: "The Epic of Alexander (Ultimate)"
   dataCentres: [Aether, Crystal, Dynamis, Primal]
-- id: "1172326306847920150"
+- id: "1350641418573447188"
   name: "naur dsr check"
   duty: "Dragonsong's Reprise (Ultimate)"
   dataCentres: [Aether, Crystal, Dynamis, Primal]
-- id: "1172326326645051412"
+- id: "1350641766755205232"
   name: "naur top check"
   duty: "The Omega Protocol (Ultimate)"
   dataCentres: [Aether, Crystal, Dynamis, Primal]
-- id: "1270053612206297088"
-  name: "nase m1s"
-  duty: "AAC Light-heavyweight M1 (Savage)"
+- id: "1350642110302261332"
+  name: "naur fru check"
+  duty: "Futures Rewritten (Ultimate)"
   dataCentres: [Aether, Crystal, Dynamis, Primal]
-- id: "1270053648742744155"
-  name: "nase m2s"
-  duty: "AAC Light-heavyweight M2 (Savage)"
+- id: "1356499044742205582"
+  name: "naur m5s"
+  duty: "AAC Cruiserweight M1 (Savage)"
   dataCentres: [Aether, Crystal, Dynamis, Primal]
-- id: "1270053664626577512"
-  name: "nase m3s"
-  duty: "AAC Light-heavyweight M3 (Savage)"
+- id: "1356521053735616697"
+  name: "naur m6s"
+  duty: "AAC Cruiserweight M2 (Savage)"
   dataCentres: [Aether, Crystal, Dynamis, Primal]
-- id: "1270053677666668668"
-  name: "nase m4s"
-  duty: "AAC Light-heavyweight M4 (Savage)"
+- id: "1356521080977756221"
+  name: "naur m7s"
+  duty: "AAC Cruiserweight M3 (Savage)"
   dataCentres: [Aether, Crystal, Dynamis, Primal]
-- id: "1270053677666668668"
-  name: "nase m4s"
-  duty: "AAC Light-heavyweight M4 (Savage)"
-  dataCentres: [Aether, Crystal, Dynamis, Primal]
-- id: "1308820840217055322"
-  name: "nase ex3"
-  duty: "The Minstrel’s Ballad: Sphene's Burden"
+- id: "1356521102398066698"
+  name: "naur m8s"
+  duty: "AAC Cruiserweight M4 (Savage)"
   dataCentres: [Aether, Crystal, Dynamis, Primal]
