@@ -436,31 +436,18 @@ guilds:
         type: "Prog"
       - name: "M8S C4X"
         type: "C4X"
-  - ids: [1081]
-    name: "The Minstrel's Ballad: Necron's Embrace"
+  - ids: [1083]
+    name: "Hell on Rails (Extreme)"
     defaultRoles: false
     difficulty: "Extreme"
     roles:
-      - name: "EX5 Cleared"
+      - name: "EX7 Cleared"
         type: "Cleared"
-      - name: "EX5 Reclear"
+      - name: "EX7 Reclear"
         type: "Reclear"
-      - name: "EX5 Prog"
+      - name: "EX7 Prog"
         type: "Prog"
-      - name: "EX5 C4X"
-        type: "C4X"
-  - ids: [1082]
-    name: "The Windward Wilds (Extreme)"
-    defaultRoles: false
-    difficulty: "Extreme"
-    roles:
-      - name: "EX6 Cleared"
-        type: "Cleared"
-      - name: "EX6 Reclear"
-        type: "Reclear"
-      - name: "EX6 Prog"
-        type: "Prog"
-      - name: "EX6 C4X"
+      - name: "EX7 C4X"
         type: "C4X"
   reconfigureRoles:
   - from: "Please Do Other Content"
