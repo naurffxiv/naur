@@ -384,57 +384,57 @@ guilds:
         type: "C4X"
       - name: "UCoB Prog"
         type: "Prog"
-  - ids: [97]
-    name: "M5S"
+  - ids: [101]
+    name: "M9S"
     defaultRoles: false
     difficulty: "Savage"
     roles:
-      - name: "M5S Cleared"
+      - name: "M9S Cleared"
         type: "Cleared"
-      - name: "M5S Reclear"
+      - name: "M9S Reclear"
         type: "Reclear"
-      - name: "M5S Prog"
+      - name: "M9S Prog"
         type: "Prog"
-      - name: "M5S C4X"
+      - name: "M9S C4X"
         type: "C4X"
-  - ids: [98]
-    name: "M6S"
+  - ids: [102]
+    name: "M10S"
     defaultRoles: false
     difficulty: "Savage"
     roles:
-      - name: "M6S Cleared"
+      - name: "M10S Cleared"
         type: "Cleared"
-      - name: "M6S Reclear"
+      - name: "M10S Reclear"
         type: "Reclear"
-      - name: "M6S Prog"
+      - name: "M10S Prog"
         type: "Prog"
-      - name: "M6S C4X"
+      - name: "M10S C4X"
         type: "C4X"
-  - ids: [99]
-    name: "M7S"
+  - ids: [103]
+    name: "M11S"
     defaultRoles: false
     difficulty: "Savage"
     roles:
-      - name: "M7S Cleared"
+      - name: "M11S Cleared"
         type: "Cleared"
-      - name: "M7S Reclear"
+      - name: "M11S Reclear"
         type: "Reclear"
-      - name: "M7S Prog"
+      - name: "M11S Prog"
         type: "Prog"
-      - name: "M7S C4X"
+      - name: "M11S C4X"
         type: "C4X"
-  - ids: [100]  # should be 101 if there's a doorboss
-    name: "M8S"
+  - ids: [104]  # should be 105 if there's a doorboss
+    name: "M12S"
     defaultRoles: false
     difficulty: "Savage"
     roles:
-      - name: "M8S Cleared"
+      - name: "M12S Cleared"
         type: "Cleared"
-      - name: "M8S Reclear"
+      - name: "M12S Reclear"
         type: "Reclear"
-      - name: "M8S Prog"
+      - name: "M12S Prog"
         type: "Prog"
-      - name: "M8S C4X"
+      - name: "M12S C4X"
         type: "C4X"
   - ids: [1083]
     name: "Hell on Rails (Extreme)"
