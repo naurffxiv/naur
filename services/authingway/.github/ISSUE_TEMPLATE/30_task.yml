@@ -1,0 +1,10 @@
+name: ✅ Task
+description: A specific piece of technical work to be completed.
+type: Task
+body:
+  - type: textarea
+    attributes:
+      label: Description
+      description: A clear and concise description of the work to be performed.
+    validations:
+      required: true

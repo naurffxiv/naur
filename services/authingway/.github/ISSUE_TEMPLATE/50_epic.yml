@@ -1,0 +1,19 @@
+name: 📕 Epic
+description: A large body of work encompassing several stories and tasks.
+type: Epic
+body:
+  - type: textarea
+    attributes:
+      label: Overview
+      description: Give a brief overview, describing what the general scope of the epic is.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Description
+      description: A clear and concise description of the work planned for the epic.
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: After you create this item, you can add existing tasks or create new ones from the dropdown on the issue.

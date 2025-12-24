@@ -1,0 +1,26 @@
+name: 💬 Story
+description: Defines a discrete product function or benefit that creates new value for users.
+type: Story
+body:
+  - type: textarea
+    attributes:
+      label: Description
+      description: A clear and concise user story description.
+      placeholder: As a [type of user], I want to [perform some task] so that I can [achieve some goal].
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Acceptance Criteria
+      description: The conditions that must be met for the story to be considered complete.
+      value: |
+        - [ ] Criteria 1: [Clear, testable requirement]
+        - [ ] Criteria 2: [Clear, testable requirement]
+        - [ ] Criteria 3: [Clear, testable requirement]
+        - [ ] [Add more as needed]
+  - type: textarea
+    attributes:
+      label: Additional context
+      description: Add any other context or screenshots about the story here.
+    validations:
+      required: false
