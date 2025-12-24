@@ -1,6 +1,6 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/AppHost/Templatingway.AppHost.csproj" />
+    <Project Path="src/AppHost/Authingway.AppHost.csproj" />
   </Folder>
   <Folder Name="/tests/" />
 </Solution>

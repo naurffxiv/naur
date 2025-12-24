@@ -1,13 +1,13 @@
 <Project>
 
   <PropertyGroup>
-    <Product>Templatingway</Product>
+    <Product>Authingway</Product>
     <Authors>NAUR</Authors>
-    <Description>The standard NAUR .NET Template.</Description>
-    <RepositoryUrl>https://github.com/naurffxiv/templatingway</RepositoryUrl>
-    <PackageProjectUrl>https://github.com/naurffxiv/templatingway</PackageProjectUrl>
-    <PackageReleaseNotes>https://github.com/naurffxiv/templatingway/releases</PackageReleaseNotes>
-    <PackageTags>Templatingway;Template</PackageTags>
+    <Description>Auth service for the NAUR Discord server.</Description>
+    <RepositoryUrl>https://github.com/naurffxiv/authingway</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/naurffxiv/authingway</PackageProjectUrl>
+    <PackageReleaseNotes>https://github.com/naurffxiv/authingway/releases</PackageReleaseNotes>
+    <PackageTags>Authingway;NAUR</PackageTags>
   </PropertyGroup>
 
   <PropertyGroup>
