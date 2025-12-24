@@ -53,3 +53,4 @@ jobs:
           allowUpdates: true
           prerelease: ${{ github.event.release.prerelease }}
           body: ${{ steps.changelog.outputs.changelog }}
+          makeLatest: true
