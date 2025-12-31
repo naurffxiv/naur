@@ -14,6 +14,11 @@ func RelevantRepetitionRoles(encs *Encounters) *Roles {
 			Description: "Cleared any relevant encounter at least 100 times.",
 			ShouldApply: func(opts *ShouldApplyOpts) (bool, string) {
 				for _, encounter := range opts.Encounters.Encounters {
+					// Only consider Ultimate encounters for this role
+					if encounter.Difficulty != "Ultimate" {
+						continue
+					}
+
 					clears := 0
 
 					for _, encounterId := range encounter.Ids {
