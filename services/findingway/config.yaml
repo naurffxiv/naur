@@ -24,18 +24,18 @@ channels:
   duty: "Futures Rewritten (Ultimate)"
   dataCentres: [Aether, Crystal, Dynamis, Primal]
 - id: "1356499044742205582"
-  name: "naur m5s"
-  duty: "AAC Cruiserweight M1 (Savage)"
+  name: "naur m9s"
+  duty: "AAC Heavyweight M1 (Savage)"
   dataCentres: [Aether, Crystal, Dynamis, Primal]
 - id: "1356521053735616697"
-  name: "naur m6s"
-  duty: "AAC Cruiserweight M2 (Savage)"
+  name: "naur m10s"
+  duty: "AAC Heavyweight M2 (Savage)"
   dataCentres: [Aether, Crystal, Dynamis, Primal]
 - id: "1356521080977756221"
-  name: "naur m7s"
-  duty: "AAC Cruiserweight M3 (Savage)"
+  name: "naur m11s"
+  duty: "AAC Heavyweight M3 (Savage)"
   dataCentres: [Aether, Crystal, Dynamis, Primal]
 - id: "1356521102398066698"
-  name: "naur m8s"
-  duty: "AAC Cruiserweight M4 (Savage)"
+  name: "naur m12s"
+  duty: "AAC Heavyweight M4 (Savage)"
   dataCentres: [Aether, Crystal, Dynamis, Primal]
