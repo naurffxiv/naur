@@ -19,27 +19,27 @@ type Roles struct {
 
 func (rs Roles) Emoji() string {
 	if reflect.DeepEqual(rs.Roles, []Role{DPS}) {
-		return "<:dps:1277660881538383967>"
+		return "<:dps:1312855997697626185>"
 	}
 	if reflect.DeepEqual(rs.Roles, []Role{Healer}) {
-		return "<:healer:1277660862966009966>"
+		return "<:healer:1312855996791656449>"
 	}
 	if reflect.DeepEqual(rs.Roles, []Role{Tank}) {
-		return "<:tank:1277660836382376028>"
+		return "<:tank:1312855995910848573>"
 	}
 	if reflect.DeepEqual(rs.Roles, []Role{DPS, Healer}) {
-		return "<:healerdps:1277660987981565982>"
+		return "<:healerdps:1312855994971193384>"
 	}
 	if reflect.DeepEqual(rs.Roles, []Role{DPS, Tank}) {
-		return "<:tankdps:1277660932935516200>"
+		return "<:tankdps:1312855993742262424>"
 	}
 	if reflect.DeepEqual(rs.Roles, []Role{Healer, Tank}) {
-		return "<:tankhealer:1277661018184749249>"
+		return "<:tankhealer:1312855992777576493>"
 	}
 
 	if reflect.DeepEqual(rs.Roles, []Role{Healer, Tank, DPS}) {
-		return "<:tankhealerdps:1277661062661017620>"
+		return "<:tankhealerdps:1312855992198758470>"
 	}
 
-	return "<:AnyRole:1277722398803886242>"
+	return "<:AnyRole:1312855998981214268>"
 }
