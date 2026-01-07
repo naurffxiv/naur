@@ -423,7 +423,7 @@ guilds:
         type: "Prog"
       - name: "M11S C4X"
         type: "C4X"
-  - ids: [104]  # should be 105 if there's a doorboss
+  - ids: [105]  # should be 105 if there's a doorboss
     name: "M12S"
     defaultRoles: false
     difficulty: "Savage"
