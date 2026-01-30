@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+.venv/
+venv/
+packages/
+
+# Next.js & Build Outputs
+.next/
+dist/
+build/
+out/
+
+# .NET / C# Artifacts
+bin/
+obj/
+artifacts/
+.aspire/
+
+# Cache & Logs
+.ruff_cache/
+.eslintcache
+.parcel-cache
+*.log
+
+# Git & System
+.git/
+.DS_Store

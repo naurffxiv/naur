@@ -1,0 +1,78 @@
+{
+  "folders": [
+    {
+      "name": "AppHost (Aspire)",
+      "path": "services/AppHost"
+    },
+    {
+      "name": "Naurffxiv (Next.js)",
+      "path": "services/naurffxiv"
+    },
+    {
+      "name": "Moddingway (Python)",
+      "path": "services/moddingway"
+    },
+    {
+      "name": "Authingway (.NET)",
+      "path": "services/authingway"
+    },
+    {
+      "name": "Findingway (Go)",
+      "path": "services/findingway"
+    },
+    {
+      "name": "Clearingway (Go)",
+      "path": "services/clearingway"
+    },
+    {
+      "name": "Testingway",
+      "path": "tests"
+    },
+    {
+      "name": "Root",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/.next": true,
+      "**/.ruff_cache": true,
+      "**/__pycache__": true,
+      "**/venv": true,
+      "**/.venv": true,
+      "**/bin": true,
+      "**/obj": true,
+      "**/coverage": true
+    },
+    "files.exclude": {
+      "services": true,
+      "tests": true
+    },
+
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+
+    "[csharp]": {
+      "editor.defaultFormatter": "ms-dotnettools.csharp"
+    },
+    "[python]": {
+      "editor.defaultFormatter": "charliermarsh.ruff",
+      "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit"
+      }
+    },
+    "[go]": {
+      "editor.defaultFormatter": "golang.go"
+    },
+
+    "python.terminal.activateEnvironment": true,
+
+    "eslint.workingDirectories": [{ "mode": "auto" }],
+    "go.useLanguageServer": true,
+    "go.lintOnSave": "workspace",
+    "[powershell]": {
+      "editor.defaultFormatter": "ms-vscode.powershell"
+    }
+  }
+}

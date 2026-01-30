@@ -1,0 +1,30 @@
+.git
+
+# Node
+**/node_modules
+npm-debug.log
+**/.next
+**/out
+**/build
+**/dist
+
+# .NET
+**/bin/
+**/obj/
+.vs
+artifacts
+
+# Python
+**/__pycache__/
+*.py[cod]
+*$py.class
+**/.venv
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+
+# Misc
+*.md
+*.log
+**/playwright-report
+**/test-results

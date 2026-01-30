@@ -1,0 +1,11 @@
+[build]
+base = "/"
+command = "npx turbo run build --filter=naurffxiv"
+publish = "services/naurffxiv/.next"
+
+[[plugins]]
+package = "@netlify/plugin-nextjs"
+
+[build.environment]
+NODE_VERSION = "22.12.0"
+NETLIFY_NEXT_PLUGIN_SKIP_INSTALL_DEPENDENCIES = "true"
