@@ -1,0 +1,19 @@
+name: 📚 Theme
+description: Strategic initiatives that describe the high-level direction for the development work, usually through multiple epics.
+type: Theme
+body:
+  - type: textarea
+    attributes:
+      label: Objective
+      description: A short objective statement, telling people what the actual goal is.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Description
+      description: A clear and concise description of what you want to happen.
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: After you create this item, you can add existing epics or create new ones from the dropdown on the issue.
