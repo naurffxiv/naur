@@ -1,0 +1,54 @@
+name: Pipeline Ticket Check
+
+on:
+  workflow_call:
+
+jobs:
+  check-ticket:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for Ticket Reference
+        id: ticket
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          ACTOR: ${{ github.actor }}
+          PR_USER: ${{ github.event.pull_request.user.login }}
+        run: |
+          report() {
+            bash .github/scripts/save_report.sh "global" "00" "Ticket Check" "$1" "$2" "$3"
+          }
+
+          # Skip if not a PR or if Dependabot
+          if [[ "$EVENT_NAME" != "pull_request" || "$ACTOR" == "dependabot[bot]" || "$PR_USER" == "dependabot[bot]" ]]; then
+            report "success" "" "Skipped"
+            exit 0
+          fi
+
+          # Extract PR info
+          PR_BODY=$(jq -r .pull_request.body "$GITHUB_EVENT_PATH")
+          PR_TITLE=$(jq -r .pull_request.title "$GITHUB_EVENT_PATH")
+          CONTENT=$(printf "%s\n%s" "$PR_TITLE" "$PR_BODY")
+
+          # Ticket pattern regex
+          REGEX='^[[:space:]]*(ticket[: ]+([0-9]+|NA)|(fix(es|ed|ing)?|clos(e[ds]?|ing)|resolv(e[ds]?|ing)|ref(s)?)[[:space:]]+#?[0-9]+|chore\(deps\)|chore\(release\)|\bNA\b)'
+
+          if echo "$CONTENT" | grep -qiE "$REGEX"; then
+            MATCH=$(echo "$CONTENT" | grep -oiE "$REGEX" | head -n 1 | xargs)
+            report "success" "" "${MATCH:-Ticket Found}"
+          else
+            echo "Ticket reference missing in PR Title or Body" > ticket_err.txt
+            report "failure" "ticket_err.txt"
+            exit 1
+          fi
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: report-ticket
+          path: |
+            summary-global-*.md
+            logs-global-*.md
+            report-global-*.json
+          retention-days: 1

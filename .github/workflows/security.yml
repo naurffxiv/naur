@@ -1,0 +1,132 @@
+name: "Security Scan"
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 2 * * 0" # Weekly Sunday at 2:00 AM UTC
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/security.yml"
+      - "services/**"
+      - "tests/**"
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  analyze:
+    name: CodeQL Analysis (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ["javascript", "python", "go", "csharp"]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-extended
+
+      - name: Autobuild
+        if: matrix.language != 'csharp'
+        uses: github/codeql-action/autobuild@v4
+
+      - name: Build C#
+        if: matrix.language == 'csharp'
+        run: |
+          dotnet build services/authingway
+          dotnet build services/AppHost
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:${{matrix.language}}"
+
+  security-scan:
+    name: Vulnerability Scanning (Trivy)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create Trivy ignore file
+        run: |
+          cat > .trivyignore << EOF
+          # Ignore Next.js DoS vulnerability GHSA-h25m-26qc-wcjf
+          # Reason: Next.js HTTP request deserialization DoS - assessed as low risk for our use case
+          # Date: 2026-01-30
+          # Revisit: Before next major release or when upgrading Next.js
+          GHSA-h25m-26qc-wcjf
+          EOF
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        env:
+          TRIVY_SKIP_VERSION_CHECK: 'true'
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+          trivyignores: .trivyignore
+          scanners: 'vuln,secret'
+          exit-code: '0'
+
+      - name: Run Trivy (Table Output)
+        uses: aquasecurity/trivy-action@master
+        env:
+          TRIVY_SKIP_VERSION_CHECK: 'true'
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          trivyignores: .trivyignore
+          scanners: 'vuln,secret'
+          exit-code: '1'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+          category: 'trivy-filesystem'
+
+
+  security-summary:
+    name: Security Summary
+    runs-on: ubuntu-latest
+    needs: [analyze, security-scan]
+    if: always()
+    permissions:
+      contents: read
+    steps:
+      - name: Summary
+        run: |
+          echo "### Security Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "- CodeQL: ${{ needs.analyze.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Trivy: ${{ needs.security-scan.result }}" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "${{ needs.analyze.result }}" == "failure" ]] || \
+             [[ "${{ needs.security-scan.result }}" == "failure" ]]; then
+            echo "Security checks failed" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+          echo "All security checks passed" >> $GITHUB_STEP_SUMMARY

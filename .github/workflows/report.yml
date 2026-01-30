@@ -1,0 +1,49 @@
+name: Report
+
+on:
+  workflow_call:
+    inputs:
+      run_e2e:
+        type: string
+        default: "false"
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      actions: read
+      contents: read
+
+    defaults:
+      run:
+        working-directory: artifacts
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: report-*
+          merge-multiple: true
+          path: artifacts
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Generate Report
+        run: python ../.github/scripts/generate_report.py
+        env:
+          RUN_E2E: ${{ inputs.run_e2e }}
+
+      - name: Publish Summary
+        run: cat report.md >> $GITHUB_STEP_SUMMARY
+
+      - uses: marocchino/sticky-pull-request-comment@v2
+        if: github.event_name == 'pull_request'
+        with:
+          path: artifacts/report.md
+          header: naur-ci-report
+
+      - uses: Kesin11/actions-timeline@v2

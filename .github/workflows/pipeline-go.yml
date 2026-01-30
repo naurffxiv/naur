@@ -1,0 +1,117 @@
+name: Pipeline Go
+
+on:
+  workflow_call:
+    inputs:
+      service:
+        required: true
+        type: string
+      go-version:
+        required: false
+        type: string
+        default: "1.24"
+      should_run:
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  lint:
+    if: inputs.should_run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ inputs.go-version }}
+          cache-dependency-path: services/${{ inputs.service }}/go.sum
+
+      - name: Format
+        uses: ./.github/actions/run-command-with-report
+        with:
+          service: ${{ inputs.service }}
+          step-number: 10
+          step-name: "Format"
+          command: |
+            UNFORMATTED=$(gofmt -l .)
+            if [ -n "$UNFORMATTED" ]; then
+              echo "The following files are not formatted:"
+              echo "$UNFORMATTED"
+              exit 1
+            fi
+            echo "All files are properly formatted"
+          output-file: gofmt.txt
+          working-directory: services/${{ inputs.service }}
+          fail-on-error: true
+
+      - name: Install golangci-lint
+        uses: golangci/golangci-lint-action@v7
+        with:
+          version: v2.8.0
+          working-directory: services/${{ inputs.service }}
+
+      - name: Lint
+        uses: ./.github/actions/run-command-with-report
+        with:
+          service: ${{ inputs.service }}
+          step-number: 11
+          step-name: "Lint"
+          command: golangci-lint run --timeout 5m
+          output-file: lint.txt
+          working-directory: services/${{ inputs.service }}
+          fail-on-error: true
+
+  build:
+    needs: [lint]
+    if: inputs.should_run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ inputs.go-version }}
+          cache-dependency-path: services/${{ inputs.service }}/go.sum
+
+      - name: Build
+        uses: ./.github/actions/run-command-with-report
+        with:
+          service: ${{ inputs.service }}
+          step-number: 20
+          step-name: "Build"
+          command: go build -v ./...
+          output-file: build.txt
+          working-directory: services/${{ inputs.service }}
+          fail-on-error: true
+
+  test:
+    needs: [build]
+    if: inputs.should_run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ inputs.go-version }}
+          cache-dependency-path: services/${{ inputs.service }}/go.sum
+
+      - name: Unit Tests
+        uses: ./.github/actions/run-command-with-report
+        with:
+          service: ${{ inputs.service }}
+          step-number: 30
+          step-name: "Unit Tests"
+          command: go test -v -coverprofile=coverage.out ./...
+          output-file: test.txt
+          working-directory: services/${{ inputs.service }}
+          fail-on-error: false
+        env:
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+
+      - name: Upload Coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-go-${{ inputs.service }}
+          path: services/${{ inputs.service }}/coverage.out
+          if-no-files-found: ignore
+          retention-days: 1

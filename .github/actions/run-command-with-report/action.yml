@@ -1,0 +1,63 @@
+name: Run Command with Report
+description: Execute command and report status
+
+inputs:
+  service:
+    description: "The name of the service being processed"
+    required: true
+  step-number:
+    description: "The order number of the step in the pipeline"
+    required: true
+  step-name:
+    description: "The display name of the step"
+    required: true
+  command:
+    description: "The shell command to execute"
+    required: true
+  output-file:
+    description: "The file to capture command output"
+    default: "command-output.txt"
+  fail-on-error:
+    description: "Whether to fail the job if the command returns a non-zero exit code"
+    default: "true"
+  working-directory:
+    description: "The directory to run the command in"
+    default: "."
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        set -o pipefail
+        STATUS="success"
+
+        # Execute command block in a subshell with exit-on-error
+        if ! (
+          set -e
+          ${{ inputs.command }}
+        ) 2>&1 | tee ${{ inputs.output-file }}; then
+          STATUS="failure"
+          if [[ "${{ inputs.fail-on-error }}" != "true" ]]; then
+            STATUS="warning"
+            echo "::warning title=${{ inputs.step-name }} Warning::${{ inputs.step-name }} in service ${{ inputs.service }} completed with errors but is set to continue (fail-on-error: false)"
+          fi
+        fi
+
+        bash $GITHUB_WORKSPACE/.github/scripts/save_report.sh \
+          "${{ inputs.service }}" "${{ inputs.step-number }}" "${{ inputs.step-name }}" \
+          "$STATUS" "${{ inputs.output-file }}"
+
+        [[ "$STATUS" == "failure" ]] && exit 1 || true
+
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: report-${{ inputs.step-name }}-${{ inputs.service }}
+        path: |
+          ${{ inputs.working-directory }}/summary-*.md
+          ${{ inputs.working-directory }}/logs-*.md
+          ${{ inputs.working-directory }}/report-*.json
+        if-no-files-found: ignore
+        retention-days: 1

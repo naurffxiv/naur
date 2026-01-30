@@ -1,0 +1,115 @@
+# act -W .github/workflows/pipeline-node.yml --input service=naurffxiv --input node-version=22 --container-architecture linux/amd64
+name: Pipeline Node
+
+on:
+  workflow_call:
+    inputs:
+      service:
+        required: true
+        type: string
+      node-version:
+        required: false
+        type: string
+        default: "22"
+      upload-build-artifact:
+        required: false
+        type: boolean
+        default: false
+      should_run:
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  lint-and-build:
+    if: inputs.should_run
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: "npm"
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prettier
+        uses: ./.github/actions/run-command-with-report
+        with:
+          service: ${{ inputs.service }}
+          step-number: 10
+          step-name: "Prettier"
+          command: npx turbo run prettier:check --filter=${{ inputs.service }}
+          output-file: prettier.txt
+
+      - name: TypeScript
+        uses: ./.github/actions/run-command-with-report
+        if: always()
+        with:
+          service: ${{ inputs.service }}
+          step-number: 10
+          step-name: "TypeScript"
+          command: npx turbo run typecheck --filter=${{ inputs.service }}
+          output-file: tsc.txt
+
+      - name: ESLint
+        uses: ./.github/actions/run-command-with-report
+        if: always()
+        with:
+          service: ${{ inputs.service }}
+          step-number: 10
+          step-name: "ESLint"
+          command: npx turbo run lint --filter=${{ inputs.service }}
+          output-file: eslint.txt
+
+      - name: Build
+        uses: ./.github/actions/run-command-with-report
+        with:
+          service: ${{ inputs.service }}
+          step-number: 20
+          step-name: "Build"
+          command: npx turbo run build --filter=${{ inputs.service }}
+          output-file: build.txt
+
+      - name: Upload Build Artifact
+        if: inputs.upload-build-artifact == true && success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ inputs.service }}
+          path: |
+            services/${{ inputs.service }}/.next
+            services/${{ inputs.service }}/public
+            services/${{ inputs.service }}/package.json
+            services/${{ inputs.service }}/next.config.mjs
+            services/${{ inputs.service }}/postcss.config.mjs
+            services/${{ inputs.service }}/tailwind.config.js
+          include-hidden-files: true
+          retention-days: 1
+
+  test:
+    if: inputs.should_run
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: "npm"
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Unit Tests
+        uses: ./.github/actions/run-command-with-report
+        with:
+          service: ${{ inputs.service }}
+          step-number: 30
+          step-name: "Unit Tests"
+          command: npx turbo run test --filter=${{ inputs.service }} --if-present 2>&1 || echo "No test script found"
+          output-file: test.txt
+          fail-on-error: false

@@ -1,0 +1,133 @@
+name: Pipeline Python
+
+on:
+  workflow_call:
+    inputs:
+      service:
+        required: true
+        type: string
+      python-version:
+        required: false
+        type: string
+        default: "3.11"
+      should_run:
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  lint:
+    if: inputs.should_run
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        check: [format, lint]
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+          cache: "pip"
+
+      - name: Install Linting Tools
+        run: pip install ruff
+
+      - name: Ruff Format
+        if: matrix.check == 'format'
+        uses: ./.github/actions/run-command-with-report
+        with:
+          service: ${{ inputs.service }}
+          step-number: 10
+          step-name: "Ruff Format"
+          command: ruff format --check .
+          output-file: format.txt
+          working-directory: services/${{ inputs.service }}
+
+      - name: Ruff Lint
+        if: matrix.check == 'lint'
+        uses: ./.github/actions/run-command-with-report
+        with:
+          service: ${{ inputs.service }}
+          step-number: 10
+          step-name: "Ruff Lint"
+          command: ruff check .
+          output-file: lint.txt
+          working-directory: services/${{ inputs.service }}
+
+  build:
+    needs: [lint]
+    if: inputs.should_run
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/${{ inputs.service }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+          cache: "pip"
+          cache-dependency-path: services/${{ inputs.service }}/requirements-dev.txt
+
+      - name: Create Virtual Environment
+        run: |
+          python -m venv .venv
+          echo "$(pwd)/.venv/bin" >> $GITHUB_PATH
+
+      - name: Install Dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Type Check
+        uses: ./.github/actions/run-command-with-report
+        with:
+          service: ${{ inputs.service }}
+          step-number: 20
+          step-name: "Type Check"
+          command: ty check .
+          working-directory: services/${{ inputs.service }}
+          fail-on-error: false
+
+  test:
+    needs: [build]
+    if: inputs.should_run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+          cache: "pip"
+          cache-dependency-path: services/${{ inputs.service }}/requirements-dev.txt
+
+      - name: Create Virtual Environment
+        run: |
+          python -m venv services/${{ inputs.service }}/.venv
+          echo "$(pwd)/services/${{ inputs.service }}/.venv/bin" >> $GITHUB_PATH
+
+      - name: Install Dependencies
+        working-directory: services/${{ inputs.service }}
+        run: |
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          pip install -e .
+
+      - name: Unit Tests
+        uses: ./.github/actions/run-command-with-report
+        with:
+          service: ${{ inputs.service }}
+          step-number: 30
+          step-name: "Unit Tests"
+          command: pytest . --cov=../../services/${{ inputs.service }} --cov-report=xml
+          output-file: pytest.txt
+          working-directory: tests/${{ inputs.service }}
+          fail-on-error: false
+
+      - name: Upload Coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ inputs.service }}
+          path: tests/${{ inputs.service }}/coverage.xml
+          if-no-files-found: ignore
+          retention-days: 1

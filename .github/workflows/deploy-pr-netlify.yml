@@ -1,0 +1,100 @@
+name: Deploy PR Preview to Netlify
+
+on:
+  workflow_call:
+    inputs:
+      service:
+        required: true
+        type: string
+        description: "naurffxiv"
+      pr_number:
+        required: true
+        type: string
+        description: "Pull Request Number"
+      should_run:
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  preview-deploy:
+    if: inputs.should_run
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    environment:
+      name: preview-${{ inputs.service }}-pr-${{ inputs.pr_number }}
+      url: ${{ steps.netlify.outputs.deploy_url }}
+
+    defaults:
+      run:
+        working-directory: services/${{ inputs.service }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.12.0"
+          cache: "npm"
+          cache-dependency-path: package-lock.json
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: build-${{ inputs.service }}
+          path: services/${{ inputs.service }}
+
+      - name: Prepare Netlify Config
+        run: |
+          [[ -f ../../netlify.toml ]] && cp ../../netlify.toml . || echo "No root netlify.toml found"
+
+      - name: Install Dependencies
+        working-directory: .
+        run: npm ci
+
+      - name: Deploy Preview
+        id: netlify
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: |
+          OUTPUT=$(npx netlify-cli deploy \
+            --build \
+            --json \
+            --alias "pr-${{ inputs.pr_number }}" \
+            --message "PR #${{ inputs.pr_number }}: ${{ github.sha }}") || exit 1
+
+          url=$(echo "$OUTPUT" | jq -r '.deploy_url')
+          logs=$(echo "$OUTPUT" | jq -r '.logs')
+
+          if [[ -z "$url" ]]; then
+            echo "::error::No deploy URL returned"
+            exit 1
+          fi
+
+          echo "deploy_url=$url" >> $GITHUB_OUTPUT
+          echo "logs_url=$logs" >> $GITHUB_OUTPUT
+
+      - name: Generate Report
+        if: always()
+        run: |
+          svc="${{ inputs.service }}"
+          url="${{ steps.netlify.outputs.deploy_url }}"
+          logs="${{ steps.netlify.outputs.logs_url }}"
+          pr="${{ inputs.pr_number }}"
+          status="${{ job.status }}"
+
+          # Call save_report.sh to generate both MD and JSON reports
+          # Use "global" as service to place it in the header section
+          bash ../../.github/scripts/save_report.sh \
+            "global" "40" "Preview (${{ inputs.service }})" "$status" "" "$url"
+
+      - name: Upload Report Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-deploy-${{ inputs.service }}
+          path: |
+            services/${{ inputs.service }}/summary-global-*.md
+            services/${{ inputs.service }}/report-global-*.json
+          retention-days: 1

@@ -1,0 +1,30 @@
+name: Cleanup Preview Environment
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PAT_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            const suffix = `-pr-${context.payload.pull_request.number}`;
+
+            const { data: { environments } } = await github.rest.repos.getAllEnvironments({ owner, repo });
+
+            const targets = environments.filter(e => e.name.startsWith('preview-') && e.name.endsWith(suffix));
+
+            if (targets.length === 0) {
+              console.log(`No environments found for PR #${context.payload.pull_request.number}`);
+              return;
+            }
+
+            for (const env of targets) {
+              await github.rest.repos.deleteAnEnvironment({ owner, repo, environment_name: env.name });
+              console.log(`Deleted: ${env.name}`);
+            }

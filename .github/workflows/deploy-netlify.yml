@@ -1,0 +1,66 @@
+name: Deploy to Netlify Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      service:
+        description: "Service to deploy"
+        required: true
+        type: choice
+        options: [naurffxiv]
+        default: naurffxiv
+
+concurrency:
+  group: production-deploy-${{ inputs.service }}
+  cancel-in-progress: false
+
+jobs:
+  deploy-production:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: production-${{ inputs.service }}
+      url: ${{ steps.deploy.outputs.deploy_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: package-lock.json
+
+      - uses: actions/cache@v4
+        with:
+          path: services/${{ inputs.service }}/.next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}
+          restore-keys: ${{ runner.os }}-nextjs-
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build and Deploy to Netlify
+        id: deploy
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: |
+          # Run Netlify Build (executes the command in netlify.toml and the Next.js plugin)
+          npx netlify-cli build --filter naurffxiv
+
+          # Deploy the artifacts produced by the build
+          OUTPUT=$(npx netlify-cli deploy --prod --filter naurffxiv --json --message "Production: ${{ github.sha }}") || exit 1
+
+          url=$(echo "$OUTPUT" | jq -r '.deploy_url')
+          logs=$(echo "$OUTPUT" | jq -r '.logs')
+
+          echo "deploy_url=$url" >> $GITHUB_OUTPUT
+          echo "logs_url=$logs" >> $GITHUB_OUTPUT
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "### Deployment Status: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **URL**: ${{ steps.deploy.outputs.deploy_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Logs**: ${{ steps.deploy.outputs.logs_url }}" >> $GITHUB_STEP_SUMMARY

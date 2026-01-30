@@ -1,0 +1,116 @@
+name: Pipeline Dotnet
+
+on:
+  workflow_call:
+    inputs:
+      service:
+        required: true
+        type: string
+        description: "Service name (e.g. authingway)"
+      dotnet-version:
+        required: false
+        type: string
+        default: "10.x"
+        description: "Dotnet version"
+      should_run:
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  lint:
+    if: inputs.should_run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ inputs.dotnet-version }}
+
+      - name: Restore dependencies
+        working-directory: services/${{ inputs.service }}
+        run: dotnet restore
+
+      - name: Format
+        uses: ./.github/actions/run-command-with-report
+        with:
+          service: ${{ inputs.service }}
+          step-number: 10
+          step-name: "Format"
+          command: dotnet format --verify-no-changes --verbosity diagnostic
+          output-file: dotnet-format.txt
+          working-directory: services/${{ inputs.service }}
+
+      - name: Lint
+        uses: ./.github/actions/run-command-with-report
+        if: always()
+        with:
+          service: ${{ inputs.service }}
+          step-number: 10
+          step-name: "Lint"
+          command: dotnet build /warnaserror
+          output-file: dotnet-lint.txt
+          working-directory: services/${{ inputs.service }}
+
+  build:
+    needs: [lint]
+    if: inputs.should_run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ inputs.dotnet-version }}
+
+      - name: Restore dependencies
+        working-directory: services/${{ inputs.service }}
+        run: dotnet restore
+
+      - name: Build
+        uses: ./.github/actions/run-command-with-report
+        with:
+          service: ${{ inputs.service }}
+          step-number: 20
+          step-name: "Build"
+          command: dotnet build --configuration Release --no-restore
+          output-file: dotnet-build.txt
+          working-directory: services/${{ inputs.service }}
+
+  test:
+    needs: [build]
+    if: inputs.should_run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ inputs.dotnet-version }}
+
+      - name: Restore dependencies
+        working-directory: services/${{ inputs.service }}
+        run: dotnet restore
+
+#      - name: Build for Tests
+#        working-directory: services/${{ inputs.service }}
+#        run: dotnet build --configuration Release --no-restore
+
+      - name: Unit Tests
+        uses: ./.github/actions/run-command-with-report
+        with:
+          service: ${{ inputs.service }}
+          step-number: 30
+          step-name: "Unit Tests"
+          # command: dotnet test --configuration Release --logger "console;verbosity=detailed" --no-build
+          command: echo "Unit Tests Not Implemented Yet"
+          output-file: dotnet-test.txt
+          working-directory: services/${{ inputs.service }}
+          fail-on-error: false
+
+      - name: Upload Coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-dotnet-${{ inputs.service }}
+          path: services/${{ inputs.service }}/**/coverage.xml
+          if-no-files-found: ignore
+          retention-days: 1
