@@ -1,0 +1,43 @@
+name: Task
+description: Generic work item, typically requires little to no code
+title: "[Task] "
+labels: ["Task"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Create a task.
+
+  - type: dropdown
+    id: service
+    attributes:
+      label: Service
+      description: Which service is this task related to?
+      options:
+        - Authingway
+        - Clearingway
+        - Findingway
+        - Moddingway
+        - Naurffxiv
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Task Description
+      description: What needs to be done?
+      placeholder: Describe the task...
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: Checklist of requirements.
+      value: |
+        - [ ] 
+    validations:
+      required: false

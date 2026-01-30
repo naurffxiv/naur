@@ -1,0 +1,59 @@
+name: Epic
+description: Track multiple issues that cannot be fit into one
+title: "[Epic] "
+labels: ["Epic"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Create an epic.
+
+  - type: dropdown
+    id: service
+    attributes:
+      label: Service
+      description: Which service is this epic related to?
+      options:
+        - Authingway
+        - Clearingway
+        - Findingway
+        - Moddingway
+        - Naurffxiv
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Epic Description
+      description: High-level goal and context.
+      placeholder: Describe the epic here...
+    validations:
+      required: true
+
+  - type: textarea
+    id: in-scope
+    attributes:
+      label: In Scope
+      description: What is included in this epic?
+      placeholder: "- Feature A\n- Feature B"
+    validations:
+      required: true
+
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of Scope
+      description: What is explicitly excluded?
+      placeholder: "- Feature C"
+    validations:
+      required: false
+
+  - type: textarea
+    id: deliverables
+    attributes:
+      label: Key Deliverables
+      description: Bullet points of expected outcomes.
+    validations:
+      required: false

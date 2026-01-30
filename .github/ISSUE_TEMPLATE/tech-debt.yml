@@ -1,0 +1,54 @@
+name: Tech Debt
+description: Work needed to address suboptimal code or design decisions
+title: "[Tech Debt] "
+labels: ["Tech Debt"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Create a tech debt item.
+
+  - type: dropdown
+    id: service
+    attributes:
+      label: Service
+      description: Which service is this related to?
+      options:
+        - Authingway
+        - Clearingway
+        - Findingway
+        - Moddingway
+        - Naurffxiv
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Description of the suboptimal code or design.
+      placeholder: Describe the current state...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: How should we fix it?
+      placeholder: Describe the desired state...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impact
+      description: How critical is this debt?
+      options:
+        - Low
+        - Medium
+        - High
+    validations:
+      required: true

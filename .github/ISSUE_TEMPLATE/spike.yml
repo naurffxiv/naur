@@ -1,0 +1,51 @@
+name: Spike
+description: Research or investigation needed to understand an approach
+title: "[Spike] "
+labels: ["Spike"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Create a research spike.
+
+  - type: dropdown
+    id: service
+    attributes:
+      label: Service
+      description: Which service is this spike related to?
+      options:
+        - Authingway
+        - Clearingway
+        - Findingway
+        - Moddingway
+        - Naurffxiv
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What are we researching?
+      placeholder: Describe the goal...
+    validations:
+      required: true
+
+  - type: textarea
+    id: questions
+    attributes:
+      label: Questions to Answer
+      description: Key questions that need to be answered.
+      placeholder: "- Question 1?\n- Question 2?"
+    validations:
+      required: true
+
+  - type: input
+    id: timebox
+    attributes:
+      label: Timebox
+      description: How long should this take?
+      placeholder: "e.g., 1 day, 1 week, 1 month"
+    validations:
+      required: false
