@@ -1,0 +1,115 @@
+networks:
+  naur-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: moddingway
+      POSTGRES_USER: nauruser
+      POSTGRES_PASSWORD: naurpass # pragma: allowlist secret
+    networks:
+      - naur-net
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nauruser"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  authingway:
+    build:
+      context: ../../
+      dockerfile: services/authingway/Dockerfile
+      cache_from:
+        - type=gha,scope=authingway
+      cache_to:
+        - type=gha,mode=max,scope=authingway
+    environment:
+      DATABASE_URL: "Host=postgres;Database=moddingway;Username=nauruser;Password=naurpass"
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID}
+      DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET}
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - naur-net
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  moddingway:
+    build:
+      context: ../../
+      dockerfile: services/moddingway/Dockerfile
+      cache_from:
+        - type=gha,scope=moddingway
+      cache_to:
+        - type=gha,mode=max,scope=moddingway
+    environment:
+      POSTGRES_DB: moddingway
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: nauruser
+      POSTGRES_PASSWORD: naurpass
+      AUTHINGWAY_URL: "http://authingway:8080"
+      DISCORD_TOKEN: ${DISCORD_BOT_TOKEN}
+      GUILD_ID: "111111111111"
+      MOD_LOGGING_CHANNEL_ID: "111111111111"
+      PTC_EVENT_FORUM_ID: "111111111111"
+      EVENT_WARN_CHANNEL: "111111111111"
+      PYTHONPATH: /app
+    depends_on:
+      authingway:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - naur-net
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  naurffxiv:
+    build:
+      context: ../../
+      dockerfile: services/naurffxiv/Dockerfile
+      cache_from:
+        - type=gha,scope=naurffxiv
+      cache_to:
+        - type=gha,mode=max,scope=naurffxiv
+    environment:
+      NEXT_PUBLIC_AUTHINGWAY_URL: "http://authingway:8080"
+      NEXT_PUBLIC_MODDINGWAY_URL: "http://moddingway:8000"
+      AUTH_SECRET: ${AUTH_SECRET}
+    depends_on:
+      authingway:
+        condition: service_healthy
+      moddingway:
+        condition: service_healthy
+    networks:
+      - naur-net
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
