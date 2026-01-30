@@ -1,0 +1,50 @@
+format:
+	python3 -m black .
+
+stop:
+	docker compose down
+
+install:
+	pip3 install -r requirements.txt
+
+clean:
+	docker image prune -a
+
+build:
+	docker compose build python-app
+
+run:
+	docker compose down python-app-local
+	docker compose up python-app-local --build
+
+database-run:
+	docker compose -f postgres.yml down
+	docker compose -f postgres.yml up -d postgres_local
+
+database-clean:
+	docker exec postgres_db rm scripts -r -f
+	docker exec postgres_db mkdir scripts
+	docker cp postgres postgres_db:scripts
+	docker exec postgres_db psql -f scripts/postgres/drop_all_tables.sql -U moddingwayLocalDB moddingway
+	docker exec postgres_db psql -f scripts/postgres/create_tables.sql -U moddingwayLocalDB moddingway
+	docker exec postgres_db psql -f scripts/postgres/seed_data.sql -U moddingwayLocalDB moddingway
+
+database-run-ephemeral:
+	docker compose -f postgres.yml down
+	docker compose -f postgres.yml up -d postgres_ephemeral
+
+database-clean-ephemeral:
+	docker exec postgres_db_ephemeral rm scripts -r -f
+	docker exec postgres_db_ephemeral mkdir scripts
+	docker cp postgres postgres_db_ephemeral:scripts
+	docker exec postgres_db_ephemeral psql -f scripts/postgres/drop_all_tables.sql -U moddingwayLocalDB moddingway
+	docker exec postgres_db_ephemeral psql -f scripts/postgres/create_tables.sql -U moddingwayLocalDB moddingway
+	docker exec postgres_db_ephemeral psql -f scripts/postgres/seed_data.sql -U moddingwayLocalDB moddingway
+
+api:
+	uvicorn moddingway_api.main:app --port 8000
+
+api-reload:
+	uvicorn moddingway_api.main:app --port 8000 --reload
+
+.PHONY: format stop install clean build run database-run
