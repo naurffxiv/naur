@@ -1,0 +1,38 @@
+<Project>
+
+  <PropertyGroup>
+    <Authors>NAUR</Authors>
+    <Copyright>© $(Authors). All rights reserved.</Copyright>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <AnalysisLevelDesign>latest-recommended</AnalysisLevelDesign>
+    <AnalysisLevelDocumentation>latest-recommended</AnalysisLevelDocumentation>
+    <AnalysisLevelGlobalization>latest-minimum</AnalysisLevelGlobalization>
+    <AnalysisLevelInteroperability>latest-recommended</AnalysisLevelInteroperability>
+    <AnalysisLevelMaintainability>latest-recommended</AnalysisLevelMaintainability>
+    <AnalysisLevelNaming>latest-recommended</AnalysisLevelNaming>
+    <AnalysisLevelPerformance>latest-recommended</AnalysisLevelPerformance>
+    <AnalysisLevelSingleFile>latest-recommended</AnalysisLevelSingleFile>
+    <AnalysisLevelReliability>latest-recommended</AnalysisLevelReliability>
+    <AnalysisLevelSecurity>latest-recommended</AnalysisLevelSecurity>
+    <AnalysisLevelUsage>latest-recommended</AnalysisLevelUsage>
+    <AnalysisLevelStyle>latest-recommended</AnalysisLevelStyle>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <UseArtifactsOutput>true</UseArtifactsOutput>
+    <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts</ArtifactsPath>
+    <HotReloadAutoRestart>true</HotReloadAutoRestart>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/services/">
+    <Project Path="services/AppHost/Naur.AppHost.csproj" />
+    <Project Path="services/authingway/Authingway.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <!-- Future C# test projects go here -->
+  </Folder>
+</Solution>
