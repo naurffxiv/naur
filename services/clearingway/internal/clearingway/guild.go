@@ -178,12 +178,12 @@ func (g *Guild) Init(c *ConfigGuild) {
 	}
 
 	if g.MenuEnabled {
-		if (c.ConfigMenuOrder != nil) {
+		if c.ConfigMenuOrder != nil {
 			for _, menuOrder := range c.ConfigMenuOrder {
 				g.Menus.MenuGroups[menuOrder.Name] = menuOrder.Menus
 			}
 		}
-		
+
 		g.InitDiscordMenu()
 		g.MenuRoles = g.Menus.Roles()
 	}
@@ -311,10 +311,10 @@ func (g *Guild) InitDiscordMenu() {
 		g.Menus.AutoCompleteTrie.Insert(menu.Name)
 	}
 
-	for group, _ := range g.Menus.MenuGroups {
+	for group := range g.Menus.MenuGroups {
 		menuGroupName := "group " + group
 		g.Menus.Autocomplete = append(g.Menus.Autocomplete, &discordgo.ApplicationCommandOptionChoice{
-			Name: menuGroupName,
+			Name:  menuGroupName,
 			Value: menuGroupName,
 		})
 		g.Menus.AutoCompleteTrie.Insert(menuGroupName)

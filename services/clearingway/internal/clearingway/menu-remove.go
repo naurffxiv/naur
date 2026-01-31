@@ -12,14 +12,14 @@ func (m *Menu) MenuRemoveInit() {
 	removeFlexCustomID := []string{string(MenuRemove), string(CommandRemoveFlex)}
 	removeButtons := []discordgo.Button{
 		{
-			Label:   "Remove all roles",
-			Style: discordgo.DangerButton,
+			Label:    "Remove all roles",
+			Style:    discordgo.DangerButton,
 			Disabled: false,
 			CustomID: strings.Join(removeAllCustomID, " "),
 		},
 		{
-			Label: "Remove just flex roles",
-			Style: discordgo.DangerButton,
+			Label:    "Remove just flex roles",
+			Style:    discordgo.DangerButton,
 			Disabled: false,
 			CustomID: strings.Join(removeFlexCustomID, " "),
 		},

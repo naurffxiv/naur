@@ -11,6 +11,10 @@ on:
       - ".github/workflows/security.yml"
       - "services/**"
       - "tests/**"
+  pull_request:
+    branches:
+      - main
+
 jobs:
   detect-changes:
     name: Detect Changes

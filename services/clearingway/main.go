@@ -45,11 +45,11 @@ func main() {
 
 	config, err := os.ReadFile("./config.yaml")
 	if err != nil {
-		panic(fmt.Errorf("Could not read config.yaml: %w", err))
+		panic(fmt.Errorf("could not read config.yaml: %w", err))
 	}
 	err = yaml.Unmarshal(config, &c.Config)
 	if err != nil {
-		panic(fmt.Errorf("Could not unmarshal config.yaml: %w", err))
+		panic(fmt.Errorf("could not unmarshal config.yaml: %w", err))
 	}
 
 	c.Init()
@@ -90,9 +90,9 @@ func main() {
 	fmt.Printf("Starting Discord...\n")
 	err = c.Discord.Start()
 	if err != nil {
-		panic(fmt.Errorf("Could not instantiate Discord: %w", err))
+		panic(fmt.Errorf("could not instantiate Discord: %w", err))
 	}
-	defer c.Discord.Session.Close()
+	defer func() { _ = c.Discord.Session.Close() }()
 
 	var arg string
 	args := os.Args[1:]
@@ -115,7 +115,7 @@ func start(c *clearingway.Clearingway) {
 	c.Discord.Session.AddHandler(c.DiscordReady)
 	err := c.Discord.Session.Open()
 	if err != nil {
-		panic(fmt.Errorf("Could not open Discord session: %f", err))
+		panic(fmt.Errorf("could not open Discord session: %f", err))
 	}
 	for !c.Ready {
 		fmt.Printf("Waiting for Clearingway to be ready...\n")
@@ -146,7 +146,7 @@ func clears(c *clearingway.Clearingway) {
 	c.Discord.Session.AddHandler(c.DiscordReady)
 	err := c.Discord.Session.Open()
 	if err != nil {
-		panic(fmt.Errorf("Could not open Discord session: %f", err))
+		panic(fmt.Errorf("could not open Discord session: %f", err))
 	}
 
 	for !c.Ready {
@@ -164,7 +164,7 @@ func clears(c *clearingway.Clearingway) {
 		fmt.Printf("Could not find character in FF Logs: %+v\n", err)
 		err = lodestone.SetCharacterLodestoneID(char)
 		if err != nil {
-			panic(fmt.Errorf("Could not find character in the Lodestone: %+v", err))
+			panic(fmt.Errorf("could not find character in the Lodestone: %+v", err))
 		}
 	}
 
@@ -184,7 +184,7 @@ func clears(c *clearingway.Clearingway) {
 	fmt.Printf("Character %s (%s) clears updated in guild %s.\n", char.Name(), char.World, guild.Name)
 
 	for _, roleText := range roleTexts {
-		fmt.Printf(roleText + "\n")
+		fmt.Printf("%s\n", roleText)
 	}
 }
 
@@ -209,7 +209,7 @@ func prog(c *clearingway.Clearingway) {
 	c.Discord.Session.AddHandler(c.DiscordReady)
 	err := c.Discord.Session.Open()
 	if err != nil {
-		panic(fmt.Errorf("Could not open Discord session: %f", err))
+		panic(fmt.Errorf("could not open Discord session: %f", err))
 	}
 
 	for !c.Ready {
@@ -227,7 +227,7 @@ func prog(c *clearingway.Clearingway) {
 		fmt.Printf("Could not find character in FF Logs: %+v\n", err)
 		err = lodestone.SetCharacterLodestoneID(char)
 		if err != nil {
-			panic(fmt.Errorf("Could not find character in the Lodestone: %+v", err))
+			panic(fmt.Errorf("could not find character in the Lodestone: %+v", err))
 		}
 	}
 
@@ -247,6 +247,6 @@ func prog(c *clearingway.Clearingway) {
 	fmt.Printf("Character %s (%s) prog updated in guild %s.\n", char.Name(), char.World, guild.Name)
 
 	for _, progText := range progTexts {
-		fmt.Printf(progText + "\n")
+		fmt.Printf("%s\n", progText)
 	}
 }

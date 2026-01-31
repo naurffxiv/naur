@@ -49,28 +49,28 @@ func (f *Fflogs) SetCharacterLodestoneID(char *ffxiv.Character) error {
 
 	raw, err := f.graphqlClient.ExecRaw(context.Background(), query, nil)
 	if err != nil {
-		return fmt.Errorf("Error executing query: %w", err)
+		return fmt.Errorf("error executing query: %w", err)
 	}
 
 	var characterData map[string]*json.RawMessage
 	err = json.Unmarshal(raw, &characterData)
 	if err != nil {
-		return fmt.Errorf("Could not unmarshal JSON: %w", err)
+		return fmt.Errorf("could not unmarshal JSON: %w", err)
 	}
 
 	var character map[string]*json.RawMessage
 	err = json.Unmarshal(*characterData["characterData"], &character)
 	if err != nil {
-		return fmt.Errorf("Could not unmarshal JSON: %w", err)
+		return fmt.Errorf("could not unmarshal JSON: %w", err)
 	}
 	if character["character"] == nil {
-		return fmt.Errorf("Character %s (%s) not found in fflogs!", char.Name(), char.World)
+		return fmt.Errorf("character %s (%s) not found in fflogs", char.Name(), char.World)
 	}
 
 	var rawCharacterResponse map[string]*json.RawMessage
 	err = json.Unmarshal(*character["character"], &rawCharacterResponse)
 	if err != nil {
-		return fmt.Errorf("Could not unmarshal JSON: %w", err)
+		return fmt.Errorf("could not unmarshal JSON: %w", err)
 	}
 
 	for rawKey, rawValue := range rawCharacterResponse {
@@ -78,7 +78,7 @@ func (f *Fflogs) SetCharacterLodestoneID(char *ffxiv.Character) error {
 			var id int
 			err = json.Unmarshal(*rawValue, &id)
 			if err != nil {
-				return fmt.Errorf("Could not unmarshal lodestone ID: %w", err)
+				return fmt.Errorf("could not unmarshal lodestone ID: %w", err)
 			}
 
 			char.LodestoneID = id
@@ -86,7 +86,7 @@ func (f *Fflogs) SetCharacterLodestoneID(char *ffxiv.Character) error {
 		}
 	}
 
-	return fmt.Errorf("Lodestone ID not found on fflogs!")
+	return fmt.Errorf("lodestone ID not found on fflogs")
 }
 
 var returnedRankingsRegexp = regexp.MustCompile(`(\D+)Z(\d+)P(\D+)`)
@@ -142,35 +142,35 @@ func (f *Fflogs) GetRankingsForCharacter(rankingsToGet []*RankingToGet, char *ff
 
 	raw, err := f.graphqlClient.ExecRaw(context.Background(), query.String(), nil)
 	if err != nil {
-		return nil, fmt.Errorf("Error executing query: %w", err)
+		return nil, fmt.Errorf("error executing query: %w", err)
 	}
 
 	var characterData map[string]*json.RawMessage
 	err = json.Unmarshal(raw, &characterData)
 	if err != nil {
-		return nil, fmt.Errorf("Could not unmarshal JSON: %w", err)
+		return nil, fmt.Errorf("could not unmarshal JSON: %w", err)
 	}
 
 	var character map[string]*json.RawMessage
 	err = json.Unmarshal(*characterData["characterData"], &character)
 	if err != nil {
-		return nil, fmt.Errorf("Could not unmarshal JSON: %w", err)
+		return nil, fmt.Errorf("could not unmarshal JSON: %w", err)
 	}
 	if character["character"] == nil {
-		return nil, fmt.Errorf("Character %s (%s) not found in fflogs!", char.Name(), char.World)
+		return nil, fmt.Errorf("character %s (%s) not found in fflogs", char.Name(), char.World)
 	}
 
 	var rawRankings map[string]*json.RawMessage
 	err = json.Unmarshal(*character["character"], &rawRankings)
 	if err != nil {
-		return nil, fmt.Errorf("Could not unmarshal JSON: %w", err)
+		return nil, fmt.Errorf("could not unmarshal JSON: %w", err)
 	}
 
 	rankings := &Rankings{Rankings: map[int]*Ranking{}}
 	for rawId, rawRanking := range rawRankings {
 		match := returnedRankingsRegexp.FindStringSubmatch(rawId)
 		if match == nil {
-			return nil, fmt.Errorf("Returned stanza did not match expected format: %v\n", rawId)
+			return nil, fmt.Errorf("returned stanza did not match expected format: %v", rawId)
 		}
 
 		metric := match[1]
@@ -178,7 +178,7 @@ func (f *Fflogs) GetRankingsForCharacter(rankingsToGet []*RankingToGet, char *ff
 		partition := match[3]
 		id, err := strconv.Atoi(idString)
 		if err != nil {
-			return nil, fmt.Errorf("Could not convert id %v from string to int: %v\n", idString, err)
+			return nil, fmt.Errorf("could not convert id %v from string to int: %v", idString, err)
 		}
 
 		ranking := &Ranking{Metric: Metric(metric)}
@@ -187,20 +187,20 @@ func (f *Fflogs) GetRankingsForCharacter(rankingsToGet []*RankingToGet, char *ff
 		}
 		err = json.Unmarshal(*rawRanking, ranking)
 		if err != nil {
-			return nil, fmt.Errorf("Could not unmarshal JSON: %w", err)
+			return nil, fmt.Errorf("could not unmarshal JSON: %w", err)
 		}
 		if ranking.Error != "" {
 			if ranking.Error == "Invalid encounter id specified." {
 				fmt.Printf("Could not find encounters for id %d, continuing...\n", id)
 				continue
 			} else {
-				return nil, fmt.Errorf("Received error from fflogs for encounter %d: %v", id, ranking.Error)
+				return nil, fmt.Errorf("received error from fflogs for encounter %d: %v", id, ranking.Error)
 			}
 		}
 
 		err = rankings.Add(id, ranking)
 		if err != nil {
-			return nil, fmt.Errorf("Could not add ranking: %w", err)
+			return nil, fmt.Errorf("could not add ranking: %w", err)
 		}
 	}
 
@@ -226,16 +226,16 @@ func (f *Fflogs) Token() (*oauth2.Token, error) {
 	writer := multipart.NewWriter(body)
 	grantTypeField, err := writer.CreateFormField("grant_type")
 	if err != nil {
-		return nil, fmt.Errorf("Could not create form field: %w", err)
+		return nil, fmt.Errorf("could not create form field: %w", err)
 	}
 	_, err = grantTypeField.Write([]byte("client_credentials"))
 	if err != nil {
-		return nil, fmt.Errorf("Could not write form field: %w", err)
+		return nil, fmt.Errorf("could not write form field: %w", err)
 	}
 
 	req, err := http.NewRequest("POST", "https://www.fflogs.com/oauth/token", body)
 	if err != nil {
-		return nil, fmt.Errorf("Could not create new HTTP request: %w", err)
+		return nil, fmt.Errorf("could not create new HTTP request: %w", err)
 	}
 	req.Header.Add("Authorization", "Basic "+basicAuth(f.clientId, f.clientSecret))
 	req.Header.Add("Content-Type", writer.FormDataContentType())
@@ -243,16 +243,16 @@ func (f *Fflogs) Token() (*oauth2.Token, error) {
 	if err != nil {
 		return nil, fmt.Errorf("HTTP oauth2 token request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	returnedFflogsToken := &fflogsAccessToken{}
 	err = json.NewDecoder(resp.Body).Decode(returnedFflogsToken)
 	if err != nil {
-		return nil, fmt.Errorf("Could not coerce response to JSON: %w", err)
+		return nil, fmt.Errorf("could not coerce response to JSON: %w", err)
 	}
 
 	if returnedFflogsToken.Error != "" {
-		return nil, fmt.Errorf("Token error %v: %v", returnedFflogsToken.Error, returnedFflogsToken.ErrorDescription)
+		return nil, fmt.Errorf("token error %v: %v", returnedFflogsToken.Error, returnedFflogsToken.ErrorDescription)
 	}
 
 	token := &oauth2.Token{}

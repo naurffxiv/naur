@@ -83,7 +83,7 @@ func (r *Role) Ensure(guildId string, s *discordgo.Session, existingRoles []*dis
 	if existingRole == nil {
 		newRole, err := s.GuildRoleCreate(guildId, roleParams)
 		if err != nil {
-			return fmt.Errorf("Could not create new role for %v: %w.\n", r.Name, err)
+			return fmt.Errorf("could not create new role for %v: %w", r.Name, err)
 		}
 		existingRole = newRole
 	}
@@ -91,7 +91,7 @@ func (r *Role) Ensure(guildId string, s *discordgo.Session, existingRoles []*dis
 	if existingRole.Color != r.Color || existingRole.Name != r.Name {
 		newRole, err := s.GuildRoleEdit(guildId, existingRole.ID, roleParams)
 		if err != nil {
-			return fmt.Errorf("Could not ensure role %v: %w.\n", r.Name, err)
+			return fmt.Errorf("could not ensure role %v: %w", r.Name, err)
 		}
 		existingRole = newRole
 	}

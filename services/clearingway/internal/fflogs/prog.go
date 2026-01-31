@@ -56,31 +56,31 @@ func (f *Fflogs) GetProgForReport(r string, rankingsToGet []*RankingToGet, char 
 
 	raw, err := f.graphqlClient.ExecRaw(context.Background(), query.String(), nil)
 	if err != nil {
-		return nil, fmt.Errorf("Error executing query: %w", err)
+		return nil, fmt.Errorf("error executing query: %w", err)
 	}
 
 	var response map[string]*json.RawMessage
 	err = json.Unmarshal(raw, &response)
 	if err != nil {
-		return nil, fmt.Errorf("Could not unmarshal JSON: %w", err)
+		return nil, fmt.Errorf("could not unmarshal JSON: %w", err)
 	}
 
 	var reportData map[string]*json.RawMessage
 	err = json.Unmarshal(*response["reportData"], &reportData)
 	if err != nil {
-		return nil, fmt.Errorf("Could not unmarshal JSON: %w", err)
+		return nil, fmt.Errorf("could not unmarshal JSON: %w", err)
 	}
 
 	var report *report
 	err = json.Unmarshal(*reportData["report"], &report)
 	if err != nil {
-		return nil, fmt.Errorf("Could not unmarshal JSON: %w", err)
+		return nil, fmt.Errorf("could not unmarshal JSON: %w", err)
 	}
 	if report.Fights == nil {
-		return nil, fmt.Errorf("Fight data not found correctly for %s!", r)
+		return nil, fmt.Errorf("fight data not found correctly for %s", r)
 	}
 	if report.MasterData == nil {
-		return nil, fmt.Errorf("Master data not found correctly for %s!", r)
+		return nil, fmt.Errorf("master data not found correctly for %s", r)
 	}
 
 	characterActorIds := []int{}
@@ -92,7 +92,7 @@ func (f *Fflogs) GetProgForReport(r string, rankingsToGet []*RankingToGet, char 
 		}
 	}
 	if !characterFoundInMasterData {
-		return nil, fmt.Errorf("Could not find character %s (%s) in report %s.", char.Name(), char.World, r)
+		return nil, fmt.Errorf("could not find character %s (%s) in report %s", char.Name(), char.World, r)
 	}
 
 	fights := &Fights{Fights: []*Fight{}}
