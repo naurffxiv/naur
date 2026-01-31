@@ -1,6 +1,6 @@
 module github.com/Veraticus/clearingway
 
-go 1.22.1
+go 1.23.0
 
 require (
 	github.com/Vivino/go-autocomplete-trie v0.0.0-20230301121706-da951497d081
@@ -8,8 +8,8 @@ require (
 	github.com/gocolly/colly v1.2.0
 	github.com/hasura/go-graphql-client v0.10.0
 	github.com/stretchr/testify v1.7.1
-	golang.org/x/oauth2 v0.15.0
-	golang.org/x/text v0.14.0
+	golang.org/x/oauth2 v0.27.0
+	golang.org/x/text v0.22.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -29,9 +29,9 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/saintfish/chardet v0.0.0-20230101081208-5e3ef4b5456d // indirect
 	github.com/temoto/robotstxt v1.1.2 // indirect
-	golang.org/x/crypto v0.16.0 // indirect
-	golang.org/x/net v0.19.0 // indirect
-	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/crypto v0.35.0 // indirect
+	golang.org/x/net v0.21.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	nhooyr.io/websocket v1.8.10 // indirect
