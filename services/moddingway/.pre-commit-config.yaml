@@ -15,12 +15,8 @@ repos:
       - id: ruff-format
         priority: 0
 
-  - repo: local
+  - repo: https://foundry.fsky.io/vel/ty-pre-commit
+    rev: 0.0.11
     hooks:
-      - id: ty
-        name: ty
-        entry: make ty
-        language: system
-        types: [python]
-        pass_filenames: false
-        priority: 1
+      - id: ty-check
+        args: [--python=venv/]
