@@ -56,11 +56,13 @@ jobs:
 
       - name: Set Language Matrix
         id: set-matrix
+        env:
+          CHANGES: ${{ steps.filter.outputs.changes }}
         run: |
           if [[ "${{ github.event_name }}" != "pull_request" ]] || [[ "${{ steps.filter.outputs.workflow }}" == "true" ]]; then
             echo 'languages=["javascript", "python", "go", "csharp"]' >> $GITHUB_OUTPUT
           else
-            echo "languages=${{ steps.filter.outputs.changes }}" >> $GITHUB_OUTPUT
+            echo "languages=$CHANGES" >> $GITHUB_OUTPUT
           fi
 
   analyze:
