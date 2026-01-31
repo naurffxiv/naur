@@ -1,0 +1,38 @@
+# Root Prek Configuration
+fail_fast: false
+
+repos:
+  - repo: builtin
+    hooks:
+      - id: trailing-whitespace
+        priority: 1
+      - id: end-of-file-fixer
+        priority: 1
+      - id: check-yaml
+        priority: 1
+      - id: check-json
+        exclude: .*/tsconfig.json
+        priority: 1
+      - id: check-toml
+        priority: 1
+      - id: check-merge-conflict
+        priority: 1
+      - id: check-added-large-files
+        args: [--maxkb=20000]
+        priority: 1
+      - id: detect-private-key
+        priority: 1
+      - id: mixed-line-ending
+        args: [--fix=auto]
+        priority: 1
+
+  # Monorepo Hygiene
+  - repo: local
+    hooks:
+      - id: dependency-sync
+        name: dependency-sync
+        entry: python scripts/check-dependency-sync.py
+        language: system
+        files: ^(dependencies\.yml|services/.*/(requirements\.txt|package\.json|go\.mod|.*\.csproj))$
+        pass_filenames: false
+        priority: 2

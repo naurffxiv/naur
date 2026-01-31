@@ -1,0 +1,33 @@
+# Node.js service configuration
+orphan: true
+repos:
+  - repo: builtin
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+
+  - repo: local
+    hooks:
+      - id: eslint
+        name: eslint
+        entry: npx eslint --fix
+        language: system
+        files: \.(js|jsx|ts|tsx)$
+        exclude: node_modules/
+        priority: 1
+
+      - id: prettier
+        name: prettier
+        entry: npx prettier --write --ignore-unknown --cache
+        language: system
+        files: \.(js|jsx|ts|tsx|json|css|scss|md|mdx)$
+        exclude: (package-lock\.json|.*\.min\.js)
+        priority: 0
+
+      - id: tsc
+        name: tsc
+        entry: npx tsc --noEmit
+        language: system
+        types: [ts]
+        pass_filenames: false
+        priority: 2

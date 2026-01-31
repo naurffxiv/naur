@@ -1,0 +1,35 @@
+{
+  "name": "naur",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "services/naurffxiv",
+    "tests/e2e"
+  ],
+  "engines": {
+    "node": ">=22.12.0",
+    "npm": ">=10.9.0"
+  },
+  "packageManager": "npm@10.9.4",
+  "license": "MIT",
+  "type": "commonjs",
+  "devDependencies": {
+    "@j178/prek": "^0.3.0",
+    "@typescript-eslint/eslint-plugin": "^8.53.0",
+    "@typescript-eslint/parser": "^8.53.0",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0",
+    "turbo": "^2.7.6"
+  },
+  "scripts": {
+    "prepare": "prek install",
+    "build:naur": "npm run build -w naurffxiv",
+    "dev:naur": "npm run dev -w naurffxiv",
+    "lint:naur": "npm run lint -w naurffxiv",
+    "test:e2e": "npm run test -w e2e-tests"
+  },
+  "overrides": {
+    "glob": "^11.0.0",
+    "@next/swc-linux-x64-gnu": "14.2.33"
+  }
+}

@@ -7,21 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "echo \"Error: no test specified\" && exit 0",
     "typecheck": "tsc --noEmit",
     "prettier:check": "npx prettier --check .",
     "prettier:write": "npx prettier --write .",
     "check:routes": "tsx scripts/middleware/validateRoutes.ts",
-    "compress": "node scripts/compress-images.js",
-    "prepare": "husky"
-  },
-  "lint-staged": {
-    "*.{ts,tsx,js,jsx}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "*.{md,mdx,json,css,scss}": [
-      "prettier --write"
-    ]
+    "compress": "node scripts/compress-images.js"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -59,7 +50,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.24.0",
-    "@netlify/plugin-nextjs": "^5.15.3",
+    "@netlify/plugin-nextjs": "^5.15.5",
     "@tailwindcss/typography": "^0.5.16",
     "@types/node": "^22.14.1",
     "@types/react": "^19.1.2",
@@ -76,13 +67,18 @@
     "eslint-plugin-react": "^7.37.5",
     "glob": "^11.1.0",
     "globals": "^16.0.0",
-    "husky": "^9.1.7",
-    "lint-staged": "^16.2.7",
     "postcss": "^8.5.3",
     "prettier": "^3.7.4",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.19.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.29.1"
+  },
+  "optionalDependencies": {
+    "@img/sharp-linux-x64": "^0.33.5",
+    "@next/swc-linux-x64-gnu": "^14.2.33"
+  },
+  "overrides": {
+    "glob": "^11.0.0"
   }
 }
