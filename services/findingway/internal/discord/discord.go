@@ -27,13 +27,13 @@ type Channel struct {
 func (d *Discord) Start() error {
 	s, err := discordgo.New("Bot " + d.Token)
 	if err != nil {
-		return fmt.Errorf("Could not start Discord: %f", err)
+		return fmt.Errorf("could not start Discord: %f", err)
 	}
 	s.ShouldRetryOnRateLimit = false
 
 	err = s.Open()
 	if err != nil {
-		return fmt.Errorf("Could not open Discord session: %f", err)
+		return fmt.Errorf("could not open Discord session: %f", err)
 	}
 
 	d.Session = s
@@ -43,7 +43,7 @@ func (d *Discord) Start() error {
 func (d *Discord) CleanChannel(channelId string) error {
 	messages, err := d.Session.ChannelMessages(channelId, 100, "", "", "")
 	if err != nil {
-		return fmt.Errorf("Could not list messages: %f", err)
+		return fmt.Errorf("could not list messages: %f", err)
 	}
 	messageIds := []string{}
 	for _, message := range messages {
@@ -51,7 +51,7 @@ func (d *Discord) CleanChannel(channelId string) error {
 	}
 	err = d.Session.ChannelMessagesBulkDelete(channelId, messageIds)
 	if err != nil {
-		return fmt.Errorf("Could not bulk delete messages: %f", err)
+		return fmt.Errorf("could not bulk delete messages: %f", err)
 	}
 
 	return nil
@@ -62,17 +62,17 @@ func (d *Discord) PostListings(channelId string, listings *ffxiv.Listings, duty 
 
 	mostRecent, err := scopedListings.MostRecentUpdated()
 	if err != nil {
-		return fmt.Errorf("Could not find most recently updated duty: %w", err)
+		return fmt.Errorf("could not find most recently updated duty: %w", err)
 	}
 	if mostRecent != nil {
 		mostRecentUpdated, err := mostRecent.UpdatedAt()
 		if err != nil {
-			return fmt.Errorf("Could not find most recently updatedAt: %w", err)
+			return fmt.Errorf("could not find most recently updatedAt: %w", err)
 		}
 		if mostRecentUpdated.After(time.Now().Add(-4 * time.Minute)) {
 			scopedListings, err = scopedListings.UpdatedWithinLast(4 * time.Minute)
 			if err != nil {
-				return fmt.Errorf("Could not find most recently listings: %w", err)
+				return fmt.Errorf("could not find most recently listings: %w", err)
 			}
 		}
 	}
@@ -95,7 +95,7 @@ func (d *Discord) PostListings(channelId string, listings *ffxiv.Listings, duty 
 	}
 	_, err = d.Session.ChannelMessageSendComplex(channelId, headerMessageSend)
 	if err != nil {
-		return fmt.Errorf("Could not send header: %w", err)
+		return fmt.Errorf("could not send header: %w", err)
 	}
 
 	fields := []*discordgo.MessageEmbedField{}
@@ -120,7 +120,7 @@ func (d *Discord) PostListings(channelId string, listings *ffxiv.Listings, duty 
 		if (i+1)%5 == 0 {
 			err = d.sendMessage(channelId, fields)
 			if err != nil {
-				return fmt.Errorf("Could not send message: %w", err)
+				return fmt.Errorf("could not send message: %w", err)
 			}
 			fields = []*discordgo.MessageEmbedField{}
 		}
@@ -130,7 +130,7 @@ func (d *Discord) PostListings(channelId string, listings *ffxiv.Listings, duty 
 	if len(fields) != 0 {
 		err = d.sendMessage(channelId, fields)
 		if err != nil {
-			return fmt.Errorf("Could not send message: %w", err)
+			return fmt.Errorf("could not send message: %w", err)
 		}
 	}
 

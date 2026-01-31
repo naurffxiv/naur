@@ -29,14 +29,16 @@ func main() {
 
 	config, err := os.ReadFile("./config.yaml")
 	if err != nil {
-		panic(fmt.Errorf("Could not read config.yaml: %w", err))
+		panic(fmt.Errorf("could not read config.yaml: %w", err))
 	}
-	yaml.Unmarshal(config, &d)
+	if err := yaml.Unmarshal(config, &d); err != nil {
+		panic(err)
+	}
 
 	err = d.Start()
-	defer d.Session.Close()
+	defer func() { _ = d.Session.Close() }()
 	if err != nil {
-		panic(fmt.Errorf("Could not instantiate Discord: %f", err))
+		panic(fmt.Errorf("could not instantiate Discord: %f", err))
 	}
 
 	scraper := &scraper.Scraper{Url: "https://xivpf.com"}
