@@ -1,10 +1,10 @@
-from pydantic import BaseModel
-from typing import Optional
 from datetime import datetime
+
+from pydantic import BaseModel
 
 
 class Note(BaseModel):
-    note_id: Optional[int] = None
+    note_id: int | None = None
     user_id: int
     is_warning: bool
     note: str

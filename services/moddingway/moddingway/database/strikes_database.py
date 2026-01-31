@@ -1,5 +1,3 @@
-from typing import List, Optional, Tuple
-
 from . import DatabaseConnection
 from .models import Strike
 
@@ -29,10 +27,13 @@ def add_strike(strike: Strike) -> int:
         cursor.execute(query, params)
         res = cursor.fetchone()
 
+        if res is None:
+            raise ValueError("Failed to add strike to DB")
+
         return res[0]
 
 
-def list_strikes(user_id: int) -> List[tuple]:
+def list_strikes(user_id: int) -> list[tuple]:
     conn = DatabaseConnection()
 
     with conn.get_cursor() as cursor:
@@ -52,7 +53,7 @@ def list_strikes(user_id: int) -> List[tuple]:
         return res
 
 
-def delete_strike(strike_id: int) -> Optional[Tuple[str, str, str]]:
+def delete_strike(strike_id: int) -> tuple[str, str, str] | None:
     conn = DatabaseConnection()
 
     with conn.get_cursor() as cursor:

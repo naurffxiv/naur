@@ -1,4 +1,4 @@
-class Exile(object):
+class Exile:
     def __init__(
         self,
         exile_id,

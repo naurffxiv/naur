@@ -1,13 +1,14 @@
+import asyncio
 import logging
-from datetime import datetime, timezone
-import discord
-import asyncio, re
+import re
+from datetime import UTC, datetime
 
-from discord import Guild, User, Thread
+import discord
+from discord import Guild, Thread, User
 from discord.ext.commands import Bot
 
-from moddingway.database import users_database
 from moddingway.constants import Role
+from moddingway.database import users_database
 from moddingway.settings import get_settings
 from moddingway.util import (
     create_interaction_embed_context,
@@ -28,7 +29,7 @@ def register_events(bot: Bot):
         Automatically assigns the NON_VERIFIED role and logs the action.
         """
         # First find and assign the role - this happens regardless of logging ability
-        is_role_assigned, message, role = await find_and_assign_role(
+        is_role_assigned, message, _role = await find_and_assign_role(
             member, Role.NON_VERIFIED
         )
 
@@ -44,14 +45,14 @@ def register_events(bot: Bot):
                 log_channel,
                 user=member,
                 description=f"<@{member.id}> joined the server",
-                timestamp=datetime.now(timezone.utc),
+                timestamp=datetime.now(UTC),
                 footer="Member Joined",
             ) as embed:
                 if is_role_assigned:
                     log_info_and_add_field(embed, logger, "Result", message)
-                    account_age = datetime.now(
-                        timezone.utc
-                    ) - member.created_at.replace(tzinfo=timezone.utc)
+                    account_age = datetime.now(UTC) - member.created_at.replace(
+                        tzinfo=UTC
+                    )
                     account_age_days = account_age.days
                     log_info_and_add_field(
                         embed,
@@ -62,7 +63,7 @@ def register_events(bot: Bot):
                 else:
                     log_info_and_add_field(embed, logger, "Error", message)
         except Exception as e:
-            logger.error(f"Failed to log member join to Discord: {str(e)}")
+            logger.error(f"Failed to log member join to Discord: {e!s}")
 
     @bot.event
     async def on_member_ban(guild: Guild, user: User):
@@ -86,7 +87,7 @@ def register_events(bot: Bot):
                 log_channel,
                 user=None,
                 description=f"{user.mention} was banned",
-                timestamp=datetime.now(timezone.utc),
+                timestamp=datetime.now(UTC),
                 footer="Member Banned",
             ) as embed:
                 log_info_and_add_field(embed, logger, "Action", "/ban")
@@ -95,7 +96,7 @@ def register_events(bot: Bot):
                     embed, logger, "Result", f"Successfully banned {user.mention}"
                 )
         except Exception as e:
-            logger.error(f"Failed to log ban event: {str(e)}")
+            logger.error(f"Failed to log ban event: {e!s}")
 
     @bot.event
     async def on_member_unban(guild: Guild, user: User):
@@ -119,7 +120,7 @@ def register_events(bot: Bot):
                 log_channel,
                 user=None,
                 description=f"{user.mention} was unbanned",
-                timestamp=datetime.now(timezone.utc),
+                timestamp=datetime.now(UTC),
                 footer="Member Unbanned",
             ) as embed:
                 log_info_and_add_field(embed, logger, "Action", "/unban")
@@ -128,7 +129,7 @@ def register_events(bot: Bot):
                     embed, logger, "Result", f"Successfully unbanned {user.mention}"
                 )
         except Exception as e:
-            logger.error(f"Failed to log unban event: {str(e)}")
+            logger.error(f"Failed to log unban event: {e!s}")
 
     @bot.event
     async def on_thread_create(thread: Thread):
@@ -150,7 +151,7 @@ def register_events(bot: Bot):
             # Fetch the thread's initial message
             try:
                 message = await thread.fetch_message(thread.id)
-            except Exception as e:
+            except Exception:
                 logger.error(f"Failed to fetch message in event thread f{thread.id}")
 
             if not message or not message.content:
@@ -177,13 +178,14 @@ def register_events(bot: Bot):
                     warn_channel = await bot.fetch_channel(
                         settings.event_warn_channel_id
                     )
-                    await warn_channel.send(
-                        content=f"{user_match.group(0)} Warning: The event you have scheduled starts in less than 24 hours!"
-                    )
+                    if isinstance(warn_channel, discord.abc.Messageable):
+                        await warn_channel.send(
+                            content=f"{user_match.group(0)} Warning: The event you have scheduled starts in less than 24 hours!"
+                        )
                     logger.info(
                         f"Sent warning for thread {thread.id} (starts in {time_difference}s)"
                     )
-                except Exception as e:
+                except Exception:
                     logger.error(
                         f"Failed to send warning message in event channel {warn_channel.id}"
                     )

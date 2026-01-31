@@ -1,9 +1,9 @@
 import logging
-from typing import Optional
+
 from moddingway.settings import get_settings
 
 from . import DatabaseConnection
-from .models import BanForm, User
+from .models import BanForm
 
 settings = get_settings()
 
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 def get_ban_forms(limit: int, offset: int) -> list[BanForm]:
     conn = DatabaseConnection()
 
-    with conn.get_cursor as cursor:
+    with conn.get_cursor() as cursor:
         query = """
         SELECT * FROM forms
         LIMIT %s OFFSET %s;
@@ -39,7 +39,7 @@ def get_ban_forms(limit: int, offset: int) -> list[BanForm]:
         return []
 
 
-def get_ban_form(form_id: int) -> Optional[BanForm]:
+def get_ban_form(form_id: int) -> BanForm | None:
     conn = DatabaseConnection()
 
     with conn.get_cursor() as cursor:
@@ -71,7 +71,6 @@ def get_form_count() -> int:
     conn = DatabaseConnection()
 
     with conn.get_cursor() as cursor:
-
         query = """
             SELECT COUNT(*)
             FROM forms
@@ -102,10 +101,13 @@ def add_form(form: BanForm) -> int:
         cursor.execute(query, params)
         res = cursor.fetchone()
 
+        if res is None:
+            raise ValueError("Failed to add form to DB")
+
         return res[0]
 
 
-def update_form(form_id, approval, approved_by) -> tuple[bool, int]:
+def update_form(form_id, approval, approved_by) -> tuple[bool, int] | None:
     conn = DatabaseConnection()
 
     with conn.get_cursor() as cursor:
@@ -132,11 +134,14 @@ def update_form(form_id, approval, approved_by) -> tuple[bool, int]:
         cursor.execute(query)
         res = cursor.fetchone()
 
-        return res
+        if res is None:
+            return None
+
+        return (res[0], res[1])
 
 
 # used to get discordUserId to unban user when banform approved
-def get_user_from_form(form_id) -> str:
+def get_user_from_form(form_id) -> str | None:
     conn = DatabaseConnection()
 
     with conn.get_cursor() as cursor:
@@ -156,3 +161,4 @@ def get_user_from_form(form_id) -> str:
 
         if res:
             return res[0]
+        return None
