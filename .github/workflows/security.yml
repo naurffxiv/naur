@@ -16,8 +16,58 @@ on:
       - main
 
 jobs:
+  detect-changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      languages: ${{ steps.set-matrix.outputs.languages }}
+      any_changed: ${{ steps.filter.outputs.any_changed }}
+      workflow_changed: ${{ steps.filter.outputs.workflow }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Filter Paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            javascript:
+              - 'services/naurffxiv/**'
+              - 'package.json'
+              - 'package-lock.json'
+            python:
+              - 'services/moddingway/**'
+              - 'pyproject.toml'
+              - 'requirements.txt'
+              - 'requirements-dev.txt'
+            go:
+              - 'services/clearingway/**'
+              - 'services/findingway/**'
+              - 'go.mod'
+              - 'go.sum'
+            csharp:
+              - 'services/authingway/**'
+              - 'services/AppHost/**'
+              - '**/*.csproj'
+              - '**/*.sln'
+            workflow:
+              - '.github/workflows/security.yml'
+
+      - name: Set Language Matrix
+        id: set-matrix
+        run: |
+          if [[ "${{ github.event_name }}" != "pull_request" ]] || [[ "${{ steps.filter.outputs.workflow }}" == "true" ]]; then
+            echo 'languages=["javascript", "python", "go", "csharp"]' >> $GITHUB_OUTPUT
+          else
+            echo "languages=${{ steps.filter.outputs.changes }}" >> $GITHUB_OUTPUT
+          fi
+
   analyze:
     name: CodeQL Analysis (${{ matrix.language }})
+    needs: detect-changes
+    # Only run if there are languages to scan
+    if: needs.detect-changes.outputs.languages != '[]' && needs.detect-changes.outputs.languages != ''
     runs-on: ubuntu-latest
     timeout-minutes: 360
     permissions:
@@ -28,7 +78,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ["javascript", "python", "go", "csharp"]
+        language: ${{ fromJSON(needs.detect-changes.outputs.languages) }}
 
     steps:
       - name: Checkout repository
@@ -56,16 +106,42 @@ jobs:
           category: "/language:${{matrix.language}}"
 
   security-scan:
-    name: Vulnerability Scanning (Trivy)
+    name: Vulnerability Scanning (Trivy - ${{ matrix.service }})
+    needs: detect-changes
+    if: |
+      github.event_name != 'pull_request' ||
+      needs.detect-changes.outputs.workflow_changed == 'true' ||
+      needs.detect-changes.outputs.any_changed == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
       security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ["services/naurffxiv", "services/clearingway", "services/findingway", "services/moddingway", "services/authingway", "services/AppHost"]
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Check if service should be scanned
+        id: check-scan
+        run: |
+          if [[ "${{ github.event_name }}" != "pull_request" ]] || \
+             [[ "${{ needs.detect-changes.outputs.workflow_changed }}" == "true" ]]; then
+            echo "should_scan=true" >> $GITHUB_OUTPUT
+          else
+            # Simple check: does the matrix service path start with a changed directory?
+            if git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep -q "^${{ matrix.service }}"; then
+              echo "should_scan=true" >> $GITHUB_OUTPUT
+            else
+              echo "should_scan=false" >> $GITHUB_OUTPUT
+            fi
+          fi
+
       - name: Create Trivy ignore file
+        if: steps.check-scan.outputs.should_scan == 'true'
         run: |
           cat > .trivyignore << EOF
           # Ignore Next.js DoS vulnerability GHSA-h25m-26qc-wcjf
@@ -76,26 +152,28 @@ jobs:
           EOF
 
       - name: Run Trivy vulnerability scanner
+        if: steps.check-scan.outputs.should_scan == 'true'
         uses: aquasecurity/trivy-action@master
         env:
           TRIVY_SKIP_VERSION_CHECK: 'true'
         with:
           scan-type: 'fs'
-          scan-ref: '.'
+          scan-ref: '${{ matrix.service }}'
           format: 'sarif'
-          output: 'trivy-results.sarif'
+          output: 'trivy-results-${{ strategy.job-index }}.sarif'
           severity: 'CRITICAL,HIGH'
           trivyignores: .trivyignore
           scanners: 'vuln,secret'
           exit-code: '0'
 
       - name: Run Trivy (Table Output)
+        if: steps.check-scan.outputs.should_scan == 'true'
         uses: aquasecurity/trivy-action@master
         env:
           TRIVY_SKIP_VERSION_CHECK: 'true'
         with:
           scan-type: 'fs'
-          scan-ref: '.'
+          scan-ref: '${{ matrix.service }}'
           format: 'table'
           severity: 'CRITICAL,HIGH'
           trivyignores: .trivyignore
@@ -104,10 +182,10 @@ jobs:
 
       - name: Upload Trivy results to GitHub Security
         uses: github/codeql-action/upload-sarif@v4
-        if: always()
+        if: steps.check-scan.outputs.should_scan == 'true' && always()
         with:
-          sarif_file: 'trivy-results.sarif'
-          category: 'trivy-filesystem'
+          sarif_file: 'trivy-results-${{ strategy.job-index }}.sarif'
+          category: 'trivy-${{ matrix.service }}'
 
 
   security-summary:
@@ -129,4 +207,10 @@ jobs:
             echo "Security checks failed" >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
-          echo "All security checks passed" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "${{ needs.analyze.result }}" == "skipped" ]] && \
+             [[ "${{ needs.security-scan.result }}" == "skipped" ]]; then
+            echo "No changes requiring security scan" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "All security checks passed" >> $GITHUB_STEP_SUMMARY
+          fi
