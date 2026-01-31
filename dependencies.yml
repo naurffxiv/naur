@@ -1,0 +1,88 @@
+services:
+  naurffxiv:
+    runtime: node
+    manifest_file: services/naurffxiv/package.json
+    lockfile: services/naurffxiv/package-lock.json
+    audited_packages:
+      - name: next
+        version: 14.2.35
+        license: MIT
+        security_tier: critical
+        source: https://github.com/vercel/next.js
+      - name: react
+        version: 18.3.1
+        license: MIT
+        security_tier: critical
+        source: https://github.com/facebook/react
+      - name: typescript
+        version: 5.9.3
+        license: Apache-2.0
+        security_tier: high
+        source: https://github.com/microsoft/TypeScript
+  moddingway:
+    runtime: python
+    manifest_file: services/moddingway/requirements.txt
+    lockfile: services/moddingway/requirements.lock
+    audited_packages:
+      - name: fastapi
+        version: 0.115.11
+        license: MIT
+        security_tier: critical
+        source: https://github.com/tiangolo/fastapi
+  authingway:
+    runtime: dotnet
+    manifest_file: services/authingway/Authingway.csproj
+    audited_packages:
+      - name: Aspire.Npgsql.EntityFrameworkCore.PostgreSQL
+        version: 13.1.0
+        license: MIT
+        security_tier: high
+        source: https://github.com/dotnet/aspnetcore
+  findingway:
+    runtime: go
+    manifest_file: services/findingway/go.mod
+    lockfile: services/findingway/go.sum
+    vendor_dir: services/findingway/vendor
+    audited_packages:
+      - name: github.com/bwmarrin/discordgo
+        version: v0.27.2-0.20230922130345-1f0b57f11024
+        license: BSD-3-Clause
+        security_tier: high
+        source: https://github.com/bwmarrin/discordgo
+  clearingway:
+    runtime: go
+    manifest_file: services/clearingway/go.mod
+    lockfile: services/clearingway/go.sum
+    vendor_dir: services/clearingway/vendor
+    audited_packages:
+      - name: github.com/bwmarrin/discordgo
+        version: v0.28.2-0.20240514123316-2c9c884e4fae
+        license: BSD-3-Clause
+        security_tier: high
+        source: https://github.com/bwmarrin/discordgo
+  apphost:
+    runtime: dotnet
+    manifest_file: services/AppHost/Naur.AppHost.csproj
+    audited_packages:
+      - name: Aspire.Hosting.AppHost
+        version: 13.1.0
+        license: MIT
+        security_tier: critical
+        source: https://github.com/dotnet/aspire
+  e2e:
+    runtime: node
+    manifest_file: tests/e2e/package.json
+    audited_packages:
+      - name: '@playwright/test'
+        version: 1.58.0
+        license: MIT
+        security_tier: medium
+        source: https://github.com/microsoft/playwright
+metadata:
+  update_policy: manual
+  last_audit: 2026-01-21
+  next_audit: 2026-02-04
+  security_tiers:
+    critical: Core framework or authentication packages
+    high: Network-facing or data-processing packages
+    medium: Utility libraries with limited exposure
