@@ -14,7 +14,7 @@ type Discord struct {
 func (d *Discord) Start() error {
 	s, err := discordgo.New("Bot " + d.Token)
 	if err != nil {
-		return fmt.Errorf("Could not start Discord: %f", err)
+		return fmt.Errorf("could not start Discord: %f", err)
 	}
 
 	s.Identify.Intents = discordgo.IntentsGuilds | discordgo.IntentsGuildMessages

@@ -207,7 +207,7 @@ func (c *Clearingway) UpdateClearsForCharacterInGuild(
 	}
 	rankings, err := c.Fflogs.GetRankingsForCharacter(rankingsToGet, char)
 	if err != nil {
-		return nil, fmt.Errorf("Error retrieving encounter rankings: %w", err)
+		return nil, fmt.Errorf("error retrieving encounter rankings: %w", err)
 	}
 
 	fmt.Printf("Found the following relevant rankings for %s (%s)...\n", char.Name(), char.World)
@@ -228,7 +228,7 @@ func (c *Clearingway) UpdateClearsForCharacterInGuild(
 
 	member, err := c.Discord.Session.GuildMember(guild.Id, discordUserId)
 	if err != nil {
-		return nil, fmt.Errorf("Could not retrieve roles for user: %w", err)
+		return nil, fmt.Errorf("could not retrieve roles for user: %w", err)
 	}
 
 	text := []string{}
@@ -299,7 +299,7 @@ func (c *Clearingway) UpdateClearsForCharacterInGuild(
 			if !role.PresentInRoles(member.Roles) {
 				err := role.AddToCharacter(guild.Id, discordUserId, c.Discord.Session)
 				if err != nil {
-					return nil, fmt.Errorf("Error adding Discord role +%v: %w", role, err)
+					return nil, fmt.Errorf("error adding Discord role +%v: %w", role, err)
 				}
 				text = append(text, fmt.Sprintf("__Adding role: **%s**__\n⮕ %s\n", role.Name, pendingRole.message))
 			}
@@ -313,7 +313,7 @@ func (c *Clearingway) UpdateClearsForCharacterInGuild(
 				if role.PresentInRoles(member.Roles) {
 					err := role.RemoveFromCharacter(guild.Id, discordUserId, c.Discord.Session)
 					if err != nil {
-						return nil, fmt.Errorf("Error adding Discord role +%v: %w", role, err)
+						return nil, fmt.Errorf("error adding Discord role +%v: %w", role, err)
 					}
 					text = append(text, fmt.Sprintf("__Removing role: **%s**__\n⮕ %s\n", role.Name, pendingRole.message))
 				}

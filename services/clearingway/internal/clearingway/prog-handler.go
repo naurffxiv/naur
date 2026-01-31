@@ -210,7 +210,7 @@ func (c *Clearingway) UpdateProgForCharacterInGuild(
 	}
 	fights, err := c.Fflogs.GetProgForReport(reportId, rankingsToGet, char)
 	if err != nil {
-		return nil, fmt.Errorf("Error retrieving prog: %w", err)
+		return nil, fmt.Errorf("error retrieving prog: %w", err)
 	}
 
 	fmt.Printf("Found the following relevant fights for %s (%s)...\n", char.Name(), char.World)
@@ -222,7 +222,7 @@ func (c *Clearingway) UpdateProgForCharacterInGuild(
 
 	member, err := c.Discord.Session.GuildMember(guild.Id, discordUserId)
 	if err != nil {
-		return nil, fmt.Errorf("Could not retrieve roles for user: %w", err)
+		return nil, fmt.Errorf("could not retrieve roles for user: %w", err)
 	}
 	existingRoles := &Roles{Roles: []*Role{}}
 	for _, guildRole := range guild.AllRoles() {
@@ -259,7 +259,7 @@ func (c *Clearingway) UpdateProgForCharacterInGuild(
 					if !role.PresentInRoles(member.Roles) {
 						err := role.AddToCharacter(guild.Id, discordUserId, c.Discord.Session)
 						if err != nil {
-							return nil, fmt.Errorf("Error adding Discord role: %v", err)
+							return nil, fmt.Errorf("error adding Discord role: %v", err)
 						}
 						text = append(text, fmt.Sprintf("Adding role: __**%s**__\n", role.Name))
 					}
@@ -271,7 +271,7 @@ func (c *Clearingway) UpdateProgForCharacterInGuild(
 					if role.PresentInRoles(member.Roles) {
 						err := role.RemoveFromCharacter(guild.Id, discordUserId, c.Discord.Session)
 						if err != nil {
-							return nil, fmt.Errorf("Error removing Discord role: %v", err)
+							return nil, fmt.Errorf("error removing Discord role: %v", err)
 						}
 						text = append(text, fmt.Sprintf("Removing role: __**%s**__\n", role.Name))
 					}

@@ -56,7 +56,7 @@ func (c *Clearingway) MenuMainSend(s *discordgo.Session, i *discordgo.Interactio
 			}
 			return
 		}
-		
+
 		for _, menu := range menuGroup {
 			err := sendMenu(s, i, g, menu)
 			if err != nil {

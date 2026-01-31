@@ -356,7 +356,7 @@ func (c *Clearingway) InteractionCreate(s *discordgo.Session, i *discordgo.Inter
 				c.MenuEncounterProcess(s, i, command[2], command[3])
 			default:
 				fmt.Printf("Invalid custom ID received: \"%v\"\n", customID)
-			}	
+			}
 		default:
 			fmt.Printf("Invalid custom ID received: \"%v\"\n", customID)
 		}
@@ -853,7 +853,9 @@ func (c *Clearingway) ToggleColor(s *discordgo.Session, i *discordgo.Interaction
 			}
 			tempstr += fmt.Sprintf("\nSuccessfully added role: <@&%v>", requestedColorRole.DiscordRole.ID)
 		}
-		discord.ContinueInteraction(s, i.Interaction, tempstr)
+		if err := discord.ContinueInteraction(s, i.Interaction, tempstr); err != nil {
+			fmt.Printf("Error sending Discord message: %v\n", err)
+		}
 	} else {
 		// remove the requested color role if it's the same
 		// edge case where someone has clears removed and doesn't want the color
@@ -863,7 +865,9 @@ func (c *Clearingway) ToggleColor(s *discordgo.Session, i *discordgo.Interaction
 				return
 			}
 			tempstr := fmt.Sprintf("Successfully removed role: <@&%v>", roleToRemove.DiscordRole.ID)
-			discord.ContinueInteraction(s, i.Interaction, tempstr)
+			if err := discord.ContinueInteraction(s, i.Interaction, tempstr); err != nil {
+				fmt.Printf("Error sending Discord message: %v\n", err)
+			}
 		} else {
 			// user doesn't meet the requirements
 			tempstr := fmt.Sprintf("You do not have the required role: <@&%v>", clearedRole.DiscordRole.ID)
