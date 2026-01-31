@@ -27,13 +27,13 @@ type Channel struct {
 func (d *Discord) Start() error {
 	s, err := discordgo.New("Bot " + d.Token)
 	if err != nil {
-		return fmt.Errorf("could not start Discord: %f", err)
+		return fmt.Errorf("could not start Discord: %w", err)
 	}
 	s.ShouldRetryOnRateLimit = false
 
 	err = s.Open()
 	if err != nil {
-		return fmt.Errorf("could not open Discord session: %f", err)
+		return fmt.Errorf("could not open Discord session: %w", err)
 	}
 
 	d.Session = s
@@ -43,7 +43,7 @@ func (d *Discord) Start() error {
 func (d *Discord) CleanChannel(channelId string) error {
 	messages, err := d.Session.ChannelMessages(channelId, 100, "", "", "")
 	if err != nil {
-		return fmt.Errorf("could not list messages: %f", err)
+		return fmt.Errorf("could not list messages: %w", err)
 	}
 	messageIds := []string{}
 	for _, message := range messages {
@@ -51,7 +51,7 @@ func (d *Discord) CleanChannel(channelId string) error {
 	}
 	err = d.Session.ChannelMessagesBulkDelete(channelId, messageIds)
 	if err != nil {
-		return fmt.Errorf("could not bulk delete messages: %f", err)
+		return fmt.Errorf("could not bulk delete messages: %w", err)
 	}
 
 	return nil

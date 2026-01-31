@@ -9,27 +9,30 @@ import (
 	"github.com/Veraticus/findingway/internal/ffxiv"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestStartDiscord(t *testing.T) {
 	token, ok := os.LookupEnv("DISCORD_TOKEN")
-	assert.Equal(t, ok, true)
+	if !ok {
+		t.Skip("DISCORD_TOKEN not set, skipping integration test")
+	}
 
 	disc := &Discord{Token: token}
 	err := disc.Start()
 
-	assert.Equal(t, err, nil)
+	assert.NoError(t, err)
 }
 
 func TestPostListings(t *testing.T) {
-
 	token, ok := os.LookupEnv("DISCORD_TOKEN")
-	assert.NotEqual(t, ok, nil)
+	if !ok {
+		t.Skip("DISCORD_TOKEN not set, skipping integration test")
+	}
 
 	disc := &Discord{Token: token}
 	err := disc.Start()
-
-	assert.Equal(t, err, nil)
+	require.NoError(t, err)
 
 	now := time.Now()
 	listings := []struct {
@@ -69,5 +72,5 @@ func TestPostListings(t *testing.T) {
 
 	// testing in #staff-actions
 	listErr := disc.PostListings("1174350271304958032", &ffxivListings, "Dragonsong's Reprise (Ultimate)", "Aether")
-	assert.Equal(t, listErr, nil)
+	assert.NoError(t, listErr)
 }

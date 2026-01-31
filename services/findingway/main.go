@@ -38,7 +38,7 @@ func main() {
 	err = d.Start()
 	defer func() { _ = d.Session.Close() }()
 	if err != nil {
-		panic(fmt.Errorf("could not instantiate Discord: %f", err))
+		panic(fmt.Errorf("could not instantiate Discord: %w", err))
 	}
 
 	scraper := &scraper.Scraper{Url: "https://xivpf.com"}
@@ -49,7 +49,7 @@ func main() {
 		fmt.Printf("Scraping source...\n")
 		listings, err := scraper.Scrape()
 		if err != nil {
-			fmt.Printf("Scraper error: %f\n", err)
+			fmt.Printf("Scraper error: %v\n", err)
 			continue
 		}
 		fmt.Printf("Got %v listings.\n", len(listings.Listings))
@@ -60,7 +60,7 @@ func main() {
 			fmt.Printf("Cleaning Discord for %v (%v)...\n", c.Name, c.Duty)
 			err = d.CleanChannel(c.ID)
 			if err != nil {
-				fmt.Printf("Discord error cleaning channel: %f\n", err)
+				fmt.Printf("Discord error cleaning channel: %v\n", err)
 			}
 
 			fmt.Printf("Updating Discord for %v (%v)...\n", c.Name, c.Duty)
@@ -68,7 +68,7 @@ func main() {
 				err = d.PostListings(c.ID, listings, c.Duty, dataCentre)
 			}
 			if err != nil {
-				fmt.Printf("Discord error updating messages: %f\n", err)
+				fmt.Printf("Discord error updating messages: %v\n", err)
 			}
 			endTime := time.Now()
 			duration := endTime.Sub(startTime)
