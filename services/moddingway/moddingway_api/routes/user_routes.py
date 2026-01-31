@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import APIRouter, HTTPException
 from fastapi_pagination import Page
 
@@ -11,8 +9,7 @@ router = APIRouter(prefix="/users")
 
 
 @router.get("/{user_id}")
-async def get_user_by_id(user_id: int) -> Optional[User]:
-
+async def get_user_by_id(user_id: int) -> User | None:
     db_user = users_database.get_user(user_id)
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -26,7 +23,6 @@ async def get_user_by_id(user_id: int) -> Optional[User]:
 
 @router.get("")
 async def get_users() -> Page[User]:
-
     page, size = parse_pagination_params()
     limit = size
     offset = (page - 1) * size

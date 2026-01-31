@@ -1,14 +1,13 @@
-import asyncio, re
+import asyncio
 import logging
-from datetime import datetime, timedelta, timezone
-from typing import Optional
+import re
+from datetime import UTC, datetime, timedelta
 
 import discord
 from discord.utils import snowflake_time
 
 from moddingway.settings import get_settings
 from moddingway.util import (
-    UnableToNotify,
     create_interaction_embed_context,
     get_log_channel,
 )
@@ -19,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 def create_autounexile_embed(
     self,
-    user: Optional[discord.Member],
+    user: discord.Member | None,
     discord_id: int,
     exile_id: str,
     end_timestamp: str,
@@ -58,7 +57,7 @@ async def automod_thread(
     duration: int,
     num_removed: int,
     num_errors: int,
-    user_id: Optional[int] = None,
+    user_id: int | None = None,
 ):
     if thread.flags.pinned:
         # skip the for loop if the thread is pinned
@@ -66,43 +65,24 @@ async def automod_thread(
 
     if user_id is not None and thread.owner_id != user_id:
         return num_removed, num_errors
+
     # check if starter message was deleted
     starter_message = None
     try:
         starter_message = await thread.fetch_message(thread.id)
+        # Adding small delay to ensure message availability/updates
         await asyncio.sleep(1)
     except discord.NotFound:
         pass
     except Exception as e:
         logger.error(e, exc_info=e)
-    now = datetime.now(timezone.utc)
-    last_post = thread.last_message_id
-    time_since = now - snowflake_time(last_post)
 
-    # We want to apply this check to raidhelper threads after the raid time passed
-    if (
-        user_id is not None
-        and thread.owner_id == user_id
-        and starter_message is not None
-    ):
-        # extracting the raids date(unix time) from raidhelpers message
-        date_pattern = re.compile(r"<t:(\d+):F>")
-        date_match = date_pattern.search(starter_message.content)
+    should_delete = _should_delete_thread(thread, starter_message, duration, user_id)
 
-        if not date_match:
-            logger.error(f"No timestamp found in thread {thread.id}")
-            return num_removed, num_errors
-
-        raid_timestamp = int(date_match.group(1))
-        time_since_raid = now.timestamp() - raid_timestamp
-
-        if time_since_raid < (duration * 86400):  # 86400 seconds = 1 day
-            return num_removed, num_errors
-
-    if starter_message is not None and time_since < timedelta(days=duration):
+    if not should_delete:
         return num_removed, num_errors
 
-    # delete thread
+    # Execute deletion
     try:
         await thread.delete()
         logger.info(f"Thread {thread.id} has been deleted successfully")
@@ -110,6 +90,39 @@ async def automod_thread(
     except Exception as e:
         logger.error(f"Unexpected error for thread {thread.id}: {e}", exc_info=e)
         return num_removed, num_errors + 1
+
+
+def _should_delete_thread(
+    thread: discord.Thread,
+    starter_message: discord.Message | None,
+    duration: int,
+    user_id: int | None,
+) -> bool:
+    now = datetime.now(UTC)
+
+    if starter_message is not None:
+        # Check specific user/raidhelper logic
+        if user_id is not None and thread.owner_id == user_id:
+            date_pattern = re.compile(r"<t:(\d+):F>")
+            date_match = date_pattern.search(starter_message.content)
+
+            if date_match:
+                raid_timestamp = int(date_match.group(1))
+                time_since_raid = now.timestamp() - raid_timestamp
+                # Delete if raid passed by duration
+                if time_since_raid >= (duration * 86400):
+                    return True
+            else:
+                logger.error(f"No timestamp found in thread {thread.id}")
+            return False
+
+    # Standard duration check (fallback or if not specific user logic)
+    if thread.last_message_id:
+        time_since = now - snowflake_time(thread.last_message_id)
+        if time_since >= timedelta(days=duration):
+            return True
+
+    return False
 
 
 async def automod_channel(messages, duration: int, channel: str):
@@ -122,7 +135,7 @@ async def automod_channel(messages, duration: int, channel: str):
             continue
 
         # Delete message if older than 150 minutes
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         time_since = now - snowflake_time(message.id)
         if time_since > timedelta(minutes=duration):
             try:
