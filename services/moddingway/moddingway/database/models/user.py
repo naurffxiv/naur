@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel
 
@@ -16,14 +15,14 @@ class User(BaseModel):
     user_role: UserRole
     temporary_points: int
     permanent_points: int
-    last_infraction_timestamp: Optional[datetime] = None
+    last_infraction_timestamp: datetime | None = None
     is_banned: bool
 
     def get_strike_points(self) -> int:
         return self.temporary_points + self.permanent_points
 
     def has_mod_permissions(self) -> bool:
-        return self.user_role == UserRole.MOD or self.user_role == UserRole.SYSADMIN
+        return self.user_role in (UserRole.MOD, UserRole.SYSADMIN)
 
     def has_sysadmin_permissions(self) -> bool:
         return self.user_role == UserRole.SYSADMIN

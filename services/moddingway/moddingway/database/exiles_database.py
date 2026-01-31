@@ -1,6 +1,5 @@
 import logging
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
 from moddingway.constants import ExileStatus
 
@@ -30,6 +29,9 @@ def add_exile(exile: Exile) -> int:
 
         cursor.execute(query, params)
         res = cursor.fetchone()
+
+        if res is None:
+            raise ValueError("Failed to add exile to DB")
 
         return res[0]
 
@@ -86,7 +88,7 @@ def get_pending_unexiles() -> list[PendingExile]:
 
         params = (
             ExileStatus.TIMED_EXILED,
-            datetime.now(timezone.utc),
+            datetime.now(UTC),
         )
 
         cursor.execute(query, params)
@@ -95,7 +97,7 @@ def get_pending_unexiles() -> list[PendingExile]:
         return [PendingExile(*x) for x in res]
 
 
-def get_user_active_exile(user_id) -> PendingExile:
+def get_user_active_exile(user_id) -> PendingExile | None:
     conn = DatabaseConnection()
 
     with conn.get_cursor() as cursor:
@@ -103,7 +105,7 @@ def get_user_active_exile(user_id) -> PendingExile:
         SELECT e.exileID, u.userID, u.discordUserID, e.endTimestamp
         FROM exiles e
         JOIN users u ON e.userID = u.userID
-        WHERE u.userID = %s AND  e.exileStatus = %s 
+        WHERE u.userID = %s AND  e.exileStatus = %s
         LIMIT 1;
         """
 
@@ -184,8 +186,8 @@ def delete_exile(exile_id: int) -> bool:
 
     with conn.get_cursor() as cursor:
         query = """
-        DELETE FROM exiles 
-        WHERE exileId = %s 
+        DELETE FROM exiles
+        WHERE exileId = %s
         AND exileStatus != %s
         RETURNING exileId
         """
@@ -201,13 +203,13 @@ def delete_exile(exile_id: int) -> bool:
         return res is not None
 
 
-def get_exile_status(exile_id: int) -> Optional[ExileStatus]:
+def get_exile_status(exile_id: int) -> ExileStatus | None:
     conn = DatabaseConnection()
 
     with conn.get_cursor() as cursor:
         query = """
-        SELECT exileStatus 
-        FROM exiles 
+        SELECT exileStatus
+        FROM exiles
         WHERE exileId = %s
         """
         params = (exile_id,)
