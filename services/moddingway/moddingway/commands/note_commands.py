@@ -1,10 +1,12 @@
+import logging
+
 import discord
 from discord.ext.commands import Bot
-from moddingway.util import is_user_moderator
-from .helper import create_logging_embed, create_response_context
+
 from moddingway.services import note_service
-from moddingway.database import notes_database
-import logging
+from moddingway.util import is_user_moderator
+
+from .helper import create_logging_embed, create_response_context
 
 logger = logging.getLogger(__name__)
 

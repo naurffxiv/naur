@@ -23,17 +23,28 @@ def create_slowmode_commands(bot: Bot) -> None:
     async def set_slowmode(
         interaction: discord.Interaction,
         interval: int,
-        channel: discord.TextChannel = None,
+        channel: discord.TextChannel | None = None,
     ):
         """Set the slowmode interval for the specified channel."""
+        target_channel: discord.TextChannel
         if channel is None:  # set default channel
-            channel = interaction.channel
+            if isinstance(interaction.channel, discord.TextChannel):
+                target_channel = interaction.channel
+            else:
+                await interaction.response.send_message(
+                    "This command can only be used in a text channel.", ephemeral=True
+                )
+                return
+        else:
+            target_channel = channel
 
         async with create_response_context(interaction) as response_message:
             async with create_logging_embed(
                 interaction, interval=interval, channel=channel
             ) as logging_embed:
                 result = await edit_slowmode(
-                    logging_embed=logging_embed, channel=channel, interval=interval
+                    logging_embed=logging_embed,
+                    channel=target_channel,
+                    interval=interval,
                 )
                 response_message.set_string(result)
