@@ -6,13 +6,19 @@ import discord
 from moddingway.constants import (
     MINOR_INFRACTION_POINTS,
     MODERATE_INFRACTION_POINTS,
+    PERMANENT_BAN_STRIKE_THRESHOLD,
     SERIOUS_INFRACTION_POINTS,
     THRESHOLDS_PUNISHMENT,
+    StrikeSeverity,
 )
 from moddingway.database import strikes_database, users_database
 from moddingway.database.models import Strike, User
-from moddingway.constants import StrikeSeverity
-from moddingway.util import log_info_and_add_field, log_info_and_embed, send_dm
+from moddingway.util import (
+    log_info_and_add_field,
+    log_info_and_embed,
+    send_dm,
+    timestamp_to_epoch,
+)
 
 from . import ban_service, exile_service
 
@@ -94,7 +100,7 @@ async def get_user_strikes(
         strike_reason = strike[2]
         strike_created_by = strike[3]
         strike_created_at = strike[4]
-        strike_created_at_ts = int(strike_created_at.timestamp())
+        strike_created_at_ts = timestamp_to_epoch(strike_created_at)
         result = (
             result
             + f"\n* ID: {strike_id} | SEVERITY: {strike_severity} | Moderator: <@{strike_created_by}> | DATE ISSUED: <t:{strike_created_at_ts}:F> | REASON: {strike_reason}"
@@ -109,10 +115,10 @@ async def delete_strike(logging_embed: discord.Embed, strike_id: int) -> str:
     deleted_strike = strikes_database.delete_strike(strike_id)
 
     if deleted_strike is None:
-        return f"Strike not found, no change will be made"
+        return "Strike not found, no change will be made"
 
     user_id = deleted_strike[1]
-    severity = StrikeSeverity(deleted_strike[2])
+    severity = StrikeSeverity(int(deleted_strike[2]))
     temporary_points_to_remove = 0
     permanent_points_to_remove = 0
 
@@ -122,7 +128,7 @@ async def delete_strike(logging_embed: discord.Embed, strike_id: int) -> str:
         temporary_points_to_remove = _get_severity_points(severity)
 
     users_database.decrement_user_strike_points(
-        user_id, temporary_points_to_remove, permanent_points_to_remove
+        int(user_id), temporary_points_to_remove, permanent_points_to_remove
     )
 
     return f"Successfully deleted strike {strike_id}"
@@ -185,9 +191,10 @@ async def _apply_punishment(
         "Your actions were severe or frequent enough for you to receive this exile"
     )
 
-    if total_points >= 15:
+    if total_points >= PERMANENT_BAN_STRIKE_THRESHOLD:
         punishment = "Permanent ban"
         await ban_service.ban_member(
+            logging_embed,
             user,
             "Your strike were severe or frequent to be removed from NA Ultimate Raiding - FFXIV",
             False,
