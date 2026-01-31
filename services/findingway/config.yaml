@@ -1,41 +1,41 @@
 channels:
-- id: "1350638986271523018"
-  name: "naur ucob check"
-  duty: "The Unending Coil of Bahamut (Ultimate)"
-  dataCentres: [Aether, Crystal, Dynamis, Primal]
-- id: "1350640606220910763"
-  name: "naur uwu check"
-  duty: "The Weapon's Refrain (Ultimate)"
-  dataCentres: [Aether, Crystal, Dynamis, Primal]
-- id: "1350641049910906987"
-  name: "naur tea check"
-  duty: "The Epic of Alexander (Ultimate)"
-  dataCentres: [Aether, Crystal, Dynamis, Primal]
-- id: "1350641418573447188"
-  name: "naur dsr check"
-  duty: "Dragonsong's Reprise (Ultimate)"
-  dataCentres: [Aether, Crystal, Dynamis, Primal]
-- id: "1350641766755205232"
-  name: "naur top check"
-  duty: "The Omega Protocol (Ultimate)"
-  dataCentres: [Aether, Crystal, Dynamis, Primal]
-- id: "1350642110302261332"
-  name: "naur fru check"
-  duty: "Futures Rewritten (Ultimate)"
-  dataCentres: [Aether, Crystal, Dynamis, Primal]
-- id: "1356499044742205582"
-  name: "naur m9s"
-  duty: "AAC Heavyweight M1 (Savage)"
-  dataCentres: [Aether, Crystal, Dynamis, Primal]
-- id: "1356521053735616697"
-  name: "naur m10s"
-  duty: "AAC Heavyweight M2 (Savage)"
-  dataCentres: [Aether, Crystal, Dynamis, Primal]
-- id: "1356521080977756221"
-  name: "naur m11s"
-  duty: "AAC Heavyweight M3 (Savage)"
-  dataCentres: [Aether, Crystal, Dynamis, Primal]
-- id: "1356521102398066698"
-  name: "naur m12s"
-  duty: "AAC Heavyweight M4 (Savage)"
-  dataCentres: [Aether, Crystal, Dynamis, Primal]
+  - id: "1350638986271523018"
+    name: "naur ucob check"
+    duty: "The Unending Coil of Bahamut (Ultimate)"
+    dataCentres: [Aether, Crystal, Dynamis, Primal]
+  - id: "1350640606220910763"
+    name: "naur uwu check"
+    duty: "The Weapon's Refrain (Ultimate)"
+    dataCentres: [Aether, Crystal, Dynamis, Primal]
+  - id: "1350641049910906987"
+    name: "naur tea check"
+    duty: "The Epic of Alexander (Ultimate)"
+    dataCentres: [Aether, Crystal, Dynamis, Primal]
+  - id: "1350641418573447188"
+    name: "naur dsr check"
+    duty: "Dragonsong's Reprise (Ultimate)"
+    dataCentres: [Aether, Crystal, Dynamis, Primal]
+  - id: "1350641766755205232"
+    name: "naur top check"
+    duty: "The Omega Protocol (Ultimate)"
+    dataCentres: [Aether, Crystal, Dynamis, Primal]
+  - id: "1350642110302261332"
+    name: "naur fru check"
+    duty: "Futures Rewritten (Ultimate)"
+    dataCentres: [Aether, Crystal, Dynamis, Primal]
+  - id: "1356499044742205582"
+    name: "naur m9s"
+    duty: "AAC Heavyweight M1 (Savage)"
+    dataCentres: [Aether, Crystal, Dynamis, Primal]
+  - id: "1356521053735616697"
+    name: "naur m10s"
+    duty: "AAC Heavyweight M2 (Savage)"
+    dataCentres: [Aether, Crystal, Dynamis, Primal]
+  - id: "1356521080977756221"
+    name: "naur m11s"
+    duty: "AAC Heavyweight M3 (Savage)"
+    dataCentres: [Aether, Crystal, Dynamis, Primal]
+  - id: "1356521102398066698"
+    name: "naur m12s"
+    duty: "AAC Heavyweight M4 (Savage)"
+    dataCentres: [Aether, Crystal, Dynamis, Primal]

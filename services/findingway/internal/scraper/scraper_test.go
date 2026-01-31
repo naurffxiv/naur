@@ -21,7 +21,7 @@ func newTestServer() (*httptest.Server, error) {
 
 	mux.HandleFunc("/listings", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
-		w.Write(listings)
+		_, _ = w.Write(listings)
 	})
 
 	return httptest.NewServer(mux), nil
