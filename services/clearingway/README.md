@@ -1,24 +1,24 @@
-# clearingway
+# Clearingway
+Clearingway is a Discord bot designed to analyse players' FFLogs data and provide relevant roles based on completion.
 
-Clearingway listens to a Discord channel for the message `/clears <world> <first-name> <last-name>`.
+## Make Commands
 
-When it hears this message, it tries to find the relevant character in the Lodestone. If it finds them, it then parses their
-fflogs and tries to assign them a few roles:
+`make test` - Runs all tests
 
-1. A role for the highest current parse they have in any relevant encounter (Gold, Orange, Purple, Blue, Green, Grey)
-2. A role for every relevant encounter they've cleared ("P1S-Cleared," "P2S-Cleared," "P3S-Cleared," etc.)
-3. A combo legend role purely for flexing purposes for every ultimate they've cleared (The Legend, The Double Legend, The Triple Legend, The Tetra Legend)
-4. The role "NA's Comfiest" if they have any relevant encounter clears with a parse between 0 and 0.9
-5. The role "The Nice Legend" if they have any ultimate clears with a parse between 69.0 and 69.9
-6. The role "Nice" if they have any relevant clears with a parse between 69.0 and 69.9
-7. The role "The Comfy Legend" if they have any ultimate clears with a parse between 0 and 0.9
+`make build` - Builds the bot binary into `./bin/clearingway`
 
-It can be configured with the `config.yaml` file found in this repository.
+`make format` - Formats all Go files using `goimports`
 
-## Running
+`make lint` - Runs linter checks using `golangci-lint`
 
-Clearingway requires the following environment variables to start:
+`make lint-fix` - Runs linter checks and attempts to fix issues using `golangci-lint`
 
-- **DISCORD_TOKEN**: You have to create a [Discord bot for Clearingway](https://discord.com/developers/applications). Once you've done so, you can add the bot token here.
-- **FFLOGS_CLIENT_ID**: The client ID from [fflogs](https://www.fflogs.com/api/clients/).
-- **FFLOGS_CLIENT_SECRET**: The client secret from [fflogs](https://www.fflogs.com/api/clients/).
+## Environment Variables
+
+| ENV                  | Description                                                          | Required | Default   |
+|----------------------|----------------------------------------------------------------------|----------|-----------|
+| CONFIG_PATH          | Relative path from project root to location of config files          | Yes      | ./configs |
+| ENV                  | The environment the bot is running in: "production" or "development" | Yes      |           |
+| DISCORD_TOKEN        | [Discord](https://discord.com/developers/docs/intro) Bot Token       | Yes      |           |
+| FFLOGS_CLIENT_ID     | Client ID for [FFLogs](https://www.fflogs.com/profile)               | Yes      |           |
+| FFLOGS_CLIENT_SECRET | Client ID for [FFLogs](https://www.fflogs.com/profile)               | Yes      |           |
