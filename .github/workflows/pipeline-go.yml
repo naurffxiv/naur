@@ -48,6 +48,7 @@ jobs:
         uses: golangci/golangci-lint-action@v7
         with:
           version: v2.8.0
+          install-only: true
           working-directory: services/${{ inputs.service }}
 
       - name: Lint
