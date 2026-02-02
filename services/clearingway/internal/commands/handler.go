@@ -32,29 +32,30 @@ func (h *CommandHandler) Register(cmd Command) {
 }
 
 // HandleInteraction - Processes an incoming Discord interaction and executes the appropriate command.
-func (h *CommandHandler) HandleInteraction(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func (h *CommandHandler) HandleInteraction(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	cmd, ok := h.commands[i.ApplicationCommandData().Name]
 
 	if !ok {
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Content: "Command not found",
 			},
 		})
-		return
+		return err // nil if successful, error otherwise
 	}
 
 	err := cmd.Handler(s, i)
 	if err != nil {
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Content: fmt.Sprintf("Error executing command: %v", err),
 			},
 		})
-		return
+		return err
 	}
+	return err
 }
 
 // RegisterAll - Sends all registered commands to the Discord API for the specified guild.
