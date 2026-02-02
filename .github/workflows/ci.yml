@@ -127,7 +127,7 @@ jobs:
     uses: ./.github/workflows/pipeline-go.yml
     with:
       service: ${{ matrix.service }}
-      go-version: ${{ matrix.service == 'clearingway' && '1.25.0' || '1.24.0' }}
+      go-version: '1.25.0'
       should_run: ${{ github.event_name == 'push' || needs.detect-changes.outputs[matrix.service] == 'true' }}
     secrets: inherit
 
