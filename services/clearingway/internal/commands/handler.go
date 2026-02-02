@@ -13,10 +13,8 @@ type CommandHandler struct {
 
 // Command - Represents a Discord slash command with its metadata and handler.
 type Command struct {
-	Name        string
-	Description string
-	Options     []*discordgo.ApplicationCommandOption
-	Handler     func(s *discordgo.Session, i *discordgo.InteractionCreate) error
+	ApplicationCommand *discordgo.ApplicationCommand
+	Handler            func(s *discordgo.Session, i *discordgo.InteractionCreate) error
 }
 
 // NewHandler - Creates a new CommandHandler with an empty command registry.
@@ -28,7 +26,7 @@ func NewHandler() *CommandHandler {
 
 // Register - Adds a command to the handler's registry.
 func (h *CommandHandler) Register(cmd Command) {
-	h.commands[cmd.Name] = cmd
+	h.commands[cmd.ApplicationCommand.Name] = cmd
 }
 
 // HandleInteraction - Processes an incoming Discord interaction and executes the appropriate command.
@@ -58,18 +56,17 @@ func (h *CommandHandler) HandleInteraction(s *discordgo.Session, i *discordgo.In
 	return err
 }
 
-// RegisterAll - Sends all registered commands to the Discord API for the specified guild.
+// RegisterAll - Sends all registered commands to the Discord API for the specified guild using bulk overwrite.
 // Pass an empty string for guildID to register commands globally (takes up to 1 hour to propagate).
 func (h *CommandHandler) RegisterAll(s *discordgo.Session, guildID string) error {
+	commands := make([]*discordgo.ApplicationCommand, 0, len(h.commands))
 	for _, cmd := range h.commands {
-		_, err := s.ApplicationCommandCreate(s.State.User.ID, guildID, &discordgo.ApplicationCommand{
-			Name:        cmd.Name,
-			Description: cmd.Description,
-			Options:     cmd.Options,
-		})
-		if err != nil {
-			return fmt.Errorf("failed to register command %s: %w", cmd.Name, err)
-		}
+		commands = append(commands, cmd.ApplicationCommand)
+	}
+
+	_, err := s.ApplicationCommandBulkOverwrite(s.State.User.ID, guildID, commands)
+	if err != nil {
+		return fmt.Errorf("failed to bulk register commands: %w", err)
 	}
 	return nil
 }

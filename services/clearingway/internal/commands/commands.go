@@ -7,8 +7,10 @@ import (
 // PingCommand - Returns a ping command that responds with "Pong!".
 func PingCommand() Command {
 	return Command{
-		Name:        "ping",
-		Description: "Responds with pong",
+		ApplicationCommand: &discordgo.ApplicationCommand{
+			Name:        "ping",
+			Description: "Responds with Pong!",
+		},
 		Handler: func(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 			err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
