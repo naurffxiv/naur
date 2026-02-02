@@ -56,11 +56,13 @@ jobs:
 
       - name: Set Language Matrix
         id: set-matrix
+        env:
+          CHANGES: ${{ steps.filter.outputs.changes }}
         run: |
           if [[ "${{ github.event_name }}" != "pull_request" ]] || [[ "${{ steps.filter.outputs.workflow }}" == "true" ]]; then
             echo 'languages=["javascript", "python", "go", "csharp"]' >> $GITHUB_OUTPUT
           else
-            echo "languages=${{ steps.filter.outputs.changes }}" >> $GITHUB_OUTPUT
+            echo "languages=$CHANGES" >> $GITHUB_OUTPUT
           fi
 
   analyze:
@@ -199,18 +201,17 @@ jobs:
       - name: Summary
         run: |
           echo "### Security Scan Results" >> $GITHUB_STEP_SUMMARY
-          echo "- CodeQL: ${{ needs.analyze.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Trivy: ${{ needs.security-scan.result }}" >> $GITHUB_STEP_SUMMARY
 
-          if [[ "${{ needs.analyze.result }}" == "failure" ]] || \
-             [[ "${{ needs.security-scan.result }}" == "failure" ]]; then
+          ANALYZE_RESULT="${{ needs.analyze.result }}"
+          SCAN_RESULT="${{ needs.security-scan.result }}"
+
+          echo "- CodeQL Analysis: $ANALYZE_RESULT" >> $GITHUB_STEP_SUMMARY
+          echo "- Trivy Vulnerability Scan: $SCAN_RESULT" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "$ANALYZE_RESULT" == "failure" ]] || [[ "$SCAN_RESULT" == "failure" ]] || \
+             [[ "$ANALYZE_RESULT" == "cancelled" ]] || [[ "$SCAN_RESULT" == "cancelled" ]]; then
+            echo "::error::Security checks failed or were cancelled."
             echo "Security checks failed" >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
-
-          if [[ "${{ needs.analyze.result }}" == "skipped" ]] && \
-             [[ "${{ needs.security-scan.result }}" == "skipped" ]]; then
-            echo "No changes requiring security scan" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "All security checks passed" >> $GITHUB_STEP_SUMMARY
-          fi
+          echo "All security checks passed or skipped." >> $GITHUB_STEP_SUMMARY
