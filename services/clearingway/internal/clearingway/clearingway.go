@@ -57,7 +57,10 @@ func initCommandHandler(s *discordgo.Session, loadedEnv *env.Env) *commands.Comm
 	})
 
 	s.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-		handler.HandleInteraction(s, i)
+		err := handler.HandleInteraction(s, i)
+		if err != nil {
+			log.Printf("Error handling interaction: %v", err)
+		}
 	})
 
 	return handler
