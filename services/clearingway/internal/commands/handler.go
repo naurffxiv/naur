@@ -45,15 +45,28 @@ func (h *CommandHandler) HandleInteraction(s *discordgo.Session, i *discordgo.In
 
 	err := cmd.Handler(s, i)
 	if err != nil {
-		err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		// Attempt to respond with an error message
+		respondErr := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Content: fmt.Sprintf("Error executing command: %v", err),
 			},
 		})
-		return err
+
+		// If responding fails, we've likely already responded, so try editing the response instead
+		if respondErr != nil {
+			content := fmt.Sprintf("Error executing command: %v", err)
+			_, editErr := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+				Content: &content,
+			})
+
+			// If the edit also fails, return that error
+			if editErr != nil {
+				return fmt.Errorf("failed to respond with error: %w", editErr)
+			}
+		}
 	}
-	return err
+	return nil
 }
 
 // RegisterAll - Sends all registered commands to the Discord API for the specified guild using bulk overwrite.
