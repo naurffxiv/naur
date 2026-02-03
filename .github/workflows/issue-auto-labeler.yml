@@ -1,0 +1,53 @@
+name: Issue Auto-Labeler
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Apply labels
+        uses: ./.github/actions/issue-auto-labeler
+        with:
+          label-maps: |
+            {
+              "Service / Component": {
+                "Authingway":        "Authingway",
+                "Clearingway":       "Clearingway",
+                "Findingway":        "Findingway",
+                "Moddingway":        "Moddingway",
+                "Naurffxiv":         "Naurffxiv",
+                "AppHost (Aspire)":  "Aspire",
+                "Shared Libraries":  "Shared Libraries",
+                "Global / Monorepo": "Global"
+              },
+              "Functional Area": {
+                "Backend / API":                  "Backend",
+                "Frontend / UI":                  "Frontend",
+                "Infrastructure (CI/CD, Docker)": "Infrastructure",
+                "Security":                       "Security",
+                "Documentation":                  "Documentation",
+                "Quality Assurance":              "QA",
+                "Testing":                        "Testing",
+                "Developer Experience":           "Devex"
+              },
+              "Priority": {
+                "Low":      "Priority: Low",
+                "Medium":   "Priority: Medium",
+                "High":     "Priority: High",
+                "Critical": "Priority: Critical"
+              },
+              "Impact": {
+                "Low":    "Impact: Low",
+                "Medium": "Impact: Medium",
+                "High":   "Impact: High"
+              }
+            }

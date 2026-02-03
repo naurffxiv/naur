@@ -1,7 +1,7 @@
 name: Task
 description: Generic work item, typically requires little to no code
-title: "[Task] "
-labels: ["Task"]
+type: Task
+projects: ["naurffxiv/10"]
 body:
   - type: markdown
     attributes:
@@ -11,15 +11,38 @@ body:
   - type: dropdown
     id: service
     attributes:
-      label: Service
-      description: Which service is this task related to?
+      label: Service / Component
+      multiple: true
+      description: Which part of the codebase is this task related to?
       options:
+        - Other
         - Authingway
         - Clearingway
         - Findingway
         - Moddingway
         - Naurffxiv
+        - AppHost (Aspire)
+        - Shared Libraries
+        - Global / Monorepo
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Functional Area
+      multiple: true
+      description: What is the primary technical concern or domain?
+      options:
         - Other
+        - Backend / API
+        - Frontend / UI
+        - Infrastructure (CI/CD, Docker)
+        - Security
+        - Documentation
+        - Quality Assurance
+        - Testing
+        - Developer Experience
     validations:
       required: true
 
@@ -38,6 +61,6 @@ body:
       label: Acceptance Criteria
       description: Checklist of requirements.
       value: |
-        - [ ] 
+        - [ ]
     validations:
       required: false
