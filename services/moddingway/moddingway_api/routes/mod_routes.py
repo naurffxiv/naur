@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import APIRouter, HTTPException
 from fastapi_pagination import Page
 
@@ -11,8 +9,7 @@ router = APIRouter(prefix="/mods")
 
 
 @router.get("/{mod_id}")
-async def get_mod_by_id(mod_id: int) -> Optional[Mod]:
-
+async def get_mod_by_id(mod_id: int) -> Mod | None:
     db_user = users_database.get_user(mod_id)
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -25,7 +22,6 @@ async def get_mod_by_id(mod_id: int) -> Optional[Mod]:
 
 @router.get("")
 async def get_mods() -> Page[Mod]:
-
     page, size = parse_pagination_params()
     limit = size
     offset = (page - 1) * size
