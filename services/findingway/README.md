@@ -10,11 +10,11 @@ findingway ingests its configuration file at `./config.yaml` to determine what t
 
 findingway requires one environment variable to start:
 
-* **DISCORD_TOKEN**: You have to create a [Discord bot for findingway](https://discord.com/developers/applications). Once you've done so, you can add the bot token here.
+- **DISCORD_TOKEN**: You have to create a [Discord bot for findingway](https://discord.com/developers/applications). Once you've done so, you can add the bot token here.
 
 findingway also accepts one optional environment variable:
 
-* **ONCE**: If present, findingway will run only once and then exit successfully. Otherwise it will run perpetually and update the target channel every three minutes.
+- **ONCE**: If present, findingway will run only once and then exit successfully. Otherwise it will run perpetually and update the target channel every three minutes.
 
 I'm not totally sure if findingway can "just run" in other Discords, even if added. The emojis it uses are present only in APD, and bots can't always use emojis across Discords. If it can't be run in other Discords, I can create a configuration file for mapping roles and jobs to emojis -- someone just open an issue and let me know.
 

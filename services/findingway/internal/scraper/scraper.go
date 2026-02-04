@@ -23,7 +23,9 @@ func (s *Scraper) Scrape() (*ffxiv.Listings, error) {
 		listing := &ffxiv.Listing{Party: []*ffxiv.Slot{}}
 
 		// We can unmarshal a fair amount of information
-		e.Unmarshal(listing)
+		if err := e.Unmarshal(listing); err != nil {
+			fmt.Printf("Error unmarshalling listing: %v\n", err)
+		}
 
 		// Get attributes which are unmarshall-able
 		listing.DataCentre = e.Attr("data-centre")
@@ -32,7 +34,7 @@ func (s *Scraper) Scrape() (*ffxiv.Listings, error) {
 
 		// Get everything else that isn't easily inferred; first description
 		description := e.ChildText(".left .description")
-		description = strings.TrimSpace(strings.Replace(description, listing.Tags, "", -1))
+		description = strings.TrimSpace(strings.ReplaceAll(description, listing.Tags, ""))
 		listing.Description = description
 
 		// Then the party list
@@ -66,10 +68,12 @@ func (s *Scraper) Scrape() (*ffxiv.Listings, error) {
 
 		listings.Add(listing)
 	})
-	c.Visit(s.Url + "/listings")
+	if err := c.Visit(s.Url + "/listings"); err != nil {
+		return nil, err
+	}
 
 	if len(errors) > 0 {
-		return nil, fmt.Errorf("Could not scrape listings: %w", errors[0])
+		return nil, fmt.Errorf("could not scrape listings: %w", errors[0])
 	}
 
 	return listings, nil
