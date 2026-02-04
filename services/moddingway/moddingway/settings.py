@@ -1,9 +1,13 @@
 import logging
 import os
-from .constants import AUTOMOD_INACTIVITY, CHANNEL_AUTOMOD_INACTIVITY, STICKY_ROLES
-from pydantic import BaseModel
 from ast import literal_eval
 
+from dotenv import load_dotenv
+from pydantic import BaseModel
+
+from .constants import AUTOMOD_INACTIVITY, CHANNEL_AUTOMOD_INACTIVITY, STICKY_ROLES
+
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
@@ -12,15 +16,15 @@ class Settings(BaseModel):
     """Class for keeping track of settings"""
 
     guild_id: int
-    discord_token: str = os.environ.get("DISCORD_TOKEN")
+    discord_token: str = os.environ.get("DISCORD_TOKEN", "")
     log_level: int = logging.INFO
     logging_channel_id: int
     notify_channel_id: int
     postgres_host: str
     postgres_port: str
     database_name: str = "moddingway"
-    postgres_username: str = os.environ.get("POSTGRES_USER")
-    postgres_password: str = os.environ.get("POSTGRES_PASSWORD")
+    postgres_username: str = os.environ.get("POSTGRES_USER", "")
+    postgres_password: str = os.environ.get("POSTGRES_PASSWORD", "")
     automod_inactivity: dict[int, int]  # key: channel id, value: inactive limit (days)
     channel_automod_inactivity: dict[
         int, int
@@ -39,8 +43,8 @@ def prod() -> Settings:
         logging_channel_id=1172324840947056681,  # mod-reports
         notify_channel_id=1279952544235524269,  # bot-channel
         log_level=logging.INFO,
-        postgres_host=os.environ.get("POSTGRES_HOST"),
-        postgres_port=os.environ.get("POSTGRES_PORT"),
+        postgres_host=os.environ.get("POSTGRES_HOST", ""),
+        postgres_port=os.environ.get("POSTGRES_PORT", ""),
         automod_inactivity=AUTOMOD_INACTIVITY,
         channel_automod_inactivity=CHANNEL_AUTOMOD_INACTIVITY,
         event_bot_id=579155972115660803,  # Raid-Helper#3806
@@ -72,18 +76,20 @@ def local() -> Settings:
     pf_recruitment_channel_duration = os.environ.get(
         "PF_RECRUITMENT_CHANNEL_DURATION", ""
     )
-    if pf_recruitment_channel_id != "":
+    if pf_recruitment_channel_id != "" and pf_recruitment_channel_duration != "":
         channel_automod_inactivity[int(pf_recruitment_channel_id)] = int(
             pf_recruitment_channel_duration
         )
 
-    notify_channel_id = os.environ.get("NOTIFY_CHANNEL_ID", "")
-    if notify_channel_id == "":
-        notify_channel_id = os.environ.get("MOD_LOGGING_CHANNEL_ID", 0)
+    notify_channel_id_str = os.environ.get("NOTIFY_CHANNEL_ID") or os.environ.get(
+        "MOD_LOGGING_CHANNEL_ID"
+    )
+    if not notify_channel_id_str:
+        notify_channel_id_str = "0"
 
     return Settings(
-        guild_id=int(os.environ.get("GUILD_ID", 0)),
-        logging_channel_id=int(os.environ.get("MOD_LOGGING_CHANNEL_ID", 0)),
+        guild_id=_check_env_convert("GUILD_ID"),
+        logging_channel_id=_check_env_convert("MOD_LOGGING_CHANNEL_ID"),
         log_level=logging.DEBUG,
         postgres_host=os.environ.get("POSTGRES_HOST", "localhost"),
         postgres_port=os.environ.get("POSTGRES_PORT", "5432"),
@@ -92,8 +98,11 @@ def local() -> Settings:
         event_bot_id=_check_env_convert("EVENT_BOT_ID"),
         event_forum_id=_check_env_convert("PTC_EVENT_FORUM_ID"),
         event_warn_channel_id=_check_env_convert("EVENT_WARN_CHANNEL"),
-        notify_channel_id=notify_channel_id,
-        sticky_roles=literal_eval(os.environ.get("STICKY_ROLE_ARRAY", "None")) or [],
+        notify_channel_id=int(notify_channel_id_str),
+        postgres_username=os.environ.get("POSTGRES_USER", ""),
+        postgres_password=os.environ.get("POSTGRES_PASSWORD", ""),
+        database_name=os.environ.get("POSTGRES_DB", "moddingway"),
+        sticky_roles=literal_eval(os.environ.get("STICKY_ROLE_ARRAY") or "None") or [],
     )
 
 
@@ -118,3 +127,4 @@ def _check_env_convert(key: str, default: int = 0) -> int:
         return int(value_str)
     except ValueError:
         logger.info(f"ENV {key} is not set to {value_str}, returning {default}.")
+        return default
