@@ -55,24 +55,29 @@ module.exports = async ({ github, context }) => {
   const allManagedLabels = new Set();
 
   for (const [fieldName, map] of Object.entries(labelMaps)) {
-    Object.values(map).forEach((l) => allManagedLabels.add(l.toLowerCase()));
+    Object.values(map).forEach((labelName) =>
+      allManagedLabels.add(labelName.toLowerCase()),
+    );
 
     const value = getFormValue(fieldName);
     const newLabels = getLabelsFromMap(map, value);
     labels.push(...newLabels);
   }
 
-  const currentLabels = context.payload.issue.labels.map((l) => l.name);
+  const currentLabels = context.payload.issue.labels.map(
+    (labelObj) => labelObj.name,
+  );
 
   const toAdd = labels.filter(
-    (l) => !currentLabels.some((c) => c.toLowerCase() === l.toLowerCase()),
+    (labelName) =>
+      !currentLabels.some((c) => c.toLowerCase() === labelName.toLowerCase()),
   );
 
   // Only remove labels we own that are no longer selected in the form
-  const toRemove = currentLabels.filter((l) => {
-    const lowerL = l.toLowerCase();
-    const isManaged = allManagedLabels.has(lowerL);
-    const isDesired = labels.some((d) => d.toLowerCase() === lowerL);
+  const toRemove = currentLabels.filter((labelName) => {
+    const lowerLabelName = labelName.toLowerCase();
+    const isManaged = allManagedLabels.has(lowerLabelName);
+    const isDesired = labels.some((d) => d.toLowerCase() === lowerLabelName);
     return isManaged && !isDesired;
   });
 
