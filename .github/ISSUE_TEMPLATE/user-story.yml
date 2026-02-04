@@ -1,7 +1,7 @@
 name: User Story
 description: A description of a feature from an end-user perspective
-title: "[Story] "
-labels: ["Story"]
+type: Story
+projects: ["naurffxiv/10"]
 body:
   - type: markdown
     attributes:
@@ -11,15 +11,38 @@ body:
   - type: dropdown
     id: service
     attributes:
-      label: Service
-      description: Which service is this story related to?
+      label: Service / Component
+      multiple: true
+      description: Which part of the codebase is this story related to?
       options:
+        - Other
         - Authingway
         - Clearingway
         - Findingway
         - Moddingway
         - Naurffxiv
+        - AppHost (Aspire)
+        - Shared Libraries
+        - Global / Monorepo
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Functional Area
+      multiple: true
+      description: What is the primary technical concern or domain?
+      options:
         - Other
+        - Backend / API
+        - Frontend / UI
+        - Infrastructure (CI/CD, Docker)
+        - Security
+        - Documentation
+        - Quality Assurance
+        - Testing
+        - Developer Experience
     validations:
       required: true
 
@@ -59,10 +82,6 @@ body:
         - [ ] Criteria 1: The 'Export CSV' button is visible on the dashboard
         - [ ] Criteria 2: Clicking the button downloads a file named 'data-export.csv'
         - [ ] Criteria 3: The CSV contains all the columns displayed in the table
-      value: |
-        - [ ]
-        - [ ]
-        - [ ]
     validations:
       required: true
 

@@ -1,0 +1,21 @@
+name: Issue Auto-Labeler
+description: Syncs GitHub Issue Form selections to labels automatically.
+
+inputs:
+  label-maps:
+    description: |
+      A JSON string defining the form field → label mappings.
+      Each key is the form field name, each value is an object mapping form options to label names.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Run labeler
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const script = require('${{ github.action_path }}/index.js');
+          await script({ github, context });
+      env:
+        LABEL_MAPS: ${{ inputs.label-maps }}
