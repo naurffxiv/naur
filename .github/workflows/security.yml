@@ -23,6 +23,7 @@ jobs:
       languages: ${{ steps.set-matrix.outputs.languages }}
       any_changed: ${{ steps.filter.outputs.any_changed }}
       workflow_changed: ${{ steps.filter.outputs.workflow }}
+      changes: ${{ steps.filter.outputs.changes }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -56,20 +57,11 @@ jobs:
 
       - name: Set Language Matrix
         id: set-matrix
-        env:
-          CHANGES: ${{ steps.filter.outputs.changes }}
-        run: |
-          if [[ "${{ github.event_name }}" != "pull_request" ]] || [[ "${{ steps.filter.outputs.workflow }}" == "true" ]]; then
-            echo 'languages=["javascript", "python", "go", "csharp"]' >> $GITHUB_OUTPUT
-          else
-            echo "languages=$CHANGES" >> $GITHUB_OUTPUT
-          fi
+        run: echo 'languages=["javascript", "python", "go", "csharp"]' >> $GITHUB_OUTPUT
 
   analyze:
     name: CodeQL Analysis (${{ matrix.language }})
     needs: detect-changes
-    # Only run if there are languages to scan
-    if: needs.detect-changes.outputs.languages != '[]' && needs.detect-changes.outputs.languages != ''
     runs-on: ubuntu-latest
     timeout-minutes: 360
     permissions:
@@ -87,22 +79,24 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Initialize CodeQL
+        id: init
         uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
           queries: security-extended
 
       - name: Autobuild
-        if: matrix.language != 'csharp'
+        if: matrix.language != 'csharp' && steps.init.outcome == 'success'
         uses: github/codeql-action/autobuild@v4
 
       - name: Build C#
-        if: matrix.language == 'csharp'
+        if: matrix.language == 'csharp' && steps.init.outcome == 'success'
         run: |
           dotnet build services/authingway
           dotnet build services/AppHost
 
       - name: Perform CodeQL Analysis
+        if: steps.init.outcome == 'success'
         uses: github/codeql-action/analyze@v4
         with:
           category: "/language:${{matrix.language}}"
@@ -121,74 +115,49 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: ["services/naurffxiv", "services/clearingway", "services/findingway", "services/moddingway", "services/authingway", "services/AppHost"]
+        service:
+          [
+            "services/naurffxiv",
+            "services/clearingway",
+            "services/findingway",
+            "services/moddingway",
+            "services/authingway",
+            "services/AppHost",
+          ]
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Check if service should be scanned
-        id: check-scan
-        run: |
-          if [[ "${{ github.event_name }}" != "pull_request" ]] || \
-             [[ "${{ needs.detect-changes.outputs.workflow_changed }}" == "true" ]]; then
-            echo "should_scan=true" >> $GITHUB_OUTPUT
-          else
-            # Simple check: does the matrix service path start with a changed directory?
-            if git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep -q "^${{ matrix.service }}"; then
-              echo "should_scan=true" >> $GITHUB_OUTPUT
-            else
-              echo "should_scan=false" >> $GITHUB_OUTPUT
-            fi
-          fi
-
-      - name: Create Trivy ignore file
-        if: steps.check-scan.outputs.should_scan == 'true'
-        run: |
-          cat > .trivyignore << EOF
-          # Ignore Next.js DoS vulnerability GHSA-h25m-26qc-wcjf
-          # Reason: Next.js HTTP request deserialization DoS - assessed as low risk for our use case
-          # Date: 2026-01-30
-          # Revisit: Before next major release or when upgrading Next.js
-          GHSA-h25m-26qc-wcjf
-          EOF
-
       - name: Run Trivy vulnerability scanner
-        if: steps.check-scan.outputs.should_scan == 'true'
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.33.1
         env:
-          TRIVY_SKIP_VERSION_CHECK: 'true'
+          TRIVY_SKIP_VERSION_CHECK: "true"
         with:
-          scan-type: 'fs'
-          scan-ref: '${{ matrix.service }}'
-          format: 'sarif'
-          output: 'trivy-results-${{ strategy.job-index }}.sarif'
-          severity: 'CRITICAL,HIGH'
-          trivyignores: .trivyignore
-          scanners: 'vuln,secret'
-          exit-code: '0'
+          scan-type: "fs"
+          scan-ref: "${{ matrix.service }}"
+          trivy-config: .github/trivy.yaml
+          format: "sarif"
+          output: "trivy-results-${{ strategy.job-index }}.sarif"
+          exit-code: "0" # Don't fail the SARIF generation step, we fail later in the table step
 
       - name: Run Trivy (Table Output)
-        if: steps.check-scan.outputs.should_scan == 'true'
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.33.1
         env:
-          TRIVY_SKIP_VERSION_CHECK: 'true'
+          TRIVY_SKIP_VERSION_CHECK: "true"
         with:
-          scan-type: 'fs'
-          scan-ref: '${{ matrix.service }}'
-          format: 'table'
-          severity: 'CRITICAL,HIGH'
-          trivyignores: .trivyignore
-          scanners: 'vuln,secret'
-          exit-code: '1'
+          scan-type: "fs"
+          scan-ref: "${{ matrix.service }}"
+          trivy-config: .github/trivy.yaml
+          format: "table"
+          exit-code: "1"
 
       - name: Upload Trivy results to GitHub Security
         uses: github/codeql-action/upload-sarif@v4
-        if: steps.check-scan.outputs.should_scan == 'true' && always()
+        if: always()
         with:
-          sarif_file: 'trivy-results-${{ strategy.job-index }}.sarif'
-          category: 'trivy-${{ matrix.service }}'
-
+          sarif_file: "trivy-results-${{ strategy.job-index }}.sarif"
+          category: "trivy-${{ matrix.service }}"
 
   security-summary:
     name: Security Summary

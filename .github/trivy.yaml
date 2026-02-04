@@ -1,0 +1,26 @@
+scan:
+  scanners:
+    - vuln
+    - secret
+  skip-dirs:
+    - node_modules
+    - .git
+    - dist
+    - bin
+
+severity:
+  - CRITICAL
+  - HIGH
+
+format: table
+exit-code: 1
+ignore-unfixed: true
+dependency-tree: true
+timeout: 10m
+
+pkg:
+  include-dev-deps: true
+
+ignore:
+  # Next.js HTTP request deserialization DoS - Fix: upgrade next >= 15.5.10
+  - GHSA-h25m-26qc-wcjf
