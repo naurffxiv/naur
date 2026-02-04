@@ -11,7 +11,7 @@ param()
 $coreStack = @(
     @{ Name = ".NET 10";      Cmd = "dotnet"; Id = "Microsoft.DotNet.SDK.10" }
     @{ Name = "Node.js";      Cmd = "node";   Id = "OpenJS.NodeJS" }
-    @{ Name = "Python 3.11";  Cmd = "python"; Id = "Python.Python.3.11" }
+    @{ Name = "Python 3.14";  Cmd = "python"; Id = "Python.Python.3.14"; Check = { (py -3.14 --version) -match "3.14" } }
     @{ Name = "Go";           Cmd = "go";     Id = "GoLang.Go" }
     @{ Name = "PowerShell 7"; Cmd = "pwsh";   Id = "Microsoft.PowerShell" }
     @{ Name = "Docker";       Cmd = "docker"; Id = "Docker.DockerDesktop" }
@@ -24,7 +24,14 @@ if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
 
 $missing = @()
 foreach ($tool in $coreStack) {
-    if (-not (Get-Command $tool.Cmd -ErrorAction SilentlyContinue)) {
+    $present = $false
+    if ($tool.ContainsKey('Check') -and $tool.Check) {
+        $present = & $tool.Check
+    } elseif (Get-Command $tool.Cmd -ErrorAction SilentlyContinue) {
+        $present = $true
+    }
+
+    if (-not $present) {
         Write-Log -Level Warn -Message "$($tool.Name) missing"
         $missing += $tool
     } else {
@@ -47,7 +54,14 @@ if ($missing.Count -gt 0) {
 
     Write-Log -Level Info -Message "Verifying installations..."
     foreach ($tool in $missing) {
-        if (Get-Command $tool.Cmd -ErrorAction SilentlyContinue) {
+        $verified = $false
+        if ($tool.ContainsKey('Check') -and $tool.Check) {
+            $verified = & $tool.Check
+        } elseif (Get-Command $tool.Cmd -ErrorAction SilentlyContinue) {
+            $verified = $true
+        }
+
+        if ($verified) {
             Write-Log -Level Ok -Message "$($tool.Name)"
         } else {
             Write-Log -Level Error -Message "$($tool.Name) - restart may be required"

@@ -92,7 +92,7 @@ jobs:
     uses: ./.github/workflows/pipeline-python.yml
     with:
       service: moddingway
-      python-version: "3.11"
+      python-version: "3.14"
       should_run: ${{ github.event_name == 'push' || needs.detect-changes.outputs.moddingway == 'true' }}
     secrets: inherit
 

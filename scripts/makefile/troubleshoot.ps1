@@ -23,7 +23,7 @@ $tools = @(
     @{ Name = ".NET SDK"; Cmd = "dotnet"; Args = "--version" }
     @{ Name = "Node.js";  Cmd = "node";   Args = "--version" }
     @{ Name = "npm";      Cmd = "npm";    Args = "--version" }
-    @{ Name = "Python";   Cmd = "python"; Args = "--version" }
+    @{ Name = "Python";   Cmd = "py";     Args = @("-3.14", "--version") }
     @{ Name = "Go";       Cmd = "go";     Args = "version" }
     @{ Name = "Docker";   Cmd = "docker"; Args = "--version" }
     @{ Name = "Git";      Cmd = "git";    Args = "--version" }
