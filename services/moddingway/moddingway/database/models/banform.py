@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel
 
@@ -9,9 +8,9 @@ settings = get_settings()
 
 
 class BanForm(BaseModel):
-    form_id: Optional[int] = None
+    form_id: int | None = None
     user_id: int
     reason: str
-    approval: Optional[bool] = None
-    approved_by: Optional[int] = None
+    approval: bool | None = None
+    approved_by: int | None = None
     submission_timestamp: datetime

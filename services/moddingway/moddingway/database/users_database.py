@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 from moddingway.constants import UserRole
 from moddingway.settings import get_settings
@@ -12,7 +11,7 @@ settings = get_settings()
 logger = logging.getLogger(__name__)
 
 
-def get_user(discord_user_id: int) -> Optional[User]:
+def get_user(discord_user_id: int) -> User | None:
     conn = DatabaseConnection()
 
     with conn.get_cursor() as cursor:
@@ -90,6 +89,9 @@ def add_user(discord_user_id: int) -> User:
 
         res = cursor.fetchone()
 
+        if res is None:
+            raise ValueError("Failed to create user record in DB")
+
         logger.info(f"Created user record in DB with id {res[0]}")
         return User(
             user_id=res[0],
@@ -146,7 +148,6 @@ def get_user_count() -> int:
     conn = DatabaseConnection()
 
     with conn.get_cursor() as cursor:
-
         query = """
             SELECT COUNT(*)
             FROM users
@@ -183,7 +184,6 @@ def get_mod_count() -> int:
     conn = DatabaseConnection()
 
     with conn.get_cursor() as cursor:
-
         query = """
             SELECT COUNT(*)
             FROM users
@@ -290,7 +290,6 @@ def get_banned_count() -> int:
     conn = DatabaseConnection()
 
     with conn.get_cursor() as cursor:
-
         query = """
             SELECT COUNT(*)
             FROM users
