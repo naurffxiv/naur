@@ -2,10 +2,120 @@
 
 Discord moderation bot for NAUR.
 
-### Environment variables
-Postgres-related information is configured in the environment variables instead of a pre-created user/password. For local development, you can create a `.env` file to populate the following environment variables
+## Development Setup
 
-#### Testing
+### First Time Setup
+
+1. **Create a Bot**: Create a personal version of the moddingway bot via Discord's developer portal. Follow [Discord's Getting Started](https://discord.com/developers/docs/quick-start/getting-started#step-1-creating-an-app).
+2. **Environment**: Copy `.env_example` to `.env` and configure the required environment variables (see [Environment Variables](#environment-variables) below).
+3. **Install Dependencies**: Run `make install` to create a virtual environment and install development dependencies. This is optional if you only plan to run the bot via Docker, but required for linting and formatting.
+4. **Docker Desktop**: Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) to run the containerized database.
+
+### Server Setup
+
+The server used for development needs the following roles (in priority order):
+
+- Mod
+- Verified
+- Exiled
+
+Give yourself the `Mod` role to run moderation commands.
+
+## Make Commands
+
+We use a Makefile to simplify common development tasks.
+
+### Setup & Installation
+
+- `make install` - Creates a virtual environment (`venv`) and installs development dependencies. **Run this to setup local environment.**
+- `make clean-venv` - Removes the virtual environment.
+- `make clean-docker` - Removes unused Docker images to reclaim disk space.
+- `make clean` - Runs both `clean-venv` and `clean-docker`.
+
+### Running the Application
+
+**Docker (Recommended):**
+
+- `make run` - Stops existing containers (if running), rebuilds, and launches the bot with Docker. This is the most common command for development.
+- `make build` - Builds the Docker image without running it.
+- `make stop` - Stops all running Docker containers for this project.
+
+**Local Python:**
+
+- `make python-run` - Runs the bot locally using your virtual environment. Requires the database to be running first (`make database-run`).
+
+### Database Management
+
+- `make database-run` - Launches the containerized Postgres persistent database. The container uses values from your `.env` file for database configuration. Tables are automatically created when you first run the bot. Data persists between container restarts.
+- `make database-clean` - Deletes all data in the persistent database, recreates tables, and loads seed data. Requires the database container to be running.
+- `make database-run-ephemeral` - Launches a temporary Postgres database for testing. Uses `.env` for configuration. Tables are automatically created. Data does NOT persist between restarts.
+- `make database-clean-ephemeral` - Deletes all data in the temporary database, recreates tables, and loads seed data. Requires the ephemeral database container to be running.
+
+### API Development
+
+- `make api` - Starts the moddingway API server at `localhost:8000`.
+- `make api-reload` - Starts the API with hot-reload enabled, so you don't need to restart after code changes. **Recommended for API development.**
+
+### Code Quality & Testing
+
+- `make format` - Runs Ruff linter/formatter over all Python files. **Required before merging pull requests.**
+- `make ty` - Runs Ty type-checker to ensure type safety.
+- `make test` - Runs automated unit tests with pytest.
+
+## Typical Development Workflow
+
+### Docker-based development (Recommended)
+
+```bash
+make install         # Install dev tools (optional if only running)
+make run             # Start the bot (includes database)
+make format          # Before committing
+```
+
+### Local Python development
+
+```bash
+make install          # First time setup
+make database-run     # Start database
+make python-run       # Run bot locally
+make format           # Before committing
+```
+
+### API development
+
+```bash
+make install          # First time setup
+make database-run     # Start database
+make api-reload       # Start API with hot-reload
+```
+
+Visit `localhost:8000/docs` to view the API documentation.
+
+## Testing
+
+This application uses `pytest` for automated unit testing.
+
+- Run `make test` to execute the full suite.
+
+### Ruff & Ty
+
+We use **Ruff** for high-performance linting and formatting, and **Ty** for type checking.
+
+- Run `make format` to clean up code style.
+- Run `make ty` to check for type-safety issues.
+
+Most IDEs (like VS Code) have extensions for Ruff that can format on save.
+
+### Reseeding the Database
+
+To reset and re-seed the local database, run `make database-clean` while the postgres container is active.
+
+## Environment Variables
+
+Postgres-related information is configured in the environment variables instead of a pre-created user/password. For local development, create a `.env` file to populate the following environment variables.
+
+### Testing Variables
+
 - GUILD_ID
 - DISCORD_TOKEN
 - MOD_LOGGING_CHANNEL_ID
@@ -21,7 +131,8 @@ Postgres-related information is configured in the environment variables instead 
 - PTC_EVENT_FORUM_DURATION
 - EVENT_BOT_ID
 
-#### Release
+### Release Variables
+
 - DISCORD_TOKEN
 - POSTGRES_HOST
 - POSTGRES_PORT
@@ -30,52 +141,5 @@ Postgres-related information is configured in the environment variables instead 
 - POSTGRES_PASSWORD
 - MODDINGWAY_ENVIRONMENT
 
-
-Defaults are also set for `POSTGRES_PORT` (5432) and `POSTGRES_DB` (moddingway) if those two are not set.
+Defaults are set for `POSTGRES_PORT` (5432) and `POSTGRES_DB` (moddingway) if not specified.
 `INACTIVE_FORUM_CHANNEL_ID` and `INACTIVE_FORUM_DURATION` are optional. The relevant task will not run if those environment variables are not defined.
-
-To run a dockerized version of our postgres database locally, run `make database-run`. To run this, you will need to install and run [docker desktop](https://www.docker.com/products/docker-desktop/) on your local machine. The python bot will create the tables it needs when you first run it
-
-## Development recommendations
-
-### First time setup
-You will need to create a personal verion of the moddingway bot via Discord's developer portal in order to run a version of the application locally. To do this, you can follow Step 1 of [Discord's Getting Started](https://discord.com/developers/docs/quick-start/getting-started#step-1-creating-an-app) tutorial. 
-
-When you first are setting up the application, copy the file titled `.env_example` to be `.env`, and configure the missing enviornment variables. To add the bot account to your server, you can follow the [discord.py instructions](https://discordpy.readthedocs.io/en/stable/discord.html). The server that you use for development also will need to have a channel where the bot will output logging messages, and will need to have the following roles set up, in this priority order
-* Mod
-* Verified
-* Exiled
-
-In addition, you will need to give yourself the `Mod` role in order to properly run all moderation commands.
-
-An optional step for development is getting a [virtual environment](https://docs.python.org/3/library/venv.html) set up for python before you start development. All required packages to run the application are defined in `requirements.txt`
-
-## Make Commands
-We are utilizing a Makefile to simplify common commands you might use when running the application.
-* `make run` This will stop the existing Moddingway Docker container (if running), rebuild the container, and launch the application. This is the most common command you will use for development.
-* `make database-run` This will launch the containerized Postgres persistent database. The container uses values defined in the .env file to define the database username, password, and database name. The tables will be automatically configured when you first run the bot, or set up seed data. Data persists between container restarts.
-* `make database-clean` This command deletes all data in the database, re-create the tables, and then set up some example data in the persistent database.
-* `make database-run-ephemeral` This will launch the containerized Postgres temporary database for testing purposes. The container uses values defined in the .env file to define the database username, password, and database name. The tables will be automatically configured when you first run the bot, or set up seed data. Data does not persist between container restarts.
-* `make database-clean-ephemeral` This command deletes all data in the temporary database, re-create the tables, and then set up some example data in the temporary database.
-* `api-reload` This will start up the moddingway API. It runs with a reload flag set up, so you will not need to relaunch the command after making a code change.
-* `format` This will run our linter over all python files. This is required for pull requests to be merged.
-* `clean` This command removes unused docker images that you have previously built. Primarily, this is used to reclaim back disk space from docker.
-
-## Testing
-This application uses pytest to run automated unit tests. To install pytest, run `pip install pytest`. To confirm that pytest installed properly, run the command `pytest --version` and you should get an output like `pytest 8.3.4`. If you get an error related to the command being missing, you must either add the pytest install to your path, or you can replace all instances of `pytest` in suggested commands with `python -m pytest`. Alternatively, most IDEs support running tests directly in the IDE with pytest.
-
-
-### Black Formatter
-Files in this repo will be run through the [Black Formatter](https://black.readthedocs.io/en/stable/). To minimize merge conflicts, it is recommended to run this formatter on your code before submitting. Most IDEs will have an extension for black, and it is recommended to use those
-
-### Running in Docker
-If you want to run the app in a container, you run the application via `make python-run`. This command will also create a container for the postgres database, and will override the postgres host environment variable to correctly allow the two containers to interact with each other
-
-### Reseeding the Database
-By default, when you run the application either via python or docker, records in the database will persist. If you want to reset the database, you can do so by running `make database-clean` while the postgres container is running on your machine. If the database container is not found by the command, you can first start it by running `make database-run`
-
-# API
-
-To get started with moddingway API development, install the necessary packages using `pip install -r requirements.txt`. From there, you can start the server by running `make api`. You can then view the swaggerdocs page hosted on `localhost:8000/docs` to view all current endpoints.
-
-Alternatively, if you want to have local changes reflected in realtime with your development API, you can run `make api-reload`
