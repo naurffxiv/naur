@@ -5,7 +5,7 @@ from discord.ext.commands import Bot
 
 from moddingway.constants import Role, StrikeSeverity
 from moddingway.services import strike_service
-from moddingway.util import is_user_moderator, user_has_role, log_info_and_add_field
+from moddingway.util import is_user_moderator, log_info_and_add_field, user_has_role
 from moddingway.workers.strike_decrement import decrement_strikes
 
 from .helper import create_logging_embed, create_response_context
@@ -69,6 +69,9 @@ def create_strikes_commands(bot: Bot) -> None:
             async with create_logging_embed(
                 interaction, user=user, reason=reason, severity=severity.name
             ) as logging_embed:
+                if not isinstance(interaction.user, discord.Member):
+                    response_message.set_string("This command must be run in a server.")
+                    return
                 await strike_service.add_strike(
                     logging_embed, user, severity, reason, interaction.user
                 )
@@ -92,7 +95,7 @@ def create_strikes_commands(bot: Bot) -> None:
     @discord.app_commands.describe(strike_id="id of the strike you are deleting")
     async def delete_strike(interaction: discord.Interaction, strike_id: int):
         await interaction.response.send_message(
-            f"Are you sure you want to delete this strike?",
+            "Are you sure you want to delete this strike?",
             view=StrikeDeleteView(
                 strike_id=strike_id, interaction=interaction, timeout=30
             ),
