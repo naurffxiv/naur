@@ -1,8 +1,8 @@
 from dataclasses import dataclass
+from datetime import datetime
+
 from . import DatabaseConnection
 from .models import Note
-from typing import List
-from datetime import datetime
 
 
 @dataclass
@@ -15,16 +15,13 @@ class NoteDisplay:
 
 
 def convert_row_to_note_display(row: tuple) -> NoteDisplay:
-    try:
-        return NoteDisplay(
-            note_id=row[0],
-            is_warning=row[1],
-            content=row[2],
-            created_by=row[3],
-            last_editor=row[4],
-        )
-    except:
-        return None
+    return NoteDisplay(
+        note_id=row[0],
+        is_warning=row[1],
+        content=row[2],
+        created_by=row[3],
+        last_editor=row[4],
+    )
 
 
 def add_note(note: Note) -> int:
@@ -52,15 +49,18 @@ def add_note(note: Note) -> int:
         cursor.execute(query, params)
         res = cursor.fetchone()
 
+        if res is None:
+            raise ValueError("Failed to add note to DB")
+
         return res[0]
 
 
-def list_notes(user_id: int) -> List[NoteDisplay]:
+def list_notes(user_id: int) -> list[NoteDisplay]:
     conn = DatabaseConnection()
 
     with conn.get_cursor() as cursor:
         query = """
-        select n.noteid, n.isWarning, n.note, n.createdby, n.lastEditedBy  
+        select n.noteid, n.isWarning, n.note, n.createdby, n.lastEditedBy
         from notes n
         join users u on u.userID = n.userID
         where u.userId = %s
@@ -80,7 +80,7 @@ def get_note(note_id: int) -> NoteDisplay:
 
     with conn.get_cursor() as cursor:
         query = """
-        select n.noteid, n.isWarning, n.note, n.createdby , n.lastEditedBy  
+        select n.noteid, n.isWarning, n.note, n.createdby , n.lastEditedBy
         from notes n
         join users u on u.userID = n.userID
         where n.noteid = %s
@@ -90,6 +90,9 @@ def get_note(note_id: int) -> NoteDisplay:
 
         cursor.execute(query, params)
         row = cursor.fetchone()
+
+        if row is None:
+            raise ValueError(f"Note with id {note_id} not found")
 
         return convert_row_to_note_display(row)
 
@@ -117,7 +120,7 @@ def update_note(
 
     with conn.get_cursor() as cursor:
         query = """
-        update notes n 
+        update notes n
         set note = %s, lastEditedBy = %s, lastEditedTimestamp = %s
         where n.noteid = %s
         """
@@ -129,12 +132,12 @@ def update_note(
         return rows_affected == 1
 
 
-def list_warnings(user_id: int) -> List[NoteDisplay]:
+def list_warnings(user_id: int) -> list[NoteDisplay]:
     conn = DatabaseConnection()
 
     with conn.get_cursor() as cursor:
         query = """
-        select n.noteid, n.isWarning, n.note, n.createdby, n.lastEditedBy  
+        select n.noteid, n.isWarning, n.note, n.createdby, n.lastEditedBy
         from notes n
         join users u on u.userID = n.userID
         where u.userId = %s and n.isWarning = true

@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel
 
@@ -10,7 +9,7 @@ settings = get_settings()
 
 
 class Strike(BaseModel):
-    strike_id: Optional[int] = None
+    strike_id: int | None = None
     user_id: int
     severity: StrikeSeverity
     reason: str
