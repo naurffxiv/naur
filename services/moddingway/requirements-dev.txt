@@ -1,0 +1,8 @@
+-r requirements.txt
+pytest
+pytest-cov
+pytest-mock
+pytest-asyncio
+ruff==0.15.0
+ty
+mypy
