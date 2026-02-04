@@ -6,8 +6,8 @@ import pytest
 from pytest_mock.plugin import MockerFixture
 
 from moddingway import constants
-from moddingway.database.models import User
 from moddingway.constants import UserRole
+from moddingway.database.models import User
 
 DEFAULT_DATETIME_NOW = datetime.datetime(
     2019, 11, 19, 8, 0, 0, tzinfo=datetime.timezone.utc
@@ -48,10 +48,12 @@ def naur_guild(mocker: MockerFixture, create_role):
 @pytest.fixture
 def create_member(mocker: MockerFixture, naur_guild, create_role):
     def __create_member(
-        roles: List[constants.Role] = [constants.Role.VERIFIED],
+        roles: List[constants.Role] | None = None,
         allows_dms: bool = True,
         id: Optional[int] = None,
     ):
+        if roles is None:
+            roles = [constants.Role.VERIFIED]
         role_list = [create_role(role) for role in roles]
         mocked_member = mocker.Mock(
             spec=discord.member,

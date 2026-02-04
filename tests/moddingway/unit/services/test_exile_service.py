@@ -4,8 +4,8 @@ import pytest
 from pytest_mock.plugin import MockerFixture
 
 from moddingway import constants
-from moddingway.database.models import User
 from moddingway.constants import UserRole
+from moddingway.database.models import User
 from moddingway.services import exile_service
 
 
