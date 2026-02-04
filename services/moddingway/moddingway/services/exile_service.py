@@ -1,14 +1,13 @@
 import datetime
 import logging
 import re
-from datetime import timezone
-from typing import Optional
 
 import discord
 
-from moddingway.database import exiles_database, users_database, roles_database
-from moddingway.database.models import Exile
+from moddingway import util
 from moddingway.constants import ExileStatus, Role
+from moddingway.database import exiles_database, roles_database, users_database
+from moddingway.database.models import Exile
 from moddingway.settings import get_settings
 from moddingway.util import (
     add_and_remove_role,
@@ -17,7 +16,6 @@ from moddingway.util import (
     send_dm,
     timestamp_to_epoch,
 )
-from moddingway import util
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
@@ -28,7 +26,7 @@ async def exile_user(
     user: discord.Member,
     duration: datetime.timedelta,
     reason: str,
-) -> Optional[str]:
+) -> str | None:
     db_user = users_database.get_user(user.id)
     if db_user:
         currentExile = exiles_database.get_user_active_exile(db_user.user_id)
@@ -56,17 +54,17 @@ async def exile_user(
         log_info_and_embed(
             logging_embed,
             logger,
-            f"User not found in database, creating new record",
+            "User not found in database, creating new record",
         )
         db_user = users_database.add_user(user.id)
 
     # add exile entry into DB
-    start_timestamp = datetime.datetime.now(datetime.timezone.utc)
+    start_timestamp = datetime.datetime.now(datetime.UTC)
     end_timestamp = start_timestamp + duration
     exile_status = ExileStatus.TIMED_EXILED
 
     # create utc timestamp for exile end
-    timestamp = int(end_timestamp.replace(tzinfo=timezone.utc).timestamp())
+    timestamp = timestamp_to_epoch(end_timestamp)
 
     exile = Exile(
         exile_id=None,
@@ -82,7 +80,7 @@ async def exile_user(
     logger.info(f"Created exile with ID {exile_id}")
     logging_embed.set_footer(text=f"Exile ID: {exile_id}")
 
-    roles_to_save: list[Role] = []
+    roles_to_save: list[discord.Role] = []
 
     # change user role
     await add_and_remove_role(
@@ -95,7 +93,7 @@ async def exile_user(
             if role.id in settings.sticky_roles:
                 discord_role = user.guild.get_role(role.id)
                 if discord_role is not None:
-                    roles_to_save.append(user.guild.get_role(discord_role.id))
+                    roles_to_save.append(discord_role)
 
         if len(roles_to_save) > 0:
             await user.remove_roles(*roles_to_save)
@@ -133,16 +131,15 @@ async def exile_user(
 
 
 async def delete_exile_by_id(logging_embed: discord.Embed, exile_id: int):
-
     status = exiles_database.get_exile_status(exile_id)
     if status == ExileStatus.TIMED_EXILED:
         log_info_and_add_field(
             logging_embed,
             logger,
             "Result",
-            f"Selected exile is active, cannot be deleted",
+            "Selected exile is active, cannot be deleted",
         )
-        return f"Selected exile is active, cannot be deleted"
+        return "Selected exile is active, cannot be deleted"
     elif status == ExileStatus.UNEXILED:
         result = exiles_database.delete_exile(exile_id)
         if result:
@@ -170,7 +167,7 @@ async def delete_exile_by_id(logging_embed: discord.Embed, exile_id: int):
 
 async def unexile_user(
     logging_embed: discord.Embed, user: discord.Member
-) -> Optional[str]:
+) -> str | None:
     if not util.user_has_role(user, Role.EXILED):
         error_message = "User is not currently exiled, no action will be taken"
         log_info_and_add_field(
@@ -188,7 +185,7 @@ async def unexile_user(
     await send_dm(
         logging_embed,
         user,
-        f"You have been un-exiled from NA Ultimate Raiding - FFXIV.",
+        "You have been un-exiled from NA Ultimate Raiding - FFXIV.",
         context="Un-Exile",
     )
 
@@ -219,7 +216,7 @@ async def unexile_user(
 
     # check for any sticky roles to restore
     try:
-        roles_to_restore: list[Role] = []
+        roles_to_restore: list[discord.Role] = []
         for role in roles_database.get_sticky_roles(db_user.user_id):
             discord_role = user.guild.get_role(int(role))
             if discord_role is not None:
@@ -284,15 +281,15 @@ async def get_active_exiles() -> str:
     if len(exile_list) == 0:
         return "No active exiles found"
 
-    result = f"Active exiles found for"
+    result = "Active exiles found for"
     for exile in exile_list:
         logger.info(type(exile))
         exile_id = exile.exile_id
         discord_id = f"<@{exile.discord_id}>"
         exile_reason = exile.reason
-        exile_start_epoch = round(exile.start_timestamp.timestamp())
+        exile_start_epoch = timestamp_to_epoch(exile.start_timestamp)
         exile_end_epoch = (
-            round(exile.end_timestamp.timestamp()) if exile.exile_status else None
+            timestamp_to_epoch(exile.end_timestamp) if exile.exile_status else None
         )
         exile_start_date = f"<t:{exile_start_epoch}:F>"
         exile_end_date = f"<t:{exile_end_epoch}:F>" if exile_end_epoch else "Indefinite"
@@ -309,7 +306,7 @@ async def get_active_exiles() -> str:
 def format_time_string(duration_string: str):
     if not duration_string:
         return None
-    regex = "^(\d\d?)(sec|min|min|hour|day)"  # Matches (digit, digit?)(option of [sec, min, hour, day])
+    regex = r"^(\d\d?)(sec|min|min|hour|day)"  # Matches (digit, digit?)(option of [sec, min, hour, day])
     result = re.search(regex, duration_string)
     if result:
         duration = int(result.group(1))

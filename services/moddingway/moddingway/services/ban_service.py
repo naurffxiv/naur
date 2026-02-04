@@ -1,9 +1,9 @@
 import logging
-from datetime import datetime, timedelta, timezone
-from typing import Optional, Tuple
+from datetime import UTC, datetime, timedelta
 
 import discord
 
+from moddingway.constants import MAX_BAN_REASON_LENGTH
 from moddingway.settings import get_settings
 from moddingway.util import send_dm
 
@@ -16,7 +16,7 @@ async def ban_member(
     user: discord.Member,
     reason: str,
     delete_messages: bool,
-) -> Optional[Tuple[bool, str]]:
+) -> tuple[bool, str | None]:
     """Executes ban of member.
 
      Args:
@@ -29,10 +29,10 @@ async def ban_member(
          bool: status of the ban
          str: any errors that occurred
     """
-    if len(reason) >= 512:
+    if len(reason) >= MAX_BAN_REASON_LENGTH:
         return (
             False,
-            f"Unable to ban {user.mention}: reason is too long (above 512 characters). Please shorten the ban reason.",
+            f"Unable to ban {user.mention}: reason is too long (above {MAX_BAN_REASON_LENGTH} characters). Please shorten the ban reason.",
         )
 
     dm_failed_message = await ban_dm(logging_embed, user, reason)
@@ -58,7 +58,7 @@ async def ban_user(
     user: discord.User,
     reason: str,
     delete_messages: bool,
-) -> Optional[Tuple[bool, str]]:
+) -> tuple[bool, str | None]:
     """Executes ban of user.
 
      Args:
@@ -72,10 +72,10 @@ async def ban_user(
          bool: status of the ban
          str: any errors that occurred
     """
-    if len(reason) >= 512:
+    if len(reason) >= MAX_BAN_REASON_LENGTH:
         return (
             False,
-            f"Unable to ban {user.mention}: reason is too long (above 512 characters). Please shorten the ban reason.",
+            f"Unable to ban {user.mention}: reason is too long (above {MAX_BAN_REASON_LENGTH} characters). Please shorten the ban reason.",
         )
 
     dm_failed_message = await ban_dm(logging_embed, user, reason)
@@ -84,6 +84,12 @@ async def ban_user(
         # 604800 seconds is the maximum value for delete_message_seconds, and is equivalent to 7 days.
         delete_seconds = 604800 if delete_messages else 0
         guild = interaction.guild
+        if guild is None:
+            return (
+                False,
+                "Unable to perform this action because the guild information is missing.",
+            )
+
         await guild.ban(user, reason=reason, delete_message_seconds=delete_seconds)
         logger.info(f"Successfully banned {user.mention}")
 
@@ -98,9 +104,9 @@ async def ban_user(
 
 async def ban_dm(
     logging_embed: discord.Embed, user: discord.User | discord.Member, reason
-) -> Optional[str]:
+) -> str | None:
     # Calculate the timestamp for 30 days from now
-    appeal_deadline = int((datetime.now(timezone.utc) + timedelta(days=30)).timestamp())
+    appeal_deadline = int((datetime.now(UTC) + timedelta(days=30)).timestamp())
     await send_dm(
         logging_embed,
         user,

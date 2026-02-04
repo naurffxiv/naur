@@ -2,6 +2,7 @@ import logging
 
 import discord
 
+from moddingway.constants import MAX_SLOWMODE_INTERVAL
 from moddingway.util import log_info_and_add_field
 
 logger = logging.getLogger(__name__)
@@ -12,8 +13,10 @@ async def edit_slowmode(
     interval: int,
     channel: discord.TextChannel,
 ) -> str:
-    if interval < 0 or interval > 21600:
-        error_message = "Interval must be between 0 and 21600 seconds"
+    if interval < 0 or interval > MAX_SLOWMODE_INTERVAL:
+        error_message = (
+            f"Interval must be between 0 and {MAX_SLOWMODE_INTERVAL} seconds"
+        )
         log_info_and_add_field(logging_embed, logger, "Error", error_message)
         return error_message
 
