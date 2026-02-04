@@ -1,11 +1,13 @@
+from datetime import datetime, time, timedelta, timezone
+from typing import List
+
+import discord
 import pytest
 from pytest_mock.plugin import MockerFixture
-from moddingway.database.models import Strike
-from moddingway.services import strike_service, ban_service, exile_service
+
 from moddingway import constants
-from typing import List
-import discord
-from datetime import datetime, time, timedelta, timezone
+from moddingway.database.models import Strike
+from moddingway.services import ban_service, exile_service, strike_service
 
 
 @pytest.mark.parametrize(
@@ -46,6 +48,7 @@ async def test_apply_punisment(
     )
     if total_points >= 15:
         mocked_ban_member.assert_called_once_with(
+            mocked_embed,
             mocked_user,
             mocker.ANY,
             False,

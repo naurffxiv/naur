@@ -12,7 +12,7 @@ medium_len_case = (
     35,
     ["medium length message that gets", "broken in half"],
 )
-exact_length_case = ("first secon third", 5, ["first", "secon", "third"])
+exact_length_case = ("first second third", 6, ["first", "second", "third"])
 
 
 @pytest.mark.parametrize(
