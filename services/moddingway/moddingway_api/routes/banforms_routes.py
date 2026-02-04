@@ -1,19 +1,15 @@
-from fastapi_pagination import Page
-import httpx
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
-from typing import Optional
-from datetime import datetime, timezone
-import discord
 import logging
-from moddingway.settings import get_settings
-from moddingway_api.utils.paginate import parse_pagination_params, paginate
+from datetime import UTC, datetime
+
+from fastapi import APIRouter, HTTPException
+from fastapi_pagination import Page
+
 from moddingway.database import banforms_database, users_database
 from moddingway.database.models import BanForm
-from moddingway.util import get_log_channel, create_interaction_embed_context
-from moddingway_api.schemas.ban_form_schema import FormRequest, UpdateRequest
+from moddingway.settings import get_settings
 from moddingway_api.routes.banneduser_routes import unban_user
-
+from moddingway_api.schemas.ban_form_schema import FormRequest, UpdateRequest
+from moddingway_api.utils.paginate import paginate, parse_pagination_params
 
 router = APIRouter(prefix="/banforms")
 settings = get_settings()
@@ -23,7 +19,6 @@ logger = logging.getLogger(__name__)
 
 @router.get("")
 async def get_ban_forms() -> Page[BanForm]:
-
     page, size = parse_pagination_params()
     limit = size
     offset = (page - 1) * size
@@ -35,8 +30,7 @@ async def get_ban_forms() -> Page[BanForm]:
 
 
 @router.get("/{form_id}")
-async def get_ban_form_by_id(form_id: int) -> Optional[BanForm]:
-
+async def get_ban_form_by_id(form_id: int) -> BanForm | None:
     db_form = banforms_database.get_ban_form(form_id)
 
     if not db_form:
@@ -55,8 +49,7 @@ async def get_ban_form_by_id(form_id: int) -> Optional[BanForm]:
 
 @router.post("")
 async def submit_form(request: FormRequest):
-
-    db_user = users_database.get_user(request.user_id)
+    db_user = users_database.get_user(int(request.user_id))
 
     if db_user:
         if not db_user.is_banned:
@@ -65,7 +58,7 @@ async def submit_form(request: FormRequest):
         form = BanForm(
             user_id=db_user.user_id,
             reason=request.reason,
-            submission_timestamp=datetime.now(timezone.utc),
+            submission_timestamp=datetime.now(UTC),
         )
 
         result = banforms_database.add_form(form)
@@ -81,19 +74,21 @@ async def submit_form(request: FormRequest):
 
 @router.patch("")
 async def update_form(request: UpdateRequest):
-
-    db_form = banforms_database.get_ban_form(request.form_id)
+    db_form = banforms_database.get_ban_form(int(request.form_id))
     if not db_form:
         raise HTTPException(status_code=404, detail="Form not found")
 
     result = banforms_database.update_form(
         request.form_id, request.approval, request.approver_id
     )
-    if result[0] == True:
+    if result is not None and result[0]:
         db_user = banforms_database.get_user_from_form(result[1])
-        try:
-            unban_user(db_user)
-        except Exception as e:
-            logger.error(f"Error unbanning user {db_user} via banform approval: {e}")
+        if db_user:
+            try:
+                await unban_user(str(db_user))
+            except Exception as e:
+                logger.error(
+                    f"Error unbanning user {db_user} via banform approval: {e}"
+                )
 
     return {"detail": f"Form {request.form_id} has been updated"}

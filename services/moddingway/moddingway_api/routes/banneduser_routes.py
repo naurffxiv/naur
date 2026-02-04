@@ -1,13 +1,12 @@
-from fastapi_pagination import Page
 import httpx
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
+from fastapi_pagination import Page
 from pydantic import BaseModel
-from typing import Optional
+
+from moddingway.database import users_database
 from moddingway.settings import get_settings
 from moddingway_api.schemas.banned_user_schema import Banned
-from moddingway_api.utils.paginate import parse_pagination_params, paginate
-from moddingway.database import users_database
-
+from moddingway_api.utils.paginate import paginate, parse_pagination_params
 
 router = APIRouter(prefix="/bannedUsers")
 settings = get_settings()
@@ -16,13 +15,12 @@ authHeader = {"Authorization": f"Bot {settings.discord_token}"}
 
 class BanRequest(BaseModel):
     user_id: str  # discord user ID
-    reason: Optional[str] = "Banned via API"  # optional reason shown in audit
-    delete_message_days: Optional[int] = 0  # optional to delete message (0-7 days)
+    reason: str | None = "Banned via API"  # optional reason shown in audit
+    delete_message_days: int | None = 0  # optional to delete message (0-7 days)
 
 
 @router.get("")
 async def get_banned_users() -> Page[Banned]:
-
     page, size = parse_pagination_params()
     limit = size
     offset = (page - 1) * size
@@ -54,7 +52,7 @@ async def ban_user(request: BanRequest):
             response.raise_for_status()  # will raise if ban fails
             return {"detail": f"User {request.user_id} has been banned"}
     except (httpx.HTTPError, httpx.RequestError) as exc:
-        raise HTTPException(status_code=503, detail=str(exc))
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
 @router.delete("")
@@ -69,4 +67,4 @@ async def unban_user(user_id: str):
             response.raise_for_status()  # will raise if ban fails
             return {"detail": f"User {user_id} has been unbanned"}
     except (httpx.HTTPError, httpx.RequestError) as exc:
-        raise HTTPException(status_code=503, detail=str(exc))
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
