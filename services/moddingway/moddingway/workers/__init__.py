@@ -1,5 +1,5 @@
 from .autounexile import autounexile_users
-from .forum_automod import autodelete_threads, autodelete_posts
+from .forum_automod import autodelete_posts, autodelete_threads
 from .strike_decrement import decrement_strikes
 
 

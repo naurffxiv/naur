@@ -1,14 +1,16 @@
 import logging
 from contextlib import asynccontextmanager
-import discord
+
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 from fastapi_pagination import add_pagination
+
 from moddingway.database import DatabaseConnection
 from moddingway_api.routes import (
-    user_router,
-    mod_router,
-    banneduser_router,
     banform_router,
+    banneduser_router,
+    mod_router,
+    user_router,
 )
 
 
@@ -31,6 +33,17 @@ def configure_logging():
 
 app = FastAPI(title="Moddingway API", lifespan=lifespan)
 add_pagination(app)
+
+
+@app.get("/", include_in_schema=False)
+def root():
+    return RedirectResponse(url="/docs")
+
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+
 
 app.include_router(user_router, tags=["user"])
 app.include_router(mod_router, tags=["mod"])
