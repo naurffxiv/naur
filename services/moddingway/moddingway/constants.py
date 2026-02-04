@@ -3,6 +3,8 @@ from enum import IntEnum, StrEnum
 
 # Class Constants
 class Role(StrEnum):
+    """Discord role names as enum values"""
+
     EXILED = "Exiled"
     NON_VERIFIED = "Non-Verified"
     VERIFIED = "Verified"
@@ -66,3 +68,8 @@ ERROR_MESSAGES = {
     # {context} gives context to where the error originated
     50007: "Failed to send DM to <@{user}> for {context}: user has DMs disabled or blocked the bot (error code: 50007).",
 }
+
+# Validation Constants
+MAX_BAN_REASON_LENGTH = 512
+MAX_SLOWMODE_INTERVAL = 21600  # 6 hours in seconds
+PERMANENT_BAN_STRIKE_THRESHOLD = 15
