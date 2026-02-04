@@ -38,12 +38,12 @@ func NewBotInstance(loadedEnv *env.Env) (*Clearingway, error) {
 }
 
 // initCommandHandler - Sets up the command handler and registers commands
-func initCommandHandler(s *discordgo.Session, loadedEnv *env.Env) *commands.CommandHandler {
+func initCommandHandler(session *discordgo.Session, loadedEnv *env.Env) *commands.CommandHandler {
 	handler := commands.NewHandler()
 
 	handler.Register(commands.PingCommand())
 
-	s.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
+	session.AddHandler(func(session *discordgo.Session, ready *discordgo.Ready) {
 		// If env is development, register commands to test guild only
 		// If this is a blank string, commands are registered globally
 		testingGuildId := ""
@@ -51,13 +51,13 @@ func initCommandHandler(s *discordgo.Session, loadedEnv *env.Env) *commands.Comm
 			testingGuildId = loadedEnv.DISCORD_TEST_GUILD_ID
 		}
 
-		if err := handler.RegisterAll(s, testingGuildId); err != nil {
+		if err := handler.RegisterAll(session, testingGuildId); err != nil {
 			log.Printf("Error registering commands: %v", err)
 		}
 	})
 
-	s.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-		err := handler.HandleInteraction(s, i)
+	session.AddHandler(func(session *discordgo.Session, inter *discordgo.InteractionCreate) {
+		err := handler.HandleInteraction(session, inter)
 		if err != nil {
 			log.Printf("Error handling interaction: %v", err)
 		}

@@ -11,8 +11,8 @@ func PingCommand() Command {
 			Name:        "ping",
 			Description: "Responds with Pong!",
 		},
-		Handler: func(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-			err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Handler: func(session *discordgo.Session, inter *discordgo.InteractionCreate) error {
+			err := session.InteractionRespond(inter.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
 					Content: "Pong!",

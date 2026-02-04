@@ -25,16 +25,16 @@ func NewHandler() *CommandHandler {
 }
 
 // Register - Adds a command to the handler's registry.
-func (h *CommandHandler) Register(cmd Command) {
-	h.commands[cmd.ApplicationCommand.Name] = cmd
+func (cmdHandler *CommandHandler) Register(cmd Command) {
+	cmdHandler.commands[cmd.ApplicationCommand.Name] = cmd
 }
 
 // HandleInteraction - Processes an incoming Discord interaction and executes the appropriate command.
-func (h *CommandHandler) HandleInteraction(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-	cmd, ok := h.commands[i.ApplicationCommandData().Name]
+func (cmdHandler *CommandHandler) HandleInteraction(session *discordgo.Session, inter *discordgo.InteractionCreate) error {
+	cmd, ok := cmdHandler.commands[inter.ApplicationCommandData().Name]
 
 	if !ok {
-		err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		err := session.InteractionRespond(inter.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Content: "Command not found",
@@ -43,10 +43,10 @@ func (h *CommandHandler) HandleInteraction(s *discordgo.Session, i *discordgo.In
 		return err // nil if successful, error otherwise
 	}
 
-	err := cmd.Handler(s, i)
+	err := cmd.Handler(session, inter)
 	if err != nil {
 		// Attempt to respond with an error message
-		respondErr := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		respondErr := session.InteractionRespond(inter.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Content: fmt.Sprintf("Error executing command: %v", err),
@@ -56,7 +56,7 @@ func (h *CommandHandler) HandleInteraction(s *discordgo.Session, i *discordgo.In
 		// If responding fails, we've likely already responded, so try editing the response instead
 		if respondErr != nil {
 			content := fmt.Sprintf("Error executing command: %v", err)
-			_, editErr := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			_, editErr := session.InteractionResponseEdit(inter.Interaction, &discordgo.WebhookEdit{
 				Content: &content,
 			})
 
@@ -71,13 +71,13 @@ func (h *CommandHandler) HandleInteraction(s *discordgo.Session, i *discordgo.In
 
 // RegisterAll - Sends all registered commands to the Discord API for the specified guild using bulk overwrite.
 // Pass an empty string for guildID to register commands globally (takes up to 1 hour to propagate).
-func (h *CommandHandler) RegisterAll(s *discordgo.Session, guildID string) error {
-	commands := make([]*discordgo.ApplicationCommand, 0, len(h.commands))
-	for _, cmd := range h.commands {
+func (cmdHandler *CommandHandler) RegisterAll(session *discordgo.Session, guildID string) error {
+	commands := make([]*discordgo.ApplicationCommand, 0, len(cmdHandler.commands))
+	for _, cmd := range cmdHandler.commands {
 		commands = append(commands, cmd.ApplicationCommand)
 	}
 
-	_, err := s.ApplicationCommandBulkOverwrite(s.State.User.ID, guildID, commands)
+	_, err := session.ApplicationCommandBulkOverwrite(session.State.User.ID, guildID, commands)
 	if err != nil {
 		return fmt.Errorf("failed to bulk register commands: %w", err)
 	}
@@ -85,7 +85,7 @@ func (h *CommandHandler) RegisterAll(s *discordgo.Session, guildID string) error
 }
 
 // GetCommand - Retrieves a command by name from the registry.
-func (h *CommandHandler) GetCommand(name string) (Command, bool) {
-	cmd, ok := h.commands[name]
+func (cmdHandler *CommandHandler) GetCommand(name string) (Command, bool) {
+	cmd, ok := cmdHandler.commands[name]
 	return cmd, ok
 }
