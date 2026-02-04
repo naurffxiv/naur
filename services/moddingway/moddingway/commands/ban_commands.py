@@ -1,4 +1,3 @@
-import asyncio
 import logging
 
 import discord
@@ -9,7 +8,7 @@ from moddingway.services.ban_service import ban_member, ban_user
 from moddingway.settings import get_settings
 from moddingway.util import is_user_moderator, user_has_role
 
-from .helper import create_logging_embed, create_deferred_response_context
+from .helper import create_deferred_response_context, create_logging_embed
 
 settings = get_settings()
 
@@ -32,15 +31,16 @@ def create_ban_commands(bot: Bot) -> None:
         reason: str,
         delete_messages: bool = False,  # Default to false for no message deletion as we typically don't want to delete messages.
     ):
-
         # Defer response due to extended checks to avoid interaction timeout
         await interaction.response.defer(ephemeral=True)
 
         # sanity check just in case
         if isinstance(user, discord.User):
-            member = interaction.guild.get_member(user.id)
-            if member is not None:
-                user = member
+            guild = interaction.guild
+            if guild is not None:
+                member = guild.get_member(user.id)
+                if member is not None:
+                    user = member
 
         if isinstance(user, discord.Member):
             if user_has_role(user, Role.MOD):

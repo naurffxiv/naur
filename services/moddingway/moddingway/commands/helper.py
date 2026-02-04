@@ -2,7 +2,6 @@ import datetime
 import logging
 import time
 from contextlib import asynccontextmanager
-from datetime import timezone
 
 import discord
 from discord.ext.commands import Bot
@@ -12,6 +11,7 @@ from moddingway.util import (
     EmbedField,
     create_interaction_embed_context,
     get_log_channel,
+    timestamp_to_epoch,
 )
 
 settings = get_settings()
@@ -29,25 +29,30 @@ def create_logging_embed(
     # Dynamically add kwargs to fields
     if kwargs is not None:
         for key, value in kwargs.items():
-            key = key.replace("_", " ")
-            match (type(value)):
+            formatted_key = key.replace("_", " ")
+            match type(value):
                 case discord.Member:
-                    fields.append(EmbedField(key.title(), f"<@{value.id}>"))
+                    fields.append(EmbedField(formatted_key.title(), f"<@{value.id}>"))
                 case discord.ChannelType:
-                    fields.append(EmbedField(key.title(), f"<#{value}>"))
+                    fields.append(EmbedField(formatted_key.title(), f"<#{value}>"))
                 case datetime.datetime:
-                    timestamp_epoch = int(
-                        value.replace(tzinfo=timezone.utc).timestamp()
-                    )
-                    fields.append(EmbedField(key.title(), f"<t:{timestamp_epoch}:R>"))
+                    timestamp_epoch = timestamp_to_epoch(value)
+                    if timestamp_epoch is not None:
+                        fields.append(
+                            EmbedField(
+                                formatted_key.title(), f"<t:{timestamp_epoch}:R>"
+                            )
+                        )
                 case _:
-                    fields.append(EmbedField(key.title(), value))
+                    fields.append(EmbedField(formatted_key.title(), value))
 
     # Set description to custom_response for non-command interaction logging_embeds
     if custom_response is not None:
         description = custom_response
     elif interaction.command:
-        description = f"Used `{interaction.command.name}` command in {interaction.channel.mention}"
+        channel = interaction.channel
+        channel_mention = getattr(channel, "mention", "#unknown-channel")
+        description = f"Used `{interaction.command.name}` command in {channel_mention}"
     else:
         # TODO: MOD-169 pass something in for these situations
         description = "Command was run via a UI"
@@ -117,7 +122,7 @@ async def create_response_context(interaction: discord.Interaction, sendEphemera
             if len(helper.message) == 0:
                 helper.set_string("Command finished without a response.")
             await msg.edit(content=helper.message)
-        except Exception as e:
+        except Exception:
             logger.error("Updating placeholder message failed")
 
 
@@ -151,5 +156,5 @@ async def create_deferred_response_context(
             if len(helper.message) == 0:
                 helper.set_string("Command finished without a response.")
             await msg.edit(content=helper.message)
-        except Exception as e:
+        except Exception:
             logger.error("Updating placeholder message failed")
