@@ -115,3 +115,21 @@ jobs:
           path: services/${{ inputs.service }}/coverage.out
           if-no-files-found: ignore
           retention-days: 1
+
+  coverage-report:
+    needs: [test]
+    if: inputs.should_run && github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: fgrosse/go-coverage-report@v1.2.0
+        with:
+          coverage-artifact-name: "coverage-go-${{ inputs.service }}"
+          coverage-file-name: "coverage.out"
+          root-package: "${{ inputs.service }}"
