@@ -3,7 +3,7 @@
 test:
 	go test ./... -race -covermode=atomic -coverprofile=coverage.out
 
-test-html:
+test-html: test
 	go tool cover -html=coverage.out
 
 build:
