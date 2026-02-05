@@ -1,7 +1,10 @@
 import discord
 import logging
-from moddingway.database import users_database
-from moddingway.util import log_info_and_embed, log_info_and_add_field, send_dm
+from moddingway.util import (
+    log_info_and_add_field,
+    send_dm,
+    get_or_create_user,
+)
 from moddingway.database import notes_database, users_database
 from moddingway.database.models import Note
 from datetime import datetime
@@ -17,14 +20,7 @@ async def add_note(
     is_warning=False,
 ):
     # find user in DB
-    db_user = users_database.get_user(user.id)
-    if db_user is None:
-        log_info_and_embed(
-            logging_embed,
-            logger,
-            "User not found in database, creating new record",
-        )
-        db_user = users_database.add_user(user.id)
+    db_user = get_or_create_user(user.id, logger, logging_embed)
 
     # create note
     note_timestamp = datetime.now()
@@ -129,7 +125,7 @@ async def delete_user_note(
             logging_embed,
             logger,
             "Result",
-            f"Note not found, no action will be taken",
+            "Note not found, no action will be taken",
         )
         return "Note not found in database, no action will be taken"
 
@@ -142,7 +138,7 @@ async def delete_user_note(
             logging_embed,
             logger,
             "Result",
-            f"Note deleted",
+            "Note deleted",
         )
 
         result = f"Successfully deleted note: {note_id}"
@@ -151,7 +147,7 @@ async def delete_user_note(
             logging_embed,
             logger,
             "Result",
-            f"Error deleting note",
+            "Error deleting note",
         )
         result = "There was an error deleting note from the database"
 
@@ -170,7 +166,7 @@ async def update_user_note(
             logging_embed,
             logger,
             "Result",
-            f"Note not found",
+            "Note not found",
         )
         return "Note not found in database"
     old_note = db_note.content
@@ -185,7 +181,7 @@ async def update_user_note(
             logging_embed,
             logger,
             "Result",
-            f"Note updated",
+            "Note updated",
         )
         return "Note succesfully updated"
     else:

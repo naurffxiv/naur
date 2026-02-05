@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime, timezone
-import discord
-import asyncio, re
+import asyncio
+import re
 
 from discord import Guild, User, Thread
 from discord.ext.commands import Bot
@@ -14,6 +14,7 @@ from moddingway.util import (
     find_and_assign_role,
     get_log_channel,
     log_info_and_add_field,
+    get_or_create_user,
 )
 
 settings = get_settings()
@@ -68,9 +69,7 @@ def register_events(bot: Bot):
     async def on_member_ban(guild: Guild, user: User):
         logger.info(f"Ban member {user.id}")
 
-        db_user = users_database.get_user(user.id)
-        if db_user is None:
-            db_user = users_database.add_user(user.id)
+        db_user = get_or_create_user(user.id)
 
         db_user.is_banned = True
 
@@ -100,9 +99,7 @@ def register_events(bot: Bot):
     @bot.event
     async def on_member_unban(guild: Guild, user: User):
         logger.info(f"Unban member {user.id}")
-        db_user = users_database.get_user(user.id)
-        if db_user is None:
-            db_user = users_database.add_user(user.id)
+        db_user = get_or_create_user(user.id)
 
         db_user.is_banned = False
 
@@ -150,7 +147,7 @@ def register_events(bot: Bot):
             # Fetch the thread's initial message
             try:
                 message = await thread.fetch_message(thread.id)
-            except Exception as e:
+            except Exception:
                 logger.error(f"Failed to fetch message in event thread f{thread.id}")
 
             if not message or not message.content:
@@ -183,7 +180,7 @@ def register_events(bot: Bot):
                     logger.info(
                         f"Sent warning for thread {thread.id} (starts in {time_difference}s)"
                     )
-                except Exception as e:
+                except Exception:
                     logger.error(
                         f"Failed to send warning message in event channel {warn_channel.id}"
                     )
