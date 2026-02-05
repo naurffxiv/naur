@@ -20,3 +20,5 @@ lint:
 
 lint-fix:
 	golangci-lint run --fix
+
+precommit: format lint-fix
