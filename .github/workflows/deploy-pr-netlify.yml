@@ -22,6 +22,10 @@ jobs:
       name: preview-naurffxiv-pr-${{ inputs.pr_number }}
       url: ${{ steps.netlify.outputs.deploy_url }}
 
+    defaults:
+      run:
+        working-directory: services/naurffxiv
+
     steps:
       - uses: actions/checkout@v4
 
@@ -31,16 +35,15 @@ jobs:
           cache: "npm"
           cache-dependency-path: package-lock.json
 
+      - name: Prepare Netlify Config
+        run: |
+          [[ -f ../../netlify.toml ]] && cp ../../netlify.toml . || echo "No root netlify.toml found"
+
       - name: Install Dependencies
+        working-directory: .
         run: npm ci
 
-      - name: Build Application
-        env:
-          NEXT_DISABLE_SWC_BINARY_PATCHING: "1"
-        run: npx turbo run build --filter=naurffxiv
-
-      - name: Configure Netlify Site
-        working-directory: services/naurffxiv
+      - name: Configure Netlify State
         env:
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
         run: |
@@ -49,17 +52,14 @@ jobs:
 
       - name: Deploy to Netlify
         id: netlify
-        working-directory: services/naurffxiv
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-        shell: bash
         run: |
           OUTPUT=$(npx netlify-cli deploy \
-            --dir=.next \
+            --build \
             --json \
             --alias "pr-${{ inputs.pr_number }}" \
-            --site "$NETLIFY_SITE_ID" \
             --message "PR #${{ inputs.pr_number }}: ${{ github.sha }}") || exit 1
 
           url=$(echo "$OUTPUT" | jq -r '.deploy_url')
@@ -75,7 +75,6 @@ jobs:
 
       - name: Generate Report
         if: always()
-        shell: bash
         run: |
           url="${{ steps.netlify.outputs.deploy_url }}"
           logs="${{ steps.netlify.outputs.logs_url }}"
@@ -84,7 +83,7 @@ jobs:
 
           # Call save_report.sh to generate both MD and JSON reports
           # Use "global" as service to place it in the header section
-          bash .github/scripts/save_report.sh \
+          bash ../../.github/scripts/save_report.sh \
             "global" "40" "Preview (naurffxiv)" "$status" "" "$url"
 
       - name: Upload Report Artifacts
@@ -93,6 +92,6 @@ jobs:
         with:
           name: report-deploy-naurffxiv
           path: |
-            summary-global-*.md
-            report-global-*.json
+            services/naurffxiv/summary-global-*.md
+            services/naurffxiv/report-global-*.json
           retention-days: 1
