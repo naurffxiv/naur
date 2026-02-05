@@ -1,3 +1,4 @@
+// Test coverage reporting enabled
 package main
 
 import (
