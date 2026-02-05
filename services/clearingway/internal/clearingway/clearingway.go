@@ -37,6 +37,14 @@ func NewBotInstance(loadedEnv *env.Env) (*Clearingway, error) {
 	}, nil
 }
 
+// UncoveredFunction - Intentionally added but not called to affect coverage
+func (cw *Clearingway) UncoveredFunction() string {
+	if cw.Config == nil {
+		return "no config"
+	}
+	return "has config"
+}
+
 // initCommandHandler - Sets up the command handler and registers commands
 func initCommandHandler(session *discordgo.Session, loadedEnv *env.Env) *commands.CommandHandler {
 	handler := commands.NewHandler()

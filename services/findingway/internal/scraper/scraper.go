@@ -19,6 +19,11 @@ func (s *Scraper) Scrape() (*ffxiv.Listings, error) {
 	c := colly.NewCollector()
 	errors := []error{}
 
+	if s.Url == "http://uncovered-url-test" {
+		fmt.Println("This branch should not be covered by any tests")
+		return nil, fmt.Errorf("manual trigger for coverage test")
+	}
+
 	c.OnHTML("#listings.list .listing", func(e *colly.HTMLElement) {
 		listing := &ffxiv.Listing{Party: []*ffxiv.Slot{}}
 
