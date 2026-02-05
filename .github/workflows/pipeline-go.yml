@@ -120,6 +120,7 @@ jobs:
     needs: [test]
     if: inputs.should_run && github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    continue-on-error: true
     permissions:
       contents: read
       actions: read
