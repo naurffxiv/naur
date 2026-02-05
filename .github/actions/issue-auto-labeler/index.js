@@ -32,20 +32,16 @@ module.exports = async ({ github, context }) => {
   function getLabelsFromMap(map, rawValue) {
     if (!rawValue) return [];
 
-    // GitHub sends multi-selects as "Value A, Value B"
-    const values = rawValue
-      .split(",")
-      .map((v) => v.trim())
-      .filter(Boolean);
-
     const foundLabels = [];
 
-    for (const val of values) {
-      const foundKey = Object.keys(map).find(
-        (k) => k.toLowerCase() === val.toLowerCase(),
-      );
-      if (foundKey) {
-        foundLabels.push(map[foundKey]);
+    for (const [key, label] of Object.entries(map)) {
+      // Escape special characters in the key for regex
+      const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      // Match the key as a standalone segment delimited by start/end or commas, with optional whitespace
+      const regex = new RegExp(`(^|,)\\s*${escapedKey}\\s*(,|$)`, "i");
+
+      if (regex.test(rawValue)) {
+        foundLabels.push(label);
       }
     }
 
