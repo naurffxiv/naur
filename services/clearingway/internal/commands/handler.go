@@ -1,10 +1,20 @@
 package commands
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/bwmarrin/discordgo"
 )
+
+// Session - Interface representing the methods of discordgo.Session used by CommandHandler.
+// This allows for easier testing and mocking.
+type Session interface {
+	InteractionRespond(interaction *discordgo.Interaction, response *discordgo.InteractionResponse, options ...discordgo.RequestOption) error
+	InteractionResponseEdit(interaction *discordgo.Interaction, edit *discordgo.WebhookEdit, options ...discordgo.RequestOption) (*discordgo.Message, error)
+	ApplicationCommandBulkOverwrite(appID string, guildID string, commands []*discordgo.ApplicationCommand, options ...discordgo.RequestOption) ([]*discordgo.ApplicationCommand, error)
+	User(userID string, options ...discordgo.RequestOption) (*discordgo.User, error)
+}
 
 // CommandHandler - Manages Discord slash commands.
 type CommandHandler struct {
@@ -14,7 +24,7 @@ type CommandHandler struct {
 // Command - Represents a Discord slash command with its metadata and handler.
 type Command struct {
 	ApplicationCommand *discordgo.ApplicationCommand
-	Handler            func(s *discordgo.Session, i *discordgo.InteractionCreate) error
+	Handler            func(s Session, i *discordgo.InteractionCreate) error
 }
 
 // NewHandler - Creates a new CommandHandler with an empty command registry.
@@ -26,13 +36,38 @@ func NewHandler() *CommandHandler {
 
 // Register - Adds a command to the handler's registry.
 func (cmdHandler *CommandHandler) Register(cmd Command) {
+	// Command validation - panics are used to halt startup on invalid commands
+	if cmd.ApplicationCommand.Name == "" {
+		panic("Cannot register command: ApplicationCommand.Name is empty")
+	}
+	if cmd.Handler == nil {
+		panic("Cannot register command: Handler is nil")
+	}
+
 	cmdHandler.commands[cmd.ApplicationCommand.Name] = cmd
 }
 
 // HandleInteraction - Processes an incoming Discord interaction and executes the appropriate command.
-func (cmdHandler *CommandHandler) HandleInteraction(session *discordgo.Session, inter *discordgo.InteractionCreate) error {
-	cmd, ok := cmdHandler.commands[inter.ApplicationCommandData().Name]
+func (cmdHandler *CommandHandler) HandleInteraction(session Session, inter *discordgo.InteractionCreate) error {
+	// Ensure the interaction is a command
+	if inter.Type != discordgo.InteractionApplicationCommand {
+		err := session.InteractionRespond(inter.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "Internal Error",
+			},
+		})
+		if err != nil {
+			return fmt.Errorf("failed to respond to invalid interaction type: %w", err)
+		}
+		return errors.New("invalid interaction type")
+	}
 
+	// Extract command data
+	cmdData := inter.ApplicationCommandData()
+
+	// Lookup command handler
+	cmd, ok := cmdHandler.commands[cmdData.Name]
 	if !ok {
 		err := session.InteractionRespond(inter.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -43,6 +78,7 @@ func (cmdHandler *CommandHandler) HandleInteraction(session *discordgo.Session, 
 		return err // nil if successful, error otherwise
 	}
 
+	// Execute command handler
 	err := cmd.Handler(session, inter)
 	if err != nil {
 		// Attempt to respond with an error message
@@ -71,13 +107,19 @@ func (cmdHandler *CommandHandler) HandleInteraction(session *discordgo.Session, 
 
 // RegisterAll - Sends all registered commands to the Discord API for the specified guild using bulk overwrite.
 // Pass an empty string for guildID to register commands globally (takes up to 1 hour to propagate).
-func (cmdHandler *CommandHandler) RegisterAll(session *discordgo.Session, guildID string) error {
+func (cmdHandler *CommandHandler) RegisterAll(session Session, guildID string) error {
 	commands := make([]*discordgo.ApplicationCommand, 0, len(cmdHandler.commands))
 	for _, cmd := range cmdHandler.commands {
 		commands = append(commands, cmd.ApplicationCommand)
 	}
 
-	_, err := session.ApplicationCommandBulkOverwrite(session.State.User.ID, guildID, commands)
+	// Get current user to obtain application ID
+	user, err := session.User("@me")
+	if err != nil {
+		return fmt.Errorf("failed to get current user: %w", err)
+	}
+
+	_, err = session.ApplicationCommandBulkOverwrite(user.ID, guildID, commands)
 	if err != nil {
 		return fmt.Errorf("failed to bulk register commands: %w", err)
 	}

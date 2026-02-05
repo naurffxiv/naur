@@ -3,6 +3,9 @@
 test:
 	go test ./... -race -covermode=atomic -coverprofile=coverage.out
 
+test-html:
+	go tool cover -html=coverage.out
+
 build:
 	go build -o bin/clearingway ./cmd/clearingway
 
