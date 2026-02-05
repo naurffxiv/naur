@@ -9,6 +9,9 @@ test-html: test
 build:
 	go build -o bin/clearingway ./cmd/clearingway
 
+run: build
+	./bin/clearingway
+
 format:
 	goimports -w .
 
