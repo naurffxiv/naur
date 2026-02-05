@@ -3,10 +3,6 @@ name: Deploy PR Preview to Netlify
 on:
   workflow_call:
     inputs:
-      service:
-        required: true
-        type: string
-        description: "naurffxiv"
       pr_number:
         required: true
         type: string
@@ -23,12 +19,12 @@ jobs:
     timeout-minutes: 10
 
     environment:
-      name: preview-${{ inputs.service }}-pr-${{ inputs.pr_number }}
+      name: preview-naurffxiv-pr-${{ inputs.pr_number }}
       url: ${{ steps.netlify.outputs.deploy_url }}
 
     defaults:
       run:
-        working-directory: services/${{ inputs.service }}
+        working-directory: services/naurffxiv
 
     steps:
       - uses: actions/checkout@v4
@@ -39,11 +35,6 @@ jobs:
           cache: "npm"
           cache-dependency-path: package-lock.json
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: build-${{ inputs.service }}
-          path: services/${{ inputs.service }}
-
       - name: Prepare Netlify Config
         run: |
           [[ -f ../../netlify.toml ]] && cp ../../netlify.toml . || echo "No root netlify.toml found"
@@ -52,7 +43,14 @@ jobs:
         working-directory: .
         run: npm ci
 
-      - name: Deploy Preview
+      - name: Configure Netlify State
+        env:
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: |
+          mkdir -p .netlify
+          echo "{\"siteId\": \"$NETLIFY_SITE_ID\"}" > .netlify/state.json
+
+      - name: Deploy to Netlify
         id: netlify
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
@@ -78,7 +76,6 @@ jobs:
       - name: Generate Report
         if: always()
         run: |
-          svc="${{ inputs.service }}"
           url="${{ steps.netlify.outputs.deploy_url }}"
           logs="${{ steps.netlify.outputs.logs_url }}"
           pr="${{ inputs.pr_number }}"
@@ -87,14 +84,14 @@ jobs:
           # Call save_report.sh to generate both MD and JSON reports
           # Use "global" as service to place it in the header section
           bash ../../.github/scripts/save_report.sh \
-            "global" "40" "Preview (${{ inputs.service }})" "$status" "" "$url"
+            "global" "40" "Preview (naurffxiv)" "$status" "" "$url"
 
       - name: Upload Report Artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: report-deploy-${{ inputs.service }}
+          name: report-deploy-naurffxiv
           path: |
-            services/${{ inputs.service }}/summary-global-*.md
-            services/${{ inputs.service }}/report-global-*.json
+            services/naurffxiv/summary-global-*.md
+            services/naurffxiv/report-global-*.json
           retention-days: 1
