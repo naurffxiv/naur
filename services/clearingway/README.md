@@ -5,13 +5,19 @@ Clearingway is a Discord bot designed to analyse players' FFLogs data and provid
 
 `make test` - Runs all tests
 
+`make test-html` - Runs all tests and opens an HTML report of test coverage in the default browser
+
 `make build` - Builds the bot binary into `./bin/clearingway`
+
+`make run` - Builds and runs the bot binary
 
 `make format` - Formats all Go files using `goimports`
 
 `make lint` - Runs linter checks using `golangci-lint`
 
 `make lint-fix` - Runs linter checks and attempts to fix issues using `golangci-lint`
+
+`make precommit` - Runs formatting and linting checks, and attempts to fix any issues.
 
 ## Environment Variables
 
