@@ -57,21 +57,20 @@ jobs:
         env:
           HEAD_COMMIT_MSG: ${{ github.event.head_commit.message }}
         run: echo "run_e2e=false" >> $GITHUB_OUTPUT
-#          # Determine commit message source based on event type
-#          if [[ "${{ github.event_name }}" == "push" ]]; then
-#            MSG="$HEAD_COMMIT_MSG"
-#          else
-#            MSG="$(jq -r '.pull_request.title // ""' "$GITHUB_EVENT_PATH") $(jq -r '.pull_request.body // ""' "$GITHUB_EVENT_PATH")"
-#          fi
-#
-#          if [[ "$MSG" == *"[skip e2e]"* ]]; then
-#            echo "run_e2e=false" >> $GITHUB_OUTPUT
-#          elif [[ "$MSG" == *"[force e2e]"* ]]; then
-#            echo "run_e2e=true" >> $GITHUB_OUTPUT
-#          else
-#            echo "run_e2e=${{ steps.filter.outputs.e2e_required }}" >> $GITHUB_OUTPUT
-#          fi
-
+  #          # Determine commit message source based on event type
+  #          if [[ "${{ github.event_name }}" == "push" ]]; then
+  #            MSG="$HEAD_COMMIT_MSG"
+  #          else
+  #            MSG="$(jq -r '.pull_request.title // ""' "$GITHUB_EVENT_PATH") $(jq -r '.pull_request.body // ""' "$GITHUB_EVENT_PATH")"
+  #          fi
+  #
+  #          if [[ "$MSG" == *"[skip e2e]"* ]]; then
+  #            echo "run_e2e=false" >> $GITHUB_OUTPUT
+  #          elif [[ "$MSG" == *"[force e2e]"* ]]; then
+  #            echo "run_e2e=true" >> $GITHUB_OUTPUT
+  #          else
+  #            echo "run_e2e=${{ steps.filter.outputs.e2e_required }}" >> $GITHUB_OUTPUT
+  #          fi
 
   ci-check-ticket:
     uses: ./.github/workflows/pipeline-ticket.yml
@@ -136,7 +135,6 @@ jobs:
     if: github.event_name == 'pull_request' && needs.detect-changes.outputs.naurffxiv == 'true'
     uses: ./.github/workflows/deploy-pr-netlify.yml
     with:
-      service: naurffxiv
       pr_number: "${{ github.event.pull_request.number }}"
       should_run: ${{ github.event_name == 'pull_request' && needs.detect-changes.outputs.naurffxiv == 'true' }}
     secrets: inherit

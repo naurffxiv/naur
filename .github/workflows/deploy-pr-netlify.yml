@@ -3,10 +3,6 @@ name: Deploy PR Preview to Netlify
 on:
   workflow_call:
     inputs:
-      service:
-        required: true
-        type: string
-        description: "naurffxiv"
       pr_number:
         required: true
         type: string
@@ -23,12 +19,8 @@ jobs:
     timeout-minutes: 10
 
     environment:
-      name: preview-${{ inputs.service }}-pr-${{ inputs.pr_number }}
+      name: preview-naurffxiv-pr-${{ inputs.pr_number }}
       url: ${{ steps.netlify.outputs.deploy_url }}
-
-    defaults:
-      run:
-        working-directory: services/${{ inputs.service }}
 
     steps:
       - uses: actions/checkout@v4
@@ -39,29 +31,35 @@ jobs:
           cache: "npm"
           cache-dependency-path: package-lock.json
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: build-${{ inputs.service }}
-          path: services/${{ inputs.service }}
-
-      - name: Prepare Netlify Config
-        run: |
-          [[ -f ../../netlify.toml ]] && cp ../../netlify.toml . || echo "No root netlify.toml found"
-
       - name: Install Dependencies
-        working-directory: .
         run: npm ci
 
-      - name: Deploy Preview
+      - name: Build Application
+        env:
+          NEXT_DISABLE_SWC_BINARY_PATCHING: "1"
+        run: npx turbo run build --filter=naurffxiv
+
+      - name: Configure Netlify Site
+        working-directory: services/naurffxiv
+        env:
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: |
+          mkdir -p .netlify
+          echo "{\"siteId\": \"$NETLIFY_SITE_ID\"}" > .netlify/state.json
+
+      - name: Deploy to Netlify
         id: netlify
+        working-directory: services/naurffxiv
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        shell: bash
         run: |
           OUTPUT=$(npx netlify-cli deploy \
-            --build \
+            --dir=.next \
             --json \
             --alias "pr-${{ inputs.pr_number }}" \
+            --site "$NETLIFY_SITE_ID" \
             --message "PR #${{ inputs.pr_number }}: ${{ github.sha }}") || exit 1
 
           url=$(echo "$OUTPUT" | jq -r '.deploy_url')
@@ -77,8 +75,8 @@ jobs:
 
       - name: Generate Report
         if: always()
+        shell: bash
         run: |
-          svc="${{ inputs.service }}"
           url="${{ steps.netlify.outputs.deploy_url }}"
           logs="${{ steps.netlify.outputs.logs_url }}"
           pr="${{ inputs.pr_number }}"
@@ -86,15 +84,15 @@ jobs:
 
           # Call save_report.sh to generate both MD and JSON reports
           # Use "global" as service to place it in the header section
-          bash ../../.github/scripts/save_report.sh \
-            "global" "40" "Preview (${{ inputs.service }})" "$status" "" "$url"
+          bash .github/scripts/save_report.sh \
+            "global" "40" "Preview (naurffxiv)" "$status" "" "$url"
 
       - name: Upload Report Artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: report-deploy-${{ inputs.service }}
+          name: report-deploy-naurffxiv
           path: |
-            services/${{ inputs.service }}/summary-global-*.md
-            services/${{ inputs.service }}/report-global-*.json
+            summary-global-*.md
+            report-global-*.json
           retention-days: 1

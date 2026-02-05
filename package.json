@@ -23,10 +23,11 @@
   },
   "scripts": {
     "prepare": "prek install",
-    "build:naur": "npm run build -w naurffxiv",
+    "build:naur": "turbo run build --filter=naurffxiv",
     "dev:naur": "npm run dev -w naurffxiv",
     "lint:naur": "npm run lint -w naurffxiv",
-    "test:e2e": "npm run test -w e2e-tests"
+    "test:e2e": "npm run test -w e2e-tests",
+    "start:naur": "npm run start -w naurffxiv"
   },
   "overrides": {
     "glob": "^11.0.0",

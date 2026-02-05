@@ -1,10 +1,14 @@
 // next.config.mjs
+import path from "path";
+import { fileURLToPath } from "url";
 import createMDX from "@next/mdx";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeImgSize from "rehype-img-size";
 import rehypeSlug from "rehype-slug";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkToc from "remark-toc";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const withMDX = createMDX({
   extension: /\.mdx?$/,
@@ -33,6 +37,7 @@ const nextConfig = {
   output: "standalone",
   pageExtensions: ["js", "jsx", "ts", "tsx", "md", "mdx"],
   images: {
+    formats: ["image/avif", "image/webp"],
     remotePatterns: [
       {
         protocol: "https",
@@ -54,6 +59,9 @@ const nextConfig = {
         pathname: "/embed/avatars/**",
       },
     ],
+  },
+  experimental: {
+    outputFileTracingRoot: path.join(__dirname, "../../"),
   },
   async redirects() {
     return [
