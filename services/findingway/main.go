@@ -1,4 +1,4 @@
-// Test coverage reporting enabled
+// Test coverage reporting enabled 2
 package main
 
 import (
