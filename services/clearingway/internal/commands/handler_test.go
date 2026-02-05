@@ -450,6 +450,9 @@ func TestCommandHandler_RegisterAll_Error(t *testing.T) {
 
 	err := handler.RegisterAll(mockSession, "test-guild-id")
 	assert.Error(t, err)
+	if err == nil {
+		t.Fatal("expected error but got nil")
+	}
 	assert.Contains(t, err.Error(), "failed to bulk register commands")
 	assert.Contains(t, err.Error(), "API error")
 }
@@ -477,6 +480,9 @@ func TestCommandHandler_RegisterAll_UserError(t *testing.T) {
 
 	err := handler.RegisterAll(mockSession, "test-guild-id")
 	assert.Error(t, err)
+	if err == nil {
+		t.Fatal("expected error but got nil")
+	}
 	assert.Contains(t, err.Error(), "failed to get current user")
 	assert.Contains(t, err.Error(), "user fetch error")
 }
