@@ -104,7 +104,7 @@ jobs:
       needs.detect-changes.outputs.AppHost == 'true'
     strategy:
       matrix:
-        service: [authingway, AppHost]
+        service: [authingway, apphost]
       fail-fast: false
     uses: ./.github/workflows/pipeline-dotnet.yml
     with:
