@@ -7,11 +7,6 @@ on:
         required: true
         type: string
         description: "Service name (e.g. authingway)"
-      dotnet-version:
-        required: false
-        type: string
-        default: "10.x"
-        description: "Dotnet version"
       should_run:
         required: false
         type: boolean
@@ -23,13 +18,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: zyactions/dotnet-setup@v1
         with:
-          dotnet-version: ${{ inputs.dotnet-version }}
+          global-json-file: global.json
 
       - name: Restore dependencies
-        working-directory: services/${{ inputs.service }}
-        run: dotnet restore
+        uses: zyactions/dotnet-restore@v1
+        with:
+          working-directory: services/${{ inputs.service }}
 
       - name: Format
         uses: ./.github/actions/run-command-with-report
@@ -58,13 +54,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: zyactions/dotnet-setup@v1
         with:
-          dotnet-version: ${{ inputs.dotnet-version }}
+          global-json-file: global.json
 
       - name: Restore dependencies
-        working-directory: services/${{ inputs.service }}
-        run: dotnet restore
+        uses: zyactions/dotnet-restore@v1
+        with:
+          working-directory: services/${{ inputs.service }}
 
       - name: Build
         uses: ./.github/actions/run-command-with-report
@@ -82,13 +79,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: zyactions/dotnet-setup@v1
         with:
-          dotnet-version: ${{ inputs.dotnet-version }}
+          global-json-file: global.json
 
       - name: Restore dependencies
-        working-directory: services/${{ inputs.service }}
-        run: dotnet restore
+        uses: zyactions/dotnet-restore@v1
+        with:
+          working-directory: services/${{ inputs.service }}
 
 #      - name: Build for Tests
 #        working-directory: services/${{ inputs.service }}
