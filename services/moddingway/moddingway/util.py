@@ -2,12 +2,15 @@ import logging
 import re
 from contextlib import asynccontextmanager
 from datetime import timedelta, datetime, timezone
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 import discord
 
 from moddingway.constants import Role, ERROR_MESSAGES
 from moddingway.settings import get_settings
+
+if TYPE_CHECKING:
+    from moddingway.database.models import User
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
@@ -292,42 +295,32 @@ async def find_and_assign_role(
 
 def get_or_create_user(
     discord_user_id: int,
-    logger: Optional[logging.Logger] = None,
+    logger: logging.Logger,
     logging_embed: Optional[discord.Embed] = None,
 ) -> "User":
     """
     Get a user from the database, creating them if they don't exist.
 
-    This helper consolidates the repeated pattern of looking up users
-    and creating them when missing, used across multiple services.
-
     Args:
         discord_user_id: The Discord user ID to look up
-        logger: Optional logger for info messages
-        logging_embed: Optional Discord embed for logging
+        logger: Logger for creation messages
+        logging_embed: Optional Discord embed for rich logging
 
     Returns:
         User: The existing or newly created user
-
-    Example:
-        # With logging (services)
-        db_user = get_or_create_user(user.id, logger, logging_embed)
-
-        # Without logging (event handlers)
-        db_user = get_or_create_user(user.id)
     """
     from moddingway.database import users_database
 
     db_user = users_database.get_user(discord_user_id)
 
     if db_user is None:
-        if logger and logging_embed:
+        if logging_embed:
             log_info_and_embed(
                 logging_embed,
                 logger,
                 "User not found in database, creating new record",
             )
-        elif logger:
+        else:
             logger.info(f"Creating new user record for Discord ID {discord_user_id}")
 
         db_user = users_database.add_user(discord_user_id)

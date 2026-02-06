@@ -47,4 +47,7 @@ api:
 api-reload:
 	uvicorn moddingway_api.main:app --port 8000 --reload
 
-.PHONY: format stop install clean build run database-run
+ty:
+	@echo "Type checking not configured"
+
+.PHONY: format stop install clean build run database-run ty

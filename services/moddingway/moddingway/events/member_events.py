@@ -69,7 +69,7 @@ def register_events(bot: Bot):
     async def on_member_ban(guild: Guild, user: User):
         logger.info(f"Ban member {user.id}")
 
-        db_user = get_or_create_user(user.id)
+        db_user = get_or_create_user(user.id, logger)
 
         db_user.is_banned = True
 
@@ -99,7 +99,7 @@ def register_events(bot: Bot):
     @bot.event
     async def on_member_unban(guild: Guild, user: User):
         logger.info(f"Unban member {user.id}")
-        db_user = get_or_create_user(user.id)
+        db_user = get_or_create_user(user.id, logger)
 
         db_user.is_banned = False
 

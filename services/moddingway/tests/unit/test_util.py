@@ -94,18 +94,18 @@ async def test_add_and_remove_role(create_member):
     assert removed_role.name == role_to_remove.value
 
 
-@pytest.mark.asyncio
-async def test_get_or_create_user_existing_user(mocker: MockerFixture, create_db_user):
+def test_get_or_create_user_existing_user(mocker: MockerFixture, create_db_user):
     """Test that existing users are returned without creating new records"""
     discord_user_id = 12345
     existing_user = create_db_user(user_id=1, discord_user_id=str(discord_user_id))
+    mock_logger = mocker.Mock()
 
     # Mock users_database module functions
     mock_get_user = mocker.patch("moddingway.database.users_database.get_user")
     mock_add_user = mocker.patch("moddingway.database.users_database.add_user")
     mock_get_user.return_value = existing_user
 
-    result = util.get_or_create_user(discord_user_id)
+    result = util.get_or_create_user(discord_user_id, mock_logger)
 
     # Verify get_user was called
     mock_get_user.assert_called_once_with(discord_user_id)
@@ -115,11 +115,11 @@ async def test_get_or_create_user_existing_user(mocker: MockerFixture, create_db
     assert result == existing_user
 
 
-@pytest.mark.asyncio
-async def test_get_or_create_user_new_user(mocker: MockerFixture, create_db_user):
+def test_get_or_create_user_new_user(mocker: MockerFixture, create_db_user):
     """Test that missing users are created"""
     discord_user_id = 67890
     new_user = create_db_user(user_id=2, discord_user_id=str(discord_user_id))
+    mock_logger = mocker.Mock()
 
     # Mock users_database module functions
     mock_get_user = mocker.patch("moddingway.database.users_database.get_user")
@@ -127,7 +127,7 @@ async def test_get_or_create_user_new_user(mocker: MockerFixture, create_db_user
     mock_get_user.return_value = None  # User doesn't exist
     mock_add_user.return_value = new_user
 
-    result = util.get_or_create_user(discord_user_id)
+    result = util.get_or_create_user(discord_user_id, mock_logger)
 
     # Verify get_user was called
     mock_get_user.assert_called_once_with(discord_user_id)
@@ -137,8 +137,7 @@ async def test_get_or_create_user_new_user(mocker: MockerFixture, create_db_user
     assert result == new_user
 
 
-@pytest.mark.asyncio
-async def test_get_or_create_user_with_logging(
+def test_get_or_create_user_with_logging(
     mocker: MockerFixture, create_db_user, create_embed
 ):
     """Test that logging with embed works correctly"""
@@ -169,10 +168,7 @@ async def test_get_or_create_user_with_logging(
     assert result == new_user
 
 
-@pytest.mark.asyncio
-async def test_get_or_create_user_with_logger_only(
-    mocker: MockerFixture, create_db_user
-):
+def test_get_or_create_user_with_logger_only(mocker: MockerFixture, create_db_user):
     """Test that logger-only logging works correctly"""
     discord_user_id = 22222
     new_user = create_db_user(user_id=4, discord_user_id=str(discord_user_id))
@@ -184,7 +180,7 @@ async def test_get_or_create_user_with_logger_only(
     mock_get_user.return_value = None  # User doesn't exist
     mock_add_user.return_value = new_user
 
-    result = util.get_or_create_user(discord_user_id, logger=mock_logger)
+    result = util.get_or_create_user(discord_user_id, mock_logger)
 
     # Verify logger.info was called with correct message
     mock_logger.info.assert_called_once_with(
@@ -195,13 +191,11 @@ async def test_get_or_create_user_with_logger_only(
     assert result == new_user
 
 
-@pytest.mark.asyncio
-async def test_get_or_create_user_without_logging(
-    mocker: MockerFixture, create_db_user
-):
-    """Test that function works without logging parameters"""
+def test_get_or_create_user_without_embed(mocker: MockerFixture, create_db_user):
+    """Test that function works without embed (logger only)"""
     discord_user_id = 33333
     new_user = create_db_user(user_id=5, discord_user_id=str(discord_user_id))
+    mock_logger = mocker.Mock()
 
     # Mock users_database module functions
     mock_get_user = mocker.patch("moddingway.database.users_database.get_user")
@@ -209,8 +203,10 @@ async def test_get_or_create_user_without_logging(
     mock_get_user.return_value = None  # User doesn't exist
     mock_add_user.return_value = new_user
 
-    result = util.get_or_create_user(discord_user_id)
+    result = util.get_or_create_user(discord_user_id, mock_logger)
 
+    # Verify logger.info was called (no embed path)
+    mock_logger.info.assert_called_once()
     # Verify user was created
     mock_add_user.assert_called_once_with(discord_user_id)
     # Verify the new user was returned
