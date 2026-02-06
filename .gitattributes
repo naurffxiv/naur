@@ -39,6 +39,8 @@
 *.epub     diff=astextplain
 
 # Graphics
+*.avif     binary
+*.webp     binary
 *.png      binary
 *.jpg      binary
 *.jpeg     binary
