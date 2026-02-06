@@ -2,7 +2,7 @@
   "folders": [
     {
       "name": "AppHost (Aspire)",
-      "path": "services/AppHost"
+      "path": "services/apphost"
     },
     {
       "name": "Naurffxiv (Next.js)",

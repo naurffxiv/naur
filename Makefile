@@ -7,7 +7,7 @@ ifdef VERBOSE
 endif
 
 # SERVICE DIRECTORIES
-APPHOST_DIR := services/AppHost
+APPHOST_DIR := services/apphost
 AUTH_DIR    := services/authingway
 NAUR_DIR    := services/naurffxiv
 MOD_DIR     := services/moddingway

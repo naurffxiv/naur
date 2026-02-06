@@ -40,12 +40,12 @@ jobs:
             findingway  : ['services/findingway/**']
             clearingway : ['services/clearingway/**']
             authingway  : ['services/authingway/**']
-            AppHost     : ['services/AppHost/**']
+            AppHost     : ['services/apphost/**']
             e2e_required:
               - 'services/naurffxiv/src/app/api/**'
               - 'services/moddingway/moddingway_api/**'
               - 'services/authingway/**'
-              - 'services/AppHost/**'
+              - 'services/apphost/**'
               - '**/package.json'
               - '**/requirements.txt'
               - '**/*.csproj'

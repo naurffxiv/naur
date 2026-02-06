@@ -62,7 +62,7 @@ services:
         source: https://github.com/bwmarrin/discordgo
   apphost:
     runtime: dotnet
-    manifest_file: services/AppHost/Naur.AppHost.csproj
+    manifest_file: services/apphost/Naur.AppHost.csproj
     audited_packages:
       - name: Aspire.Hosting.AppHost
         version: 13.1.0

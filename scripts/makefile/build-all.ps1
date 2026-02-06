@@ -5,7 +5,7 @@
 
 [CmdletBinding()]
 param(
-    [string]$AppHostPrj   = "services/AppHost/Naur.AppHost.csproj",
+    [string]$AppHostPrj   = "services/apphost/Naur.AppHost.csproj",
     [string]$AuthPrj      = "services/authingway/Authingway.csproj",
     [string]$NaurDir      = "services/naurffxiv",
     [string]$ModDir       = "services/moddingway",
