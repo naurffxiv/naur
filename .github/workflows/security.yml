@@ -122,7 +122,7 @@ jobs:
             "services/findingway",
             "services/moddingway",
             "services/authingway",
-            "services/AppHost",
+            "services/apphost",
           ]
 
     steps:
