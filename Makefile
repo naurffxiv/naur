@@ -16,7 +16,7 @@ CLEAR_DIR   := services/clearingway
 
 # PROJECT FILES
 APPHOST_PRJ := $(APPHOST_DIR)/Naur.AppHost.csproj
-AUTH_PRJ    := $(AUTH_DIR)/Authingway.csproj
+AUTH_PRJ    := $(AUTH_DIR)/Naur.Authingway.csproj
 
 # SCRIPTS & COMMANDS
 SCRIPTS_DIR := scripts/makefile

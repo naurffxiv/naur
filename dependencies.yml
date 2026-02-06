@@ -31,7 +31,7 @@ services:
         source: https://github.com/tiangolo/fastapi
   authingway:
     runtime: dotnet
-    manifest_file: services/authingway/Authingway.csproj
+    manifest_file: services/authingway/Naur.Authingway.csproj
     audited_packages:
       - name: Aspire.Npgsql.EntityFrameworkCore.PostgreSQL
         version: 13.1.0
