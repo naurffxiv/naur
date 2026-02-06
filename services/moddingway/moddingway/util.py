@@ -55,7 +55,7 @@ async def create_interaction_embed_context(
 
         yield embed
     except Exception as e:
-        embed.add_field(name="Error", value=e, inline=False)
+        embed.add_field(name="Error", value=f"{e!s}", inline=False)
         raise e
     finally:
         if isinstance(log_channel, discord.abc.Messageable):
