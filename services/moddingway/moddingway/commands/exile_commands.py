@@ -192,7 +192,7 @@ def create_exile_commands(bot: Bot) -> None:
                 response_message.set_string(msg)
             except Exception as e:
                 logger.error(f"Error in get_user_exiles: {e!s}")
-                async with create_logging_embed(interaction, user=user, error=str(e)):
+                async with create_logging_embed(interaction, user=user, error=f"{e!s}"):
                     response_message.set_string(
                         "An error occurred while fetching user exiles."
                     )

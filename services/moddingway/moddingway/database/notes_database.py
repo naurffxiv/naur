@@ -15,13 +15,18 @@ class NoteDisplay:
 
 
 def convert_row_to_note_display(row: tuple) -> NoteDisplay:
-    return NoteDisplay(
-        note_id=row[0],
-        is_warning=row[1],
-        content=row[2],
-        created_by=row[3],
-        last_editor=row[4],
-    )
+    try:
+        return NoteDisplay(
+            note_id=row[0],
+            is_warning=row[1],
+            content=row[2],
+            created_by=row[3],
+            last_editor=row[4],
+        )
+    except IndexError as e:
+        raise ValueError(
+            "Invalid row data encountered while converting to NoteDisplay"
+        ) from e
 
 
 def add_note(note: Note) -> int:
