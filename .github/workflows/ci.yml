@@ -109,7 +109,6 @@ jobs:
     uses: ./.github/workflows/pipeline-dotnet.yml
     with:
       service: ${{ matrix.service }}
-      dotnet-version: "10.0.101"
       should_run: ${{ github.event_name == 'push' || needs.detect-changes.outputs[matrix.service] == 'true' }}
     secrets: inherit
 
