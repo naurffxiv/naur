@@ -1,9 +1,13 @@
 <Project>
 
   <PropertyGroup>
-    <Authors>NAUR</Authors>
-    <Copyright>© $(Authors). All rights reserved.</Copyright>
-    <RepositoryType>git</RepositoryType>
+    <Product>NAUR</Product>
+    <Authors>NAUR Contributors</Authors>
+    <Description>The NAUR Core Services.</Description>
+    <RepositoryUrl>https://github.com/naurffxiv/naur</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/naurffxiv/naur</PackageProjectUrl>
+    <PackageReleaseNotes>https://github.com/naurffxiv/naur/releases</PackageReleaseNotes>
+    <PackageTags>FFXIV;NAUR</PackageTags>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -18,7 +22,7 @@
     <AnalysisLevelReliability>latest-recommended</AnalysisLevelReliability>
     <AnalysisLevelSecurity>latest-recommended</AnalysisLevelSecurity>
     <AnalysisLevelUsage>latest-recommended</AnalysisLevelUsage>
-    <AnalysisLevelStyle>latest-recommended</AnalysisLevelStyle>
+    <AnalysisLevelStyle>latest-all</AnalysisLevelStyle>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -28,11 +32,22 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <UseArtifactsOutput>true</UseArtifactsOutput>
-    <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts</ArtifactsPath>
     <HotReloadAutoRestart>true</HotReloadAutoRestart>
+    <Copyright>© $(Authors). All rights reserved.</Copyright>
+    <RepositoryType>git</RepositoryType>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <IsPackable>false</IsPackable>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <PackageIcon>nuget.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Version Condition="'$(ReleaseVersion)' != ''">$(ReleaseVersion)</Version>
   </PropertyGroup>
+
+  <ItemGroup Condition="$(IsPackable) == 'true'">
+    <None Include="$(MSBuildThisFileDirectory)assets/nuget.png" Visible="false" Pack="true" PackagePath="" />
+    <None Include="$(MSBuildThisFileDirectory)README.md" Visible="false" Pack="true" PackagePath="" />
+    <None Include="$(MSBuildThisFileDirectory)LICENSE.txt" Visible="False" Pack="true" PackagePath="" />
+  </ItemGroup>
 
 </Project>

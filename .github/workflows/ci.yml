@@ -40,12 +40,12 @@ jobs:
             findingway  : ['services/findingway/**']
             clearingway : ['services/clearingway/**']
             authingway  : ['services/authingway/**']
-            AppHost     : ['services/AppHost/**']
+            AppHost     : ['services/apphost/**']
             e2e_required:
               - 'services/naurffxiv/src/app/api/**'
               - 'services/moddingway/moddingway_api/**'
               - 'services/authingway/**'
-              - 'services/AppHost/**'
+              - 'services/apphost/**'
               - '**/package.json'
               - '**/requirements.txt'
               - '**/*.csproj'
@@ -104,12 +104,11 @@ jobs:
       needs.detect-changes.outputs.AppHost == 'true'
     strategy:
       matrix:
-        service: [authingway, AppHost]
+        service: [authingway, apphost]
       fail-fast: false
     uses: ./.github/workflows/pipeline-dotnet.yml
     with:
       service: ${{ matrix.service }}
-      dotnet-version: "10.0.101"
       should_run: ${{ github.event_name == 'push' || needs.detect-changes.outputs[matrix.service] == 'true' }}
     secrets: inherit
 
