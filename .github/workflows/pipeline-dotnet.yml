@@ -101,7 +101,7 @@ jobs:
           service: ${{ inputs.service }}
           step-number: 30
           step-name: "Unit Tests"
-          command: dotnet run --configuration Release --coverage-output-format xml --no-build
+          command: dotnet run --configuration Release --coverage --coverage-output-format xml --no-build
           output-file: dotnet-test.txt
           working-directory: tests/${{ inputs.service }}
           fail-on-error: false
