@@ -70,7 +70,7 @@ try {
     }
 
     Run-Lint -Name ".NET Services" -Path "." -Command {
-        $projects = @("services/authingway/Authingway.csproj", "services/AppHost/Naur.AppHost.csproj")
+        $projects = @("services/authingway/Naur.Authingway.csproj", "services/apphost/Naur.AppHost.csproj")
         foreach ($proj in $projects) {
             if ($Fix) { dotnet format $proj } else { dotnet format $proj --verify-no-changes }
             if ($LASTEXITCODE -ne 0) { throw "dotnet format failed for $proj" }

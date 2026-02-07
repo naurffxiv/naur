@@ -1,8 +1,6 @@
 <Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <CentralPackageFloatingVersionsEnabled>true</CentralPackageFloatingVersionsEnabled>
-    <NoWarn>NU1507</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <!-- Aspire -->

@@ -2,16 +2,18 @@ services:
   dev:
     profiles: ["dev"]
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../../
+      dockerfile: services/naurffxiv/Dockerfile
       target: dev
     ports:
       - "3000:3000"
     volumes:
-      - .:/app
-      - /app/node_modules
+      - .:/app/services/naurffxiv
+      - /app/services/naurffxiv/node_modules
+      - /app/services/naurffxiv/.next
     environment:
       - NODE_ENV=development
+      - WATCHPACK_POLLING=true
     env_file:
       - path: .env
         required: false
@@ -21,8 +23,8 @@ services:
   prod:
     profiles: ["prod"]
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../../
+      dockerfile: services/naurffxiv/Dockerfile
       target: runner
     ports:
       - "3000:3000"

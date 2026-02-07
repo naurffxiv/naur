@@ -7,7 +7,7 @@ ifdef VERBOSE
 endif
 
 # SERVICE DIRECTORIES
-APPHOST_DIR := services/AppHost
+APPHOST_DIR := services/apphost
 AUTH_DIR    := services/authingway
 NAUR_DIR    := services/naurffxiv
 MOD_DIR     := services/moddingway
@@ -16,7 +16,7 @@ CLEAR_DIR   := services/clearingway
 
 # PROJECT FILES
 APPHOST_PRJ := $(APPHOST_DIR)/Naur.AppHost.csproj
-AUTH_PRJ    := $(AUTH_DIR)/Authingway.csproj
+AUTH_PRJ    := $(AUTH_DIR)/Naur.Authingway.csproj
 
 # SCRIPTS & COMMANDS
 SCRIPTS_DIR := scripts/makefile

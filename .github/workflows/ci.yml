@@ -40,12 +40,12 @@ jobs:
             findingway  : ['services/findingway/**']
             clearingway : ['services/clearingway/**']
             authingway  : ['services/authingway/**']
-            AppHost     : ['services/AppHost/**']
+            AppHost     : ['services/apphost/**']
             e2e_required:
               - 'services/naurffxiv/src/app/api/**'
               - 'services/moddingway/moddingway_api/**'
               - 'services/authingway/**'
-              - 'services/AppHost/**'
+              - 'services/apphost/**'
               - '**/package.json'
               - '**/requirements.txt'
               - '**/*.csproj'
@@ -57,21 +57,20 @@ jobs:
         env:
           HEAD_COMMIT_MSG: ${{ github.event.head_commit.message }}
         run: echo "run_e2e=false" >> $GITHUB_OUTPUT
-#          # Determine commit message source based on event type
-#          if [[ "${{ github.event_name }}" == "push" ]]; then
-#            MSG="$HEAD_COMMIT_MSG"
-#          else
-#            MSG="$(jq -r '.pull_request.title // ""' "$GITHUB_EVENT_PATH") $(jq -r '.pull_request.body // ""' "$GITHUB_EVENT_PATH")"
-#          fi
-#
-#          if [[ "$MSG" == *"[skip e2e]"* ]]; then
-#            echo "run_e2e=false" >> $GITHUB_OUTPUT
-#          elif [[ "$MSG" == *"[force e2e]"* ]]; then
-#            echo "run_e2e=true" >> $GITHUB_OUTPUT
-#          else
-#            echo "run_e2e=${{ steps.filter.outputs.e2e_required }}" >> $GITHUB_OUTPUT
-#          fi
-
+  #          # Determine commit message source based on event type
+  #          if [[ "${{ github.event_name }}" == "push" ]]; then
+  #            MSG="$HEAD_COMMIT_MSG"
+  #          else
+  #            MSG="$(jq -r '.pull_request.title // ""' "$GITHUB_EVENT_PATH") $(jq -r '.pull_request.body // ""' "$GITHUB_EVENT_PATH")"
+  #          fi
+  #
+  #          if [[ "$MSG" == *"[skip e2e]"* ]]; then
+  #            echo "run_e2e=false" >> $GITHUB_OUTPUT
+  #          elif [[ "$MSG" == *"[force e2e]"* ]]; then
+  #            echo "run_e2e=true" >> $GITHUB_OUTPUT
+  #          else
+  #            echo "run_e2e=${{ steps.filter.outputs.e2e_required }}" >> $GITHUB_OUTPUT
+  #          fi
 
   ci-check-ticket:
     uses: ./.github/workflows/pipeline-ticket.yml
@@ -105,12 +104,11 @@ jobs:
       needs.detect-changes.outputs.AppHost == 'true'
     strategy:
       matrix:
-        service: [authingway, AppHost]
+        service: [authingway, apphost]
       fail-fast: false
     uses: ./.github/workflows/pipeline-dotnet.yml
     with:
       service: ${{ matrix.service }}
-      dotnet-version: "10.0.101"
       should_run: ${{ github.event_name == 'push' || needs.detect-changes.outputs[matrix.service] == 'true' }}
     secrets: inherit
 
@@ -127,7 +125,7 @@ jobs:
     uses: ./.github/workflows/pipeline-go.yml
     with:
       service: ${{ matrix.service }}
-      go-version: "1.24.0"
+      go-version: '1.25.0'
       should_run: ${{ github.event_name == 'push' || needs.detect-changes.outputs[matrix.service] == 'true' }}
     secrets: inherit
 
@@ -136,7 +134,6 @@ jobs:
     if: github.event_name == 'pull_request' && needs.detect-changes.outputs.naurffxiv == 'true'
     uses: ./.github/workflows/deploy-pr-netlify.yml
     with:
-      service: naurffxiv
       pr_number: "${{ github.event.pull_request.number }}"
       should_run: ${{ github.event_name == 'pull_request' && needs.detect-changes.outputs.naurffxiv == 'true' }}
     secrets: inherit

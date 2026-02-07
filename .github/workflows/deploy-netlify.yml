@@ -22,38 +22,53 @@ jobs:
       name: production-${{ inputs.service }}
       url: ${{ steps.deploy.outputs.deploy_url }}
 
+    defaults:
+      run:
+        working-directory: services/${{ inputs.service }}
+
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "22.12.0"
           cache: "npm"
           cache-dependency-path: package-lock.json
 
+      - name: Prepare Netlify Config
+        run: |
+          [[ -f ../../netlify.toml ]] && cp ../../netlify.toml . || echo "No root netlify.toml found"
+
       - uses: actions/cache@v4
         with:
-          path: services/${{ inputs.service }}/.next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}
+          path: .next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('../../package-lock.json') }}
           restore-keys: ${{ runner.os }}-nextjs-
 
       - name: Install Dependencies
+        working-directory: .
         run: npm ci
 
-      - name: Build and Deploy to Netlify
+      - name: Deploy to Netlify
         id: deploy
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
         run: |
-          # Run Netlify Build (executes the command in netlify.toml and the Next.js plugin)
-          npx netlify-cli build --filter naurffxiv
-
-          # Deploy the artifacts produced by the build
-          OUTPUT=$(npx netlify-cli deploy --prod --filter naurffxiv --json --message "Production: ${{ github.sha }}") || exit 1
+          # Use --build to let Netlify CLI handle build and plugin orchestration
+          OUTPUT=$(npx netlify-cli deploy \
+            --prod \
+            --build \
+            --json \
+            --message "Production: ${{ github.sha }}") || exit 1
 
           url=$(echo "$OUTPUT" | jq -r '.deploy_url')
           logs=$(echo "$OUTPUT" | jq -r '.logs')
+
+          if [[ -z "$url" ]]; then
+            echo "::error::No deploy URL returned"
+            exit 1
+          fi
 
           echo "deploy_url=$url" >> $GITHUB_OUTPUT
           echo "logs_url=$logs" >> $GITHUB_OUTPUT
