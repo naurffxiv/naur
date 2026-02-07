@@ -37,7 +37,7 @@ class DatabaseConnection:
             self._connection.set_session(autocommit=True)
         except Exception as e:
             logger.error(f"Failed to connect to database: {e}", exc_info=e)
-            raise e
+            raise ValueError(f"Failed to connect to database: {e}") from e
 
     def create_tables(self):
         """
