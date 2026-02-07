@@ -1,10 +1,5 @@
 # Authingway
 
-[![Build](https://github.com/naurffxiv/authingway/actions/workflows/build-code.yml/badge.svg?branch=main&event=push)](https://github.com/naurffxiv/authingway/actions/workflows/build-code.yml)
-[![Lint](https://github.com/naurffxiv/authingway/actions/workflows/lint-code.yml/badge.svg?branch=main&event=push)](https://github.com/naurffxiv/authingway/actions/workflows/lint-code.yml)
-[![Test](https://github.com/naurffxiv/authingway/actions/workflows/test-code.yml/badge.svg?branch=main&event=push)](https://github.com/naurffxiv/authingway/actions/workflows/test-code.yml)
-[![Scan](https://github.com/naurffxiv/authingway/actions/workflows/scan-code.yml/badge.svg?branch=main&event=push)](https://github.com/naurffxiv/authingway/actions/workflows/scan-code.yml)
-
 ## What is Authingway?
 
 Authingway is the auth service for the NAUR Discord server.

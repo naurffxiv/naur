@@ -10,7 +10,7 @@ param(
     [string]$ModDir     = "services/moddingway",
     [string]$FindDir    = "services/findingway",
     [string]$ClearDir   = "services/clearingway",
-    [string]$AppHostPrj = "services/AppHost/Naur.AppHost.csproj"
+    [string]$AppHostPrj = "services/apphost/Naur.AppHost.csproj"
 )
 
 . "$PSScriptRoot/_lib.ps1"
