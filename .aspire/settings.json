@@ -1,3 +1,6 @@
 {
-  "appHostPath": "../services/apphost/Naur.AppHost.csproj"
+  "appHostPath": "../services/apphost/Naur.AppHost.csproj",
+  "features": {
+    "dotnetSdkInstallationEnabled": "true"
+  }
 }
