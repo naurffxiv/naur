@@ -45,7 +45,7 @@ jobs:
           service: ${{ inputs.service }}
           step-number: 10
           step-name: "Prettier"
-          command: npx prettier --check "services/${{ inputs.service }}/**/*"
+          command: npx prettier --check --ignore-unknown "services/${{ inputs.service }}/**/*"
           output-file: prettier.txt
 
       - name: TypeScript
