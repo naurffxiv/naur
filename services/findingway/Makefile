@@ -5,3 +5,12 @@ test:
 
 build:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s -X main.buildSha=`git rev-parse HEAD` -X main.buildTime=`date +'%Y-%m-%d_%T'`"
+
+format:
+	goimports -w .
+
+lint:
+	golangci-lint run
+
+lint-fix:
+	golangci-lint run --fix
