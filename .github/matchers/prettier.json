@@ -1,0 +1,16 @@
+{
+  "problemMatcher": [
+    {
+      "owner": "prettier",
+      "pattern": [
+        {
+          "regexp": "^.*?\\[error\\]\\s+(.*?):\\s+(.*?)\\s+\\((\\d+):(\\d+)\\)$",
+          "file": 1,
+          "message": 2,
+          "line": 3,
+          "column": 4
+        }
+      ]
+    }
+  ]
+}

@@ -33,6 +33,9 @@ jobs:
           cache: "npm"
           cache-dependency-path: package-lock.json
 
+      - name: Register Problem Matchers
+        uses: ./.github/actions/setup-matchers
+
       - name: Install dependencies
         run: npm ci
 
@@ -42,7 +45,7 @@ jobs:
           service: ${{ inputs.service }}
           step-number: 10
           step-name: "Prettier"
-          command: npx turbo run prettier:check --filter=${{ inputs.service }}
+          command: npx prettier --check "services/${{ inputs.service }}/**/*"
           output-file: prettier.txt
 
       - name: TypeScript
@@ -52,7 +55,7 @@ jobs:
           service: ${{ inputs.service }}
           step-number: 10
           step-name: "TypeScript"
-          command: npx turbo run typecheck --filter=${{ inputs.service }}
+          command: npx tsc --noEmit -p services/${{ inputs.service }}/tsconfig.json
           output-file: tsc.txt
 
       - name: ESLint
@@ -62,7 +65,7 @@ jobs:
           service: ${{ inputs.service }}
           step-number: 10
           step-name: "ESLint"
-          command: npx turbo run lint --filter=${{ inputs.service }}
+          command: npx eslint "services/${{ inputs.service }}/src" --config services/${{ inputs.service }}/.eslintrc.json
           output-file: eslint.txt
 
       - name: Build
@@ -71,8 +74,9 @@ jobs:
           service: ${{ inputs.service }}
           step-number: 20
           step-name: "Build"
-          command: npx turbo run build --filter=${{ inputs.service }}
+          command: npm run build
           output-file: build.txt
+          working-directory: services/${{ inputs.service }}
 
       - name: Upload Build Artifact
         if: inputs.upload-build-artifact == true && success()
@@ -110,6 +114,6 @@ jobs:
           service: ${{ inputs.service }}
           step-number: 30
           step-name: "Unit Tests"
-          command: npx turbo run test --filter=${{ inputs.service }} --if-present 2>&1 || echo "No test script found"
+          command: npm run test -w services/${{ inputs.service }} 2>&1 || echo "No test script found"
           output-file: test.txt
           fail-on-error: false

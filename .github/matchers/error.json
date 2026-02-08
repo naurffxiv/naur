@@ -1,0 +1,16 @@
+{
+  "problemMatcher": [
+    {
+      "owner": "custom-error",
+      "pattern": [
+        {
+          "regexp": "ERROR in (.*):(\\d+):(\\d+): (.*)",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "message": 4
+        }
+      ]
+    }
+  ]
+}
