@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS forms (
 CREATE TABLE IF NOT EXISTS announcements (
 	announcementID INT GENERATED ALWAYS AS IDENTITY,
 	discordMessageID VARCHAR(20),
-	announcementRevisions JSONB NOT NULL,
+	announcementRevisions JSONB NOT NULL, --holds the last 3 revisions, version number and editor of the announcements [{“version”:x, “content”:”Announcement goes here.”, “author_id”: xxxxxxxxxxxx}]
 	sentFLAG BOOL NOT NULL DEFAULT FALSE,
 	PRIMARY KEY(announcementID)
 );
