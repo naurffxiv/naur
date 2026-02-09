@@ -10,8 +10,6 @@ export interface JobInfo {
   name: string;
   role: JobRole;
   xivGearUrl: string;
-  gcdSpeed?: string;
-  notes?: string;
   color?: string; // Derived from JOB_NAMES
 }
 
@@ -22,6 +20,15 @@ export interface UltimateConfig {
 }
 
 export type BisConfig = Record<string, UltimateConfig>;
+
+export const ULTIMATE_INFO = {
+  FRU: { name: "Futures Rewritten", abbreviation: "FRU" },
+  TOP: { name: "The Omega Protocol", abbreviation: "TOP" },
+  DSR: { name: "Dragonsong's Reprise", abbreviation: "DSR" },
+  TEA: { name: "The Epic of Alexander", abbreviation: "TEA" },
+  UWU: { name: "The Weapon's Refrain", abbreviation: "UWU" },
+  UCOB: { name: "The Unending Coil of Bahamut", abbreviation: "UCOB" },
+} as const;
 
 // Job Definitions
 export const JOB_NAMES: Record<
