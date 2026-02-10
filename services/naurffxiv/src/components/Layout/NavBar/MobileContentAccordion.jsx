@@ -26,7 +26,7 @@ export function MobileContentAccordion({ data, name }) {
               component="a"
               href={fight.url}
               key={i}
-              disablePadding
+              disablepadding="true"
               sx={sx.dropdownItemContainer}
             >
               <Box sx={sx.dropdownItem}>
