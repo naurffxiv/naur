@@ -6,7 +6,6 @@ import HomepageContent from "@/components/Homepage/Sections/HomepageContent";
 import React from "react";
 
 export default function Home() {
-  // test ci
   return (
     <Box>
       <Box
