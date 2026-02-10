@@ -41,13 +41,14 @@ jobs:
 
       - uses: actions/cache@v4
         with:
-          path: .next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('../../package-lock.json') }}
+          path: services/${{ inputs.service }}/.next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}
           restore-keys: ${{ runner.os }}-nextjs-
 
+      # Deliberately run 'Install Dependencies' at the repository root (working-directory: .)
       - name: Install Dependencies
-        working-directory: .
         run: npm ci
+        working-directory: .
 
       - name: Deploy to Netlify
         id: deploy

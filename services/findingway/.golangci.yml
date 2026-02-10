@@ -1,4 +1,6 @@
 version: "2"
+run:
+  modules-download-mode: readonly
 linters:
   enable:
     - errcheck
@@ -6,3 +8,23 @@ linters:
     - ineffassign
     - staticcheck
     - unused
+    - revive
+  settings:
+    revive:
+      rules:
+        - name: blank-imports
+        - name: context-as-argument
+        - name: error-strings
+        - name: error-naming
+        - name: if-return
+        - name: indent-error-flow
+        - name: superfluous-else
+        - name: modifies-parameter
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+formatters:
+  enable:
+    - gofmt
+    - goimports
