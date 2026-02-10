@@ -50,17 +50,25 @@ jobs:
         run: npm ci
         working-directory: .
 
+      - name: Configure Netlify State
+        env:
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: |
+          mkdir -p .netlify
+          echo "{\"siteId\": \"$NETLIFY_SITE_ID\"}" > .netlify/state.json
+
       - name: Deploy to Netlify
         id: deploy
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
         run: |
-          # Use --build to let Netlify CLI handle build and plugin orchestration
           OUTPUT=$(npx netlify-cli deploy \
             --prod \
-            --build \
             --json \
+            --site "${{ secrets.NETLIFY_SITE_ID }}" \
+            --auth "${{ secrets.NETLIFY_AUTH_TOKEN }}" \
+            --context production \
             --message "Production: ${{ github.sha }}") || exit 1
 
           url=$(echo "$OUTPUT" | jq -r '.deploy_url')
