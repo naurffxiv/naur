@@ -25,6 +25,9 @@ jobs:
           go-version: ${{ inputs.go-version }}
           cache-dependency-path: services/${{ inputs.service }}/go.sum
 
+      - name: Register Problem Matchers
+        uses: ./.github/actions/setup-matchers
+
       - name: Format
         uses: ./.github/actions/run-command-with-report
         with:
@@ -32,7 +35,7 @@ jobs:
           step-number: 10
           step-name: "Format"
           command: |
-            UNFORMATTED=$(gofmt -l .)
+            UNFORMATTED=$(gofmt -l services/${{ inputs.service }})
             if [ -n "$UNFORMATTED" ]; then
               echo "The following files are not formatted:"
               echo "$UNFORMATTED"
@@ -40,7 +43,6 @@ jobs:
             fi
             echo "All files are properly formatted"
           output-file: gofmt.txt
-          working-directory: services/${{ inputs.service }}
           fail-on-error: true
 
       - name: Install golangci-lint
@@ -48,7 +50,6 @@ jobs:
         with:
           version: v2.8.0
           install-only: true
-          working-directory: services/${{ inputs.service }}
 
       - name: Lint
         uses: ./.github/actions/run-command-with-report
@@ -56,13 +57,11 @@ jobs:
           service: ${{ inputs.service }}
           step-number: 11
           step-name: "Lint"
-          command: golangci-lint run --timeout 5m
+          command: cd services/${{ inputs.service }} && golangci-lint run --timeout 5m --output.text.path=stdout --output.text.colors=false --path-prefix services/${{ inputs.service }}
           output-file: lint.txt
-          working-directory: services/${{ inputs.service }}
           fail-on-error: true
 
   build:
-    needs: [lint]
     if: inputs.should_run
     runs-on: ubuntu-latest
     steps:
@@ -78,9 +77,8 @@ jobs:
           service: ${{ inputs.service }}
           step-number: 20
           step-name: "Build"
-          command: go build -v ./...
+          command: cd services/${{ inputs.service }} && go build -v ./... 2>&1 | sed "s|^|services/${{ inputs.service }}/|"
           output-file: build.txt
-          working-directory: services/${{ inputs.service }}
           fail-on-error: true
 
   test:
@@ -100,9 +98,8 @@ jobs:
           service: ${{ inputs.service }}
           step-number: 30
           step-name: "Unit Tests"
-          command: go test -v -coverprofile=coverage.out ./...
+          command: cd services/${{ inputs.service }} && go test -v -coverprofile=coverage.out ./... 2>&1 | sed "s|^|services/${{ inputs.service }}/|"
           output-file: test.txt
-          working-directory: services/${{ inputs.service }}
           fail-on-error: false
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
@@ -113,14 +110,13 @@ jobs:
         with:
           name: coverage-go-${{ inputs.service }}
           path: services/${{ inputs.service }}/coverage.out
-          if-no-files-found: ignore
+          if-no-files-found: warn
           retention-days: 1
 
   coverage-report:
     needs: [test]
     if: inputs.should_run && github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    continue-on-error: true
     permissions:
       contents: read
       actions: read
