@@ -1,0 +1,14 @@
+{
+  "problemMatcher": [
+    {
+      "owner": "dotnet-format",
+      "pattern": [
+        {
+          "regexp": "^\\s*Format check failed for:\\s+(.*)$",
+          "file": 1,
+          "message": 0
+        }
+      ]
+    }
+  ]
+}
