@@ -23,8 +23,9 @@ Write-Log -Level Info -Message "Found $($aspireFolders.Count) Aspire cache folde
 $aspireFolders | ForEach-Object -Parallel {
     $path = $_.FullName
     $root = $using:ProjectRoot
+    $theme = $using:Theme
     $displayPath = $path.Replace($root, '.').Replace('\', '/')
-    Write-Host "  Removing: $displayPath" -ForegroundColor Gray
+    Write-Host "  Removing: $displayPath" -ForegroundColor $theme.Debug
 
     . "$using:PSScriptRoot/_lib.ps1"
     Remove-DirectoryRobust -Path $path

@@ -1,22 +1,13 @@
-.PHONY: setup lint-tools lint format check validate-deps install-prereqs install build validate clean clean-all aspire-run aspire-watch troubleshoot kill-dev help all
-
+.PHONY: setup lint-tools lint format check validate-deps install build clean clean-all aspire-run aspire-watch troubleshoot kill-dev help all check-python
 # VERBOSITY CONTROL
 Q := @
 ifdef VERBOSE
   Q :=
 endif
 
-# SERVICE DIRECTORIES
+# .NET ASPIRE APPHOST
 APPHOST_DIR := services/apphost
-AUTH_DIR    := services/authingway
-NAUR_DIR    := services/naurffxiv
-MOD_DIR     := services/moddingway
-FIND_DIR    := services/findingway
-CLEAR_DIR   := services/clearingway
-
-# PROJECT FILES
 APPHOST_PRJ := $(APPHOST_DIR)/Naur.AppHost.csproj
-AUTH_PRJ    := $(AUTH_DIR)/Naur.Authingway.csproj
 
 # SCRIPTS & COMMANDS
 SCRIPTS_DIR := scripts/makefile
@@ -69,24 +60,12 @@ validate-deps: check-python
 
 
 install: check lint-tools
-	$(Q)$(PWSH) $(SCRIPTS_DIR)/install.ps1 \
-		-AppHostPrj $(APPHOST_PRJ) \
-		-AuthPrj $(AUTH_PRJ) \
-		-NaurDir $(NAUR_DIR) \
-		-ModDir $(MOD_DIR) \
-		-FindDir $(FIND_DIR) \
-		-ClearDir $(CLEAR_DIR)
+	$(Q)$(PWSH) $(SCRIPTS_DIR)/install.ps1
 	$(Q)$(MAKE) validate-deps
 
 # BUILD
 build:
-	$(Q)$(PWSH) $(SCRIPTS_DIR)/build-all.ps1 \
-		-AppHostPrj $(APPHOST_PRJ) \
-		-AuthPrj $(AUTH_PRJ) \
-		-NaurDir $(NAUR_DIR) \
-		-ModDir $(MOD_DIR) \
-		-FindDir $(FIND_DIR) \
-		-ClearDir $(CLEAR_DIR)
+	$(Q)$(PWSH) $(SCRIPTS_DIR)/build-all.ps1
 
 # DEV
 aspire-run:
@@ -109,13 +88,7 @@ clean-all: clean
 
 # TROUBLESHOOTING
 troubleshoot:
-	$(Q)$(PWSH) $(SCRIPTS_DIR)/troubleshoot.ps1 \
-		-AuthDir $(AUTH_DIR) \
-		-NaurDir $(NAUR_DIR) \
-		-ModDir $(MOD_DIR) \
-		-FindDir $(FIND_DIR) \
-		-ClearDir $(CLEAR_DIR) \
-		-AppHostPrj $(APPHOST_PRJ)
+	$(Q)$(PWSH) $(SCRIPTS_DIR)/troubleshoot.ps1
 
 # HELP
 help:

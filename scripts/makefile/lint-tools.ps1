@@ -33,9 +33,19 @@ if ($installTasks.Count -gt 0) {
         exit 1
     }
 
+    $failedTools = @()
     foreach ($id in $installTasks) {
         Write-Log -Level Info -Message "Running: winget install $id"
         winget install $id --silent --accept-source-agreements --accept-package-agreements | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            Write-Log -Level Error -Message "Failed to install $id"
+            $failedTools += $id
+        }
+    }
+
+    if ($failedTools.Count -gt 0) {
+        Write-Log -Level Error -Message "One or more linting tools failed to install: $($failedTools -join ', ')"
+        exit 1
     }
 
     Write-Log -Level Info -Message "Refreshing PATH..."
@@ -44,3 +54,5 @@ if ($installTasks.Count -gt 0) {
 } else {
     Write-Log -Level Info -Message "All linting tools are ready."
 }
+
+exit 0

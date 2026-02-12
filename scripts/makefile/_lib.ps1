@@ -6,16 +6,17 @@
   Provides Resolve-ProjectRoot, unified logging, job helpers and safe push/pop helpers.
 #>
 
-Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 # Centralized Color Theme
 $Theme = @{
-    Ok    = 'Green'
-    Info  = 'Cyan'
-    Warn  = 'Yellow'
-    Error = 'Red'
-    Debug = 'DarkGray'
+    Ok       = 'Green'
+    Info     = 'Cyan'
+    Warn     = 'Yellow'
+    Error    = 'Red'
+    Debug    = 'DarkGray'
+    Primary  = 'White'
+    Emphasis = 'White'
 }
 
 function Resolve-ProjectRoot {
@@ -159,4 +160,93 @@ function Remove-DirectoryRobust {
         Write-Log -Level Warn -Message "Robust delete failed for $Path, falling back to Remove-Item."
         Remove-Item -Path $Path -Force -Recurse -ErrorAction SilentlyContinue
     }
+}
+
+function Test-ToolPresence {
+    <#
+    .SYNOPSIS
+      Check if a tool is present on the system.
+    .DESCRIPTION
+      Accepts a tool hashtable. If it contains 'Check' and it's a scriptblock, invokes it.
+      Otherwise, uses Get-Command to check for the presence of tool.Cmd.
+      Optionally supports specialized 'Type' checks via Test-ServiceHealth.
+    #>
+    param(
+        [Parameter(Mandatory)]
+        [hashtable]$Tool
+    )
+
+    if ($Tool.Type) {
+        # Check specialized types using the shared library
+        return Test-ServiceHealth -Type $Tool.Type -Path "." # Path is often a dummy or root context
+    }
+
+    if ($Tool.ContainsKey('Check') -and $Tool.Check -is [scriptblock]) {
+        return & $Tool.Check
+    }
+
+    if ($Tool.Cmd) {
+        return [bool](Get-Command $Tool.Cmd -ErrorAction SilentlyContinue)
+    }
+
+    return $false
+}
+
+function Test-ServiceHealth {
+    <#
+    .SYNOPSIS
+      Centralized check for service readiness.
+    #>
+    param(
+        [Parameter(Mandatory)][string]$Type,
+        [Parameter(Mandatory)][string]$Path,
+        [string]$ProjectRoot,
+        [string]$DotNetProjName
+    )
+
+    if (-not (Test-Path $Path)) { return $false }
+
+    switch ($Type) {
+        "Node" { return Test-Path (Join-Path $Path "node_modules") }
+        "Go" { return Test-Path (Join-Path $Path "go.mod") }
+        "Playwright" {
+            $pwPath = Join-Path $env:LOCALAPPDATA "ms-playwright"
+            return (Test-Path $pwPath) -and (Get-ChildItem $pwPath -Filter "chromium-*" -ErrorAction SilentlyContinue)
+        }
+        "Python" {
+            $venvPython = Join-Path $Path "venv\Scripts\python.exe"
+            if (-not (Test-Path $venvPython)) { $venvPython = Join-Path $Path "venv/bin/python" }
+            if (Test-Path $venvPython) {
+                # Heuristic: Check if pip can list anything (means venv is actually working)
+                $installed = & $venvPython -m pip list --format=freeze 2>$null
+                return ($null -ne $installed) -and (@($installed).Count -gt 0)
+            }
+            return $false
+        }
+        "DotNet" {
+            $root = if ($ProjectRoot) { $ProjectRoot } else { Resolve-ProjectRoot }
+            $projName = if ($DotNetProjName) { $DotNetProjName } else { [System.IO.Path]::GetFileNameWithoutExtension($Path) }
+            $artifactsObjPath = Join-Path $root "artifacts/obj/$projName"
+            return (Test-Path $artifactsObjPath) -and (Get-ChildItem $artifactsObjPath -ErrorAction SilentlyContinue)
+        }
+        Default { return $false }
+    }
+}
+
+function Get-PythonPath {
+    <#
+    .SYNOPSIS
+      Get the Python executable path from a venv directory.
+    .PARAMETER Path
+      Path to the service or venv directory.
+    #>
+    param([Parameter(Mandatory)][string]$Path)
+
+    $windowsPath = Join-Path $Path "venv\Scripts\python.exe"
+    if (Test-Path $windowsPath) { return $windowsPath }
+
+    $unixPath = Join-Path $Path "venv/bin/python"
+    if (Test-Path $unixPath) { return $unixPath }
+
+    return $null
 }

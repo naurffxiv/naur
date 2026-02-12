@@ -7,23 +7,24 @@
 param()
 
 . "$PSScriptRoot/_lib.ps1"
+. "$PSScriptRoot/_config.ps1"
 
-$tools = @(
-    @{ Name = ".NET";          Cmd = "dotnet";        Required = $true }
-    @{ Name = "Node.js";       Cmd = "node";          Required = $true }
-    @{ Name = "Python";        Cmd = "python";        Required = $true }
-    @{ Name = "Go";            Cmd = "go";            Required = $true }
-    @{ Name = "Ruff";          Cmd = "ruff";          Required = $true }
-    @{ Name = "golangci-lint"; Cmd = "golangci-lint"; Required = $true }
-    @{ Name = "Docker";        Cmd = "docker";        Required = $true }
-)
+$pmName = Get-PMName
+$tools = Get-ToolRegistry
+
+# Add package manager to tools list dynamically if not already present
+if (-not ($tools | Where-Object { $_.Name -eq $pmName })) {
+    $tools = @($tools) + @(@{ Name = $pmName; Cmd = $pmName; Required = $true })
+}
 
 $missing = [System.Collections.Generic.List[string]]::new()
 
 Write-Log -Level Info -Message "Checking Development Prerequisites..."
 
 foreach ($tool in $tools) {
-    if (Get-Command $tool.Cmd -ErrorAction SilentlyContinue) {
+    $exists = Test-ToolPresence -Tool $tool
+
+    if ($exists) {
         Write-Log -Level Ok -Message "$($tool.Name) Found"
     } elseif ($tool.Required) {
         Write-Log -Level Error -Message "$($tool.Name) NOT Found"

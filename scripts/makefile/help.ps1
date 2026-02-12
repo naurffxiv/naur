@@ -8,7 +8,7 @@ param()
 
 . "$PSScriptRoot/_lib.ps1"
 
-Write-Host "`n--- NAUR Monorepo ---`n" -ForegroundColor Cyan
+Write-Host "`n--- NAUR Monorepo ---`n" -ForegroundColor $Theme.Info
 
 $commands       = @(
     @{ Group    = "Setup & Installation"; Target = "setup";         Desc = "Install system compilers (.NET 10, Node, Python, Go)" }
@@ -31,14 +31,14 @@ $commands       = @(
 
 $groups = $commands | Group-Object Group
 foreach ($g in $groups) {
-    Write-Host " $($g.Name):" -ForegroundColor Yellow
+    Write-Host " $($g.Name):" -ForegroundColor $Theme.Warn
     foreach ($cmd in $g.Group) {
         $t = $cmd.Target.PadRight(15)
-        Write-Host "   make " -NoNewline -ForegroundColor Gray
-        Write-Host $t -NoNewline -ForegroundColor White
-        Write-Host " - $($cmd.Desc)" -ForegroundColor Gray
+        Write-Host "   make " -NoNewline -ForegroundColor $Theme.Debug
+        Write-Host $t -NoNewline -ForegroundColor $Theme.Primary
+        Write-Host " - $($cmd.Desc)" -ForegroundColor $Theme.Debug
     }
     Write-Host ""
 }
 
-Write-Host "[TIP] Run 'make troubleshoot' if a build fails to see a health report." -ForegroundColor Cyan
+Write-Host "[TIP] Run 'make troubleshoot' if a build fails to see a health report." -ForegroundColor $Theme.Info
