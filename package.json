@@ -8,26 +8,29 @@
   ],
   "engines": {
     "node": ">=22.12.0",
-    "npm": ">=10.9.0"
+    "pnpm": ">=10.29.2"
   },
-  "packageManager": "npm@10.9.4",
+  "packageManager": "pnpm@10.29.2",
   "license": "MIT",
   "type": "commonjs",
   "devDependencies": {
     "@j178/prek": "^0.3.0",
     "@typescript-eslint/eslint-plugin": "^8.53.0",
     "@typescript-eslint/parser": "^8.53.0",
-    "eslint": "^8.0.0",
-    "prettier": "^3.0.0",
-    "turbo": "^2.7.6"
+    "eslint": "^8.57.1",
+    "prettier": "^3.7.4",
+    "turbo": "^2.7.6",
+    "typescript": "^5.9.3"
   },
   "scripts": {
     "prepare": "prek install",
     "build:naur": "turbo run build --filter=naurffxiv",
-    "dev:naur": "npm run dev -w naurffxiv",
-    "lint:naur": "npm run lint -w naurffxiv",
-    "test:e2e": "npm run test -w e2e-tests",
-    "start:naur": "npm run start -w naurffxiv"
+    "dev:naur": "pnpm --filter naurffxiv dev",
+    "lint:naur": "pnpm --filter naurffxiv lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo test",
+    "test:e2e": "pnpm --filter e2e-tests test",
+    "start:naur": "pnpm --filter naurffxiv start"
   },
   "overrides": {
     "glob": "^11.0.0",

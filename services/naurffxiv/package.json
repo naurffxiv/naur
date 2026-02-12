@@ -2,15 +2,19 @@
   "name": "naurffxiv",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=22.12.0",
+    "pnpm": ">=10.29.2"
+  },
   "scripts": {
-    "dev": "npm run check:routes && next dev",
+    "dev": "pnpm check:routes && next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "test": "echo \"Error: no test specified\" && exit 0",
     "typecheck": "tsc --noEmit",
-    "prettier:check": "npx prettier --check .",
-    "prettier:write": "npx prettier --write .",
+    "prettier:check": "prettier --check .",
+    "prettier:write": "prettier --write .",
     "check:routes": "tsx scripts/middleware/validateRoutes.ts",
     "compress": "node scripts/compress-images.js"
   },
