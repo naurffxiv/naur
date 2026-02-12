@@ -41,7 +41,7 @@ public class TestAppHost : IAsyncDiscoveryInitializer, IAsyncDisposable
 
         await Application.StartAsync();
 
-        await resourceNotificationService.WaitForResourceAsync("authingway", KnownResourceStates.Running)
+        await resourceNotificationService.WaitForResourceHealthyAsync("authingway")
             .WaitAsync(TimeSpan.FromMinutes(5));
     }
 
