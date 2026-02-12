@@ -99,9 +99,8 @@ jobs:
 
       - name: Install dev certs
         run: dotnet dev-certs https --trust
-        env:
-          # Can be removed once https://github.com/dotnet/aspnetcore/issues/65391 is merged and released in a new SDK version
-          WSL_INTEROP: ""
+        # Can be removed once https://github.com/dotnet/aspnetcore/issues/65391 is addressed in a new SDK version
+        continue-on-error: true
 
       - name: Build for Tests
         working-directory: tests/${{ inputs.service }}
