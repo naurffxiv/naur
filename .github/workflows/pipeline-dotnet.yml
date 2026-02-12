@@ -81,7 +81,7 @@ jobs:
 
   test:
     needs: [build]
-    if: inputs.should_run
+    if: inputs.should_run && inputs.service != 'apphost'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -95,11 +95,16 @@ jobs:
       - name: Restore dependencies
         uses: zyactions/dotnet-restore@v1
         with:
-          working-directory: services/${{ inputs.service }}
+          working-directory: tests/${{ inputs.service }}
 
-      #      - name: Build for Tests
-      #        working-directory: services/${{ inputs.service }}
-      #        run: dotnet build --configuration Release --no-restore
+      - name: Install dev certs
+        run: dotnet dev-certs https --trust
+        # Can be removed once https://github.com/dotnet/aspnetcore/issues/65391 is addressed in a new SDK version
+        continue-on-error: true
+
+      - name: Build for Tests
+        working-directory: tests/${{ inputs.service }}
+        run: dotnet build --configuration Release --no-restore
 
       - name: Unit Tests
         uses: ./.github/actions/run-command-with-report
@@ -107,10 +112,9 @@ jobs:
           service: ${{ inputs.service }}
           step-number: 30
           step-name: "Unit Tests"
-          # command: dotnet test --configuration Release --logger "console;verbosity=detailed" --no-build
-          command: echo "Unit Tests Not Implemented Yet"
+          command: dotnet run --configuration Release --coverage --coverage-output-format xml --no-build
           output-file: dotnet-test.txt
-          working-directory: services/${{ inputs.service }}
+          working-directory: tests/${{ inputs.service }}
           fail-on-error: false
 
       - name: Upload Coverage
@@ -118,6 +122,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-dotnet-${{ inputs.service }}
-          path: services/${{ inputs.service }}/**/coverage.xml
+          path: artifacts/bin/*/release/TestResults/*.xml
           if-no-files-found: ignore
           retention-days: 1
