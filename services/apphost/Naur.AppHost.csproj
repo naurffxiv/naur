@@ -3,10 +3,17 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
+    <UserSecretsId>naur-apphost</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.AppHost" />
+    <PackageReference Include="Aspire.Hosting.Docker.SshDeploy" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\authingway\Naur.Authingway.csproj" />
   </ItemGroup>
 
 </Project>

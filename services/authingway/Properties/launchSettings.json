@@ -1,12 +1,14 @@
 {
+  "$schema": "https://json.schemastore.org/launchsettings.json",
   "profiles": {
-    "Authingway": {
+    "https": {
       "commandName": "Project",
+      "dotnetRunMessages": true,
       "launchBrowser": true,
+      "applicationUrl": "https://authingway.dev.localhost:8443",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "applicationUrl": "https://localhost:54375;http://localhost:54376"
+      }
     }
   }
 }
