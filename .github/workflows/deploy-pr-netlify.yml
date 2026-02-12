@@ -29,11 +29,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: "22.12.0"
-          cache: "npm"
-          cache-dependency-path: package-lock.json
+          cache: "pnpm"
+          cache-dependency-path: "pnpm-lock.yaml"
 
       - name: Prepare Netlify Config
         run: |
@@ -41,7 +43,7 @@ jobs:
 
       - name: Install Dependencies
         working-directory: .
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Configure Netlify State
         env:
@@ -56,7 +58,7 @@ jobs:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
         run: |
-          OUTPUT=$(npx netlify-cli deploy \
+          OUTPUT=$(pnpm --package=netlify-cli dlx netlify deploy \
             --build \
             --json \
             --alias "pr-${{ inputs.pr_number }}" \
@@ -65,11 +67,10 @@ jobs:
           url=$(echo "$OUTPUT" | jq -r '.deploy_url')
           logs=$(echo "$OUTPUT" | jq -r '.logs')
 
-          if [[ -z "$url" ]]; then
+          if [[ -z "$url" || "$url" == "null" ]]; then
             echo "::error::No deploy URL returned"
             exit 1
           fi
-
           echo "deploy_url=$url" >> $GITHUB_OUTPUT
           echo "logs_url=$logs" >> $GITHUB_OUTPUT
 
