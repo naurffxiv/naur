@@ -222,6 +222,12 @@ async def is_user_moderator(interaction: discord.Interaction):
     return False
 
 
+async def is_user_admin(interaction: discord.Interaction):
+    if isinstance(interaction.user, discord.Member):
+        return user_has_role(interaction.user, Role.ADMIN)
+    return False
+
+
 def timestamp_to_epoch(timestamp: datetime | None) -> int | None:
     if timestamp is None:
         return None
