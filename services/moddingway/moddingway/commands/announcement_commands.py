@@ -3,14 +3,13 @@ import logging
 import discord
 from discord.ext.commands import Bot
 
+from moddingway.database import announcements_database
 from moddingway.services import announcement_service
 from moddingway.util import is_user_admin
 
 from .helper import create_logging_embed, create_response_context
 
 logger = logging.getLogger(__name__)
-
-##TODO: tidy up code, configure the envs instead of hardcoded, make sure only admin can use it
 
 
 class AnnouncementPublishView(discord.ui.View):
@@ -35,7 +34,6 @@ class AnnouncementPublishView(discord.ui.View):
                     logging_embed,
                     channel=self.channel,
                     announcement_id=self.announcement_id,
-                    bot=self.bot,
                 )
                 response_message.set_string(
                     f"Successfully published announcement, ID: {self.announcement_id}"
@@ -84,13 +82,21 @@ def create_announcement_commands(bot: Bot) -> None:
         announcement_id: int,
     ):
         """Publish an announcement"""
-        await interaction.response.send_message(
-            f"Are you sure you want to publish announcement ID {announcement_id}",
-            view=AnnouncementPublishView(
-                interaction=interaction,
-                channel=channel,
-                announcement_id=announcement_id,
-                bot=bot,
-            ),
-            ephemeral=True,
+        announcement_json = announcements_database.get_announcement(
+            announcement_id=announcement_id
         )
+        if announcement_json is None:
+            await interaction.response.send_message(
+                "Announcement not found.", ephemeral=True
+            )
+        else:
+            await interaction.response.send_message(
+                f"Are you sure you want to publish announcement ID {announcement_id}",
+                view=AnnouncementPublishView(
+                    interaction=interaction,
+                    channel=channel,
+                    announcement_id=announcement_id,
+                    bot=bot,
+                ),
+                ephemeral=True,
+            )

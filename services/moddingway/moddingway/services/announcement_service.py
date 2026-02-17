@@ -47,7 +47,7 @@ async def add_announcement(
             logging_embed,
             logger,
             "Result",
-            f"Announcement draft created, ID:{new_id}",
+            "Announcement draft created.",
         )
 
     return new_id
@@ -56,14 +56,11 @@ async def add_announcement(
 ## should sent announcement be able to get sent again?
 
 
-async def publish_announcement(logging_embed, channel, announcement_id, bot) -> bool:
+async def publish_announcement(logging_embed, channel, announcement_id):
 
     announcement_json = announcements_database.get_announcement(
         announcement_id=announcement_id
     )
-
-    if announcement_json is None:
-        return False
     revisions = announcement_json.get("revisions", [])
     latest_revision_dict = revisions[-1]
     latest_revision = AnnouncementRevision(**latest_revision_dict)
