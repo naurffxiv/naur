@@ -55,5 +55,4 @@ class DatabaseConnection:
         return self._connection.cursor()
 
 
-db = DatabaseConnection()
-reveal_type(db.get_cursor())  # noqa: F821
+db: int = DatabaseConnection()
