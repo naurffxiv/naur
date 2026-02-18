@@ -29,19 +29,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: "22.12.0"
-          cache: "npm"
-          cache-dependency-path: package-lock.json
+          cache: "pnpm"
+          cache-dependency-path: "pnpm-lock.yaml"
 
       - name: Prepare Netlify Config
         run: |
           [[ -f ../../netlify.toml ]] && cp ../../netlify.toml . || echo "No root netlify.toml found"
 
+      - name: Install Netlify CLI
+        run: pnpm add -g netlify-cli
+
       - name: Install Dependencies
         working-directory: .
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Configure Netlify State
         env:
@@ -56,22 +61,30 @@ jobs:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
         run: |
-          OUTPUT=$(npx netlify-cli deploy \
+          netlify deploy \
             --build \
             --json \
             --alias "pr-${{ inputs.pr_number }}" \
-            --message "PR #${{ inputs.pr_number }}: ${{ github.sha }}") || exit 1
+            --message "PR #${{ inputs.pr_number }}: ${{ github.sha }}" \
+            > deploy.json
 
-          url=$(echo "$OUTPUT" | jq -r '.deploy_url')
-          logs=$(echo "$OUTPUT" | jq -r '.logs')
+          # Extract all the fields
+          deploy_url=$(jq -r '.deploy_url // ""' deploy.json)
+          site_url=$(jq -r '.url // ""' deploy.json)
+          deploy_id=$(jq -r '.deploy_id // ""' deploy.json)
+          logs_url=$(jq -r '.logs // ""' deploy.json)
+          function_logs=$(jq -r '.function_logs // ""' deploy.json)
+          edge_logs=$(jq -r '.edge_function_logs // ""' deploy.json)
 
-          if [[ -z "$url" ]]; then
-            echo "::error::No deploy URL returned"
-            exit 1
-          fi
+          # Set outputs
+          echo "deploy_url=$deploy_url" >> $GITHUB_OUTPUT
+          echo "site_url=$site_url" >> $GITHUB_OUTPUT
+          echo "deploy_id=$deploy_id" >> $GITHUB_OUTPUT
+          echo "logs_url=$logs_url" >> $GITHUB_OUTPUT
+          echo "function_logs=$function_logs" >> $GITHUB_OUTPUT
+          echo "edge_logs=$edge_logs" >> $GITHUB_OUTPUT
 
-          echo "deploy_url=$url" >> $GITHUB_OUTPUT
-          echo "logs_url=$logs" >> $GITHUB_OUTPUT
+          echo "Deployed to: $deploy_url"
 
       - name: Generate Report
         if: always()
@@ -84,7 +97,24 @@ jobs:
           # Call save_report.sh to generate both MD and JSON reports
           # Use "global" as service to place it in the header section
           bash ../../.github/scripts/save_report.sh \
-            "global" "40" "Preview (naurffxiv)" "$status" "" "$url"
+            "global" "40" "Preview (naurffxiv)" "$status" "$logs" "$url"
+
+      - name: Deploy Summary
+        if: always()
+        run: |
+          echo "### Preview Status: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Preview URL:** ${{ steps.netlify.outputs.deploy_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Deploy ID:** \`${{ steps.netlify.outputs.deploy_id }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### Logs" >> $GITHUB_STEP_SUMMARY
+          echo "- [Build Logs](${{ steps.netlify.outputs.logs_url }})" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ steps.netlify.outputs.function_logs }}" != "" ]]; then
+            echo "- [Function Logs](${{ steps.netlify.outputs.function_logs }})" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [[ "${{ steps.netlify.outputs.edge_logs }}" != "" ]]; then
+            echo "- [Edge Function Logs](${{ steps.netlify.outputs.edge_logs }})" >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: Upload Report Artifacts
         if: always()

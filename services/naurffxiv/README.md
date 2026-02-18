@@ -70,13 +70,13 @@ If you prefer to run the project directly on your machine without Docker.
 
 ### Prerequisites
 
-You need **Node.js v22+** and **npm v10+**.
+You need **Node.js v22+** and **pnpm v10+**.
 
 #### Check Installed Versions
 
 ```bash
 node -v
-npm -v
+pnpm -v
 ```
 
 Expected output:
@@ -85,18 +85,25 @@ Expected output:
 ❯ node -v
 v22.6.0
 
-❯ npm -v
-10.8.2
+❯ pnpm -v
+10.29.2
 ```
 
 ### Installation
 
-### Install or Upgrade npm
+### Install or Upgrade pnpm
 
-If you need to install or update **npm**, run:
+If you need to install or update **pnpm**, run:
 
 ```bash
-npm install -g npm
+npm install -g pnpm
+```
+
+Or use [Corepack](https://nodejs.org/api/corepack.html) (recommended):
+
+```bash
+corepack enable
+corepack prepare pnpm@latest --activate
 ```
 
 #### Install Node.js Using nvm
@@ -121,17 +128,11 @@ If you need to install or update **Node.js**, use [nvm (Node Version Manager)](h
    nvm install 22
    ```
 
-4. Install Next.js:
+4. Install dependencies (including Next.js):
 
    ```bash
-   npm install next
+   pnpm install
    ```
-
-#### Install Project Dependencies
-
-```bash
-npm install
-```
 
 ## Environment Setup
 
@@ -159,7 +160,7 @@ For instructions on running a local HTTPS server to test secure cookies and OAut
 #### Development Server
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 #### Production Build
@@ -167,8 +168,8 @@ npm run dev
 To build and test what the website will be like in production, run:
 
 ```bash
-npm run build
-npm run start
+pnpm build
+pnpm start
 ```
 
 ---
@@ -181,23 +182,23 @@ To merge into the repository, the code must pass the pipelines. Here are some co
 
 ```bash
 # Installation
-npm install --save-dev prettier
+pnpm add -D prettier
 
 # Running the check
-npx prettier --check .
+pnpm exec prettier --check .
 
 # Automatically fix formatting issues
-npx prettier --write .
+pnpm exec prettier --write .
 ```
 
 ## ESLint
 
 ```bash
 # Installation
-npm install --save-dev eslint
+pnpm add -D eslint
 
 # Run the linter
-npx eslint . --ext .js,.jsx,.ts,.tsx
+pnpm exec eslint . --ext .js,.jsx,.ts,.tsx
 ```
 
 ## Contributing
