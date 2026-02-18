@@ -4,5 +4,5 @@ pytest-cov
 pytest-mock
 pytest-asyncio
 ruff==0.15.0
-ty
+ty==0.0.11
 mypy
