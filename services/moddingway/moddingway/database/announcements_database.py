@@ -12,7 +12,7 @@ settings = get_settings()
 logger = logging.getLogger(__name__)
 
 
-def add_announcement(announcement_rev: AnnouncementRevision) -> int:
+def insert_announcement(announcement_rev: AnnouncementRevision) -> int:
     conn = DatabaseConnection()
 
     revisions_data = [announcement_rev.model_dump()]

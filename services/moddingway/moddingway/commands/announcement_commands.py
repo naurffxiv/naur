@@ -36,7 +36,7 @@ class AnnouncementPublishView(discord.ui.View):
                     announcement_id=self.announcement_id,
                 )
                 response_message.set_string(
-                    f"Successfully published announcement, ID: {self.announcement_id}"
+                    f"Successfully published announcement. (ID: {self.announcement_id})"
                 )
 
     @discord.ui.button(label="Cancel", style=discord.ButtonStyle.danger)
@@ -71,7 +71,7 @@ def create_announcement_commands(bot: Bot) -> None:
                 )
 
                 response_message.set_string(
-                    f"Successfully added announcement, ID: {draft_id}"
+                    f"Successfully added announcement. (ID: {draft_id})"
                 )
 
     @bot.tree.command()
@@ -91,7 +91,7 @@ def create_announcement_commands(bot: Bot) -> None:
             )
         else:
             await interaction.response.send_message(
-                f"Are you sure you want to publish announcement ID {announcement_id}",
+                f"Are you sure you want to publish this announcement (ID: {announcement_id})",
                 view=AnnouncementPublishView(
                     interaction=interaction,
                     channel=channel,

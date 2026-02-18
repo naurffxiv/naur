@@ -22,7 +22,9 @@ async def add_announcement(
         version=0, content=announcement_text, author_id=author.id
     )
 
-    new_id = announcements_database.add_announcement(announcement_rev=announcement_rev)
+    new_id = announcements_database.insert_announcement(
+        announcement_rev=announcement_rev
+    )
     logging_embed.set_footer(text=f"Announcement ID: {new_id}")
 
     test_channel_id = settings.announcement_draft_channel
@@ -69,7 +71,6 @@ async def publish_announcement(logging_embed, channel, announcement_id):
     )  # put it in embed so it can support 4k characters
     sent_message = await channel.send(embed=publish_embed)
     if sent_message:
-        # double check if it actually sets
         announcements_database.set_sent(
             announcement_id=announcement_id, discord_msg_id=sent_message.id
         )
