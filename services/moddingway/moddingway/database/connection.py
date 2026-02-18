@@ -53,3 +53,7 @@ class DatabaseConnection:
         if self._connection.closed:
             self.connect()
         return self._connection.cursor()
+
+
+db = DatabaseConnection()
+reveal_type(db.get_cursor())  # noqa: F821
