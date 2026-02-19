@@ -1,5 +1,5 @@
 from collections.abc import Callable, Sequence
-from typing import Any, TypeVar
+from typing import Any
 
 from fastapi_pagination.api import create_page
 from fastapi_pagination.utils import verify_params
@@ -12,10 +12,7 @@ def parse_pagination_params() -> tuple[int, int]:
     return (params.page, params.size)
 
 
-T = TypeVar("T")
-
-
-def paginate(
+def paginate[T](
     sequence: Sequence[T], length_function: Callable[[Sequence[T]], int]
 ) -> Any:
     params: Any
