@@ -8,8 +8,12 @@ Discord moderation bot for NAUR.
 
 1. **Create a Bot**: Create a personal version of the moddingway bot via Discord's developer portal. Follow [Discord's Getting Started](https://discord.com/developers/docs/quick-start/getting-started#step-1-creating-an-app).
 2. **Environment**: Copy `.env_example` to `.env` and configure the required environment variables (see [Environment Variables](#environment-variables) below).
-3. **Install Dependencies**: Run `make install` to create a virtual environment and install development dependencies. This is optional if you only plan to run the bot via Docker, but required for linting and formatting.
-4. **Docker Desktop**: Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) to run the containerized database.
+3. **Docker Desktop**: Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) to run the containerized database.
+4. **Install uv**: Follow the [official uv installation guide](https://docs.astral.sh/uv/getting-started/installation/).
+5. **Install Dependencies**: Run `make sync`. This will:
+   - Automatically ensure the correct Python version (3.14) is available.
+   - Create a local `.venv` if it doesn't exist.
+   - Synchronize all dependencies from `uv.lock`.
 
 ### Server Setup
 
@@ -27,8 +31,9 @@ We use a Makefile to simplify common development tasks.
 
 ### Setup & Installation
 
-- `make install` - Creates a virtual environment (`venv`) and installs development dependencies. **Run this to setup local environment.**
-- `make clean-venv` - Removes the virtual environment.
+- `make lock` - Regenerates `uv.lock` from `pyproject.toml`. Run after editing dependencies.
+- `make sync` - Runs `make lock` then `uv sync` to install/update all Python dependencies.
+- `make clean-venv` - Clears and recreates the local `.venv` directory.
 - `make clean-docker` - Removes unused Docker images to reclaim disk space.
 - `make clean` - Runs both `clean-venv` and `clean-docker`.
 
@@ -58,16 +63,38 @@ We use a Makefile to simplify common development tasks.
 
 ### Code Quality & Testing
 
-- `make format` - Runs Ruff linter/formatter over all Python files. **Required before merging pull requests.**
-- `make ty` - Runs Ty type-checker to ensure type safety.
-- `make test` - Runs automated unit tests with pytest.
+- `make format` - Runs `ruff format` and `ruff check --fix`. **Required before merging.**
+- `make lint` - Runs `format` then `ty check`. Full code quality pass.
+- `make ty` - Runs `ty check` for type safety.
+- `make test` - Runs automated unit tests with `pytest`.
+
+## Dependency Management
+
+We use only `pyproject.toml` and `uv.lock` for dependencies. `requirements.txt` files do not exist. All dependency management is handled exclusively through `uv`.
+
+### Adding/Removing Dependencies
+
+Use `uv` directly to manage packages:
+
+```bash
+# Add a production dependency
+uv add package-name
+
+# Add a development dependency
+uv add --dev package-name
+
+# Remove a dependency
+uv remove package-name
+```
+
+Always commit both `pyproject.toml` and `uv.lock` together. After editing `pyproject.toml`, run `make lock` to regenerate the lockfile before committing.
 
 ## Typical Development Workflow
 
 ### Docker-based development (Recommended)
 
 ```bash
-make install         # Install dev tools (optional if only running)
+make sync            # Install dev tools (optional if only running)
 make run             # Start the bot (includes database)
 make format          # Before committing
 ```
@@ -75,16 +102,16 @@ make format          # Before committing
 ### Local Python development
 
 ```bash
-make install          # First time setup
+make sync             # First time setup/sync
 make database-run     # Start database
 make python-run       # Run bot locally
-make format           # Before committing
+make format           # Format before committing
 ```
 
 ### API development
 
 ```bash
-make install          # First time setup
+make sync             # First time setup/sync
 make database-run     # Start database
 make api-reload       # Start API with hot-reload
 ```
@@ -109,6 +136,41 @@ Most IDEs (like VS Code) have extensions for Ruff that can format on save.
 ### Reseeding the Database
 
 To reset and re-seed the local database, run `make database-clean` while the postgres container is active.
+
+## Troubleshooting
+
+### Lockfile Mismatch
+
+If you see errors about `uv.lock` being out of sync, run:
+
+```bash
+make lock
+# then
+make sync
+```
+
+Or directly with uv:
+
+```bash
+uv lock && uv sync
+```
+
+### Environment Issues
+
+If the virtual environment seems corrupted, try:
+
+```bash
+make clean-venv
+make install
+```
+
+### Python Version
+
+The project requires Python 3.14. `uv` will manage this for you, but you can check the version with:
+
+```bash
+uv run python --version
+```
 
 ## Environment Variables
 
