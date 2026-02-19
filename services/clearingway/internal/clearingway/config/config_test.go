@@ -59,9 +59,8 @@ func TestBotConfig_GetEncounterByID_Found(t *testing.T) {
 	result := cfg.GetEncounterByID(102)
 
 	assert.NotNil(t, result)
-	if result == nil {
-		t.Fatal("Expected encounter config, got nil")
-	}
+
+	//goland:noinspection GoMaybeNil
 	assert.Equal(t, "Test Encounter", result.Name)
 }
 
@@ -101,9 +100,8 @@ func TestBotConfig_GetEncounterByName_Found(t *testing.T) {
 	result := cfg.GetEncounterByName("p12s")
 
 	assert.NotNil(t, result)
-	if result == nil {
-		t.Fatal("Expected encounter config, got nil")
-	}
+
+	//goland:noinspection GoMaybeNil
 	assert.Equal(t, "P12S", result.Name)
 }
 
@@ -162,9 +160,8 @@ func TestParseEncounterConfig_InvalidJSON(t *testing.T) {
 	err := cfg.parseEncounterConfig("test.json", data)
 
 	assert.Error(t, err)
-	if err == nil {
-		t.Fatal("Expected error, got nil")
-	}
+
+	//goland:noinspection GoMaybeNil
 	assert.Contains(t, err.Error(), "error unmarshaling encounter config file")
 }
 
