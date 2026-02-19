@@ -67,8 +67,7 @@ try {
             if ($LASTEXITCODE -ne 0) { throw "ruff format --check failed" }
         }
         if ($LASTEXITCODE -eq 0) {
-            $pythonExe = Get-PythonPath -Path "."
-            if ($pythonExe) { & $pythonExe -m ty check . } else { ty check . }
+            uv run ty check .
         }
     }
 

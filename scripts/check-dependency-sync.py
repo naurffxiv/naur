@@ -5,7 +5,7 @@ import sys
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 
 try:
     from ruamel.yaml import YAML
@@ -19,7 +19,7 @@ except ImportError:
 try:
     import yaml
 except ImportError:
-    print("Error: PyYAML required. pip install pyyaml")
+    print("Error: PyYAML required. Run: uv run --with pyyaml python scripts/check-dependency-sync.py")
     sys.exit(2)
 
 
@@ -46,7 +46,7 @@ class DependencyValidator:
     Validates and syncs package dependency versions across a monorepo.
 
     Compares versions in dependencies.yml against actual manifest files
-    (package.json, requirements.txt, go.mod, .csproj) and reports mismatches.
+    (package.json, pyproject.toml, go.mod, .csproj) and reports mismatches.
     """
     def __init__(self, repo_root: Path, args: argparse.Namespace):
         self.repo_root = repo_root.resolve()
@@ -88,14 +88,22 @@ class DependencyValidator:
     @staticmethod
     def parse_python(path: Path) -> Dict[str, str]:
         pkgs = {}
-        for line in path.read_text(encoding="utf-8").splitlines():
-            # Matches package names with optional extras (e.g., package[extra])
-            # followed by exact version pins (==1.2.3)
-            if m := re.match(
-                r"^([a-zA-Z0-9\._-]+)(?:\[.+\])?\s*==\s*([a-zA-Z0-9\._\-+]+)",
-                line.split("#")[0].strip(),
-            ):
-                pkgs[m.group(1).lower()] = m.group(2)
+        content = path.read_text(encoding="utf-8")
+        if path.suffix == ".toml":
+            # Simple regex-based parser for pinned dependencies in pyproject.toml
+            # Matches "package==version" or "package[extra]==version" inside quotes
+            for line in content.splitlines():
+                if m := re.search(r'["\']([a-zA-Z0-9\._-]+)(?:\[.+\])?\s*==\s*([a-zA-Z0-9\._\-+]+)["\']', line):
+                    pkgs[m.group(1).lower()] = m.group(2)
+        else:
+            for line in content.splitlines():
+                # Matches package names with optional extras (e.g., package[extra])
+                # followed by exact version pins (==1.2.3)
+                if m := re.match(
+                    r"^([a-zA-Z0-9\._-]+)(?:\[.+\])?\s*==\s*([a-zA-Z0-9\._\-+]+)",
+                    line.split("#")[0].strip(),
+                ):
+                    pkgs[m.group(1).lower()] = m.group(2)
         return pkgs
 
     @staticmethod
@@ -168,6 +176,7 @@ class DependencyValidator:
 
             manifest = self._get_path(cfg["manifest_file"])
             if not manifest or not manifest.exists():
+                self._log_system_error(f"Manifest not found for {name}: {cfg['manifest_file']}")
                 continue
 
             try:

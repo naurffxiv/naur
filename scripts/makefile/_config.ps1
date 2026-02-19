@@ -5,6 +5,10 @@
 .DESCRIPTION
   Single source of truth for service metadata, paths, and package manager settings.
   This eliminates duplication across build-all.ps1, install.ps1, check.ps1, and troubleshoot.ps1.
+
+.NOTES
+  To add a new Python service, add an entry to $script:ServiceRegistry with Type = "Python".
+  It will be automatically picked up by sync-python.ps1 and other scripts that filter by type.
 #>
 
 $ErrorActionPreference = 'Stop'
@@ -46,6 +50,8 @@ $script:ServiceRegistry = @{
         DisplayName = "E2E-Tests"
     }
 }
+
+$script:UvVersion = "0.10.4"
 
 $script:PackageManager = @{
     Name         = "pnpm"
@@ -94,7 +100,7 @@ function Get-ServicePath {
     }
 
     # Validate that service config has a path defined
-    $relativePath = if ($config.ProjectPath) { $config.ProjectPath } else { $config.DirPath }
+    $relativePath = if ($config.ContainsKey('ProjectPath') -and $config.ProjectPath) { $config.ProjectPath } else { $config.DirPath }
 
     if ([string]::IsNullOrWhiteSpace($relativePath)) {
         throw "Service '$ServiceName' is missing both ProjectPath and DirPath in configuration. Please update the ServiceRegistry."
@@ -146,6 +152,7 @@ $script:ToolRegistry = @(
     @{ Name = "Node.js";       Cmd = "node";          Required = $true }
     @{ Name = "Python";        Cmd = "python";        Required = $true }
     @{ Name = "Go";            Cmd = "go";            Required = $true }
+    @{ Name = "uv";            Cmd = "uv";            Required = $true }
     @{ Name = "Ruff";          Cmd = "ruff";          Required = $true }
     @{ Name = "golangci-lint"; Cmd = "golangci-lint"; Required = $true }
     @{ Name = "Docker";        Cmd = "docker";        Required = $true }
@@ -157,6 +164,7 @@ $script:PrerequisiteRegistry = @(
     @{ Name = "Node.js";      Cmd = "node";   Id = "OpenJS.NodeJS" }
     @{ Name = "Python 3.14";  Cmd = "python"; Id = "Python.Python.3.14"; Check = { (py -3.14 --version) -match "3.14" } }
     @{ Name = "Go";           Cmd = "go";     Id = "GoLang.Go" }
+    @{ Name = "uv";           Cmd = "uv";     Id = "astral-sh.uv" }
     @{ Name = "PowerShell 7"; Cmd = "pwsh";   Id = "Microsoft.PowerShell" }
     @{ Name = "Docker";       Cmd = "docker"; Id = "Docker.DockerDesktop" }
 )
