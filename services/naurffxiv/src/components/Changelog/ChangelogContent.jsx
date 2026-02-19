@@ -63,6 +63,7 @@ export default function ChangelogContent() {
           src="/images/changelog.avif"
           alt="Changelog Banner"
           fill
+          priority
           className="object-cover object-center rounded-lg"
         />
       </div>
