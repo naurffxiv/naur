@@ -93,7 +93,12 @@ export default function UiTestPage(): ReactElement {
       {/* Avatar Size Selector */}
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold">Avatar Size Selector</h2>
+        <label htmlFor="avatar-size" className="sr-only">
+          Avatar Size
+        </label>
         <select
+          id="avatar-size"
+          name="avatar-size"
           className="border p-2 rounded text-black"
           value={avatarSize}
           onChange={(e) => setAvatarSize(Number(e.target.value))}
@@ -185,11 +190,11 @@ export default function UiTestPage(): ReactElement {
         <h2 className="text-2xl font-semibold">Role-Based Cards</h2>
         <Fade in timeout={500}>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
-            {mockCards.map(({ href, title, desc }) => (
+            {mockCards.map(({ href, title, desc }, i) => (
               <Link
-                key={href}
+                key={i}
                 href={href}
-                className="flex flex-col justify-between bg-[#10242b] hover:bg-[#1c3a45] 
+                className="flex flex-col justify-between bg-[#10242b] hover:bg-[#1c3a45]
                 transition-colors p-5 rounded-xl shadow-md border border-gray-700 min-h-[150px]"
                 aria-label={title}
               >

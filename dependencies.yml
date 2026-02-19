@@ -5,12 +5,12 @@ services:
     lockfile: services/naurffxiv/package-lock.json
     audited_packages:
       - name: next
-        version: 14.2.35
+        version: 15.5.12
         license: MIT
         security_tier: critical
         source: https://github.com/vercel/next.js
       - name: react
-        version: 18.3.1
+        version: 19.2.4
         license: MIT
         security_tier: critical
         source: https://github.com/facebook/react

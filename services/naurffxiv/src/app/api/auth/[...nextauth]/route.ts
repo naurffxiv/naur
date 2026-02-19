@@ -6,22 +6,23 @@ import { logError } from "@/lib/logger/logger";
 const nextAuthHandler = NextAuth(authOptions);
 
 interface Context {
-  params: {
+  params: Promise<{
     nextauth: string[];
-  };
+  }>;
 }
 
 async function handler(
   request: NextRequest,
   context: Context,
 ): Promise<Response> {
+  const params = await context.params;
   try {
-    return await nextAuthHandler(request, context);
+    return await nextAuthHandler(request, { params });
   } catch (error) {
     logError("NextAuth:HandlerError", error, {
       method: request.method,
       url: request.url,
-      params: context.params,
+      params,
     });
 
     const message =
