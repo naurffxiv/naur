@@ -1,6 +1,6 @@
 [build]
 base = "/"
-command = "npx turbo run build --filter=naurffxiv"
+command = "pnpm exec turbo run build --filter=naurffxiv"
 publish = "services/naurffxiv/.next"
 
 [[plugins]]
@@ -10,3 +10,4 @@ package = "@netlify/plugin-nextjs"
 NODE_VERSION = "22.12.0"
 NEXT_DISABLE_SWC_BINARY_PATCHING = "1"
 NETLIFY_NEXT_PLUGIN_SKIP_INSTALL_DEPENDENCIES = "true"
+PNPM_FLAGS = "--shamefully-hoist"

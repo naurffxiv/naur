@@ -29,25 +29,30 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: "22.12.0"
-          cache: "npm"
-          cache-dependency-path: package-lock.json
+          cache: "pnpm"
+          cache-dependency-path: "pnpm-lock.yaml"
 
       - name: Prepare Netlify Config
         run: |
           [[ -f ../../netlify.toml ]] && cp ../../netlify.toml . || echo "No root netlify.toml found"
 
+      - name: Install Netlify CLI
+        run: pnpm add -g netlify-cli
+
       - uses: actions/cache@v4
         with:
           path: services/${{ inputs.service }}/.next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: ${{ runner.os }}-nextjs-
 
       # Deliberately run 'Install Dependencies' at the repository root (working-directory: .)
       - name: Install Dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
         working-directory: .
 
       - name: Configure Netlify State
@@ -63,28 +68,47 @@ jobs:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
         run: |
-          OUTPUT=$(npx netlify-cli deploy \
+          netlify deploy \
             --prod \
+            --build \
             --json \
             --site "${{ secrets.NETLIFY_SITE_ID }}" \
             --auth "${{ secrets.NETLIFY_AUTH_TOKEN }}" \
-            --context production \
-            --message "Production: ${{ github.sha }}") || exit 1
+            --message "Production: ${{ github.sha }}" \
+            > deploy.json
 
-          url=$(echo "$OUTPUT" | jq -r '.deploy_url')
-          logs=$(echo "$OUTPUT" | jq -r '.logs')
+          # Extract all the fields
+          deploy_url=$(jq -r '.deploy_url // ""' deploy.json)
+          site_url=$(jq -r '.url // ""' deploy.json)
+          deploy_id=$(jq -r '.deploy_id // ""' deploy.json)
+          logs_url=$(jq -r '.logs // ""' deploy.json)
+          function_logs=$(jq -r '.function_logs // ""' deploy.json)
+          edge_logs=$(jq -r '.edge_function_logs // ""' deploy.json)
 
-          if [[ -z "$url" ]]; then
-            echo "::error::No deploy URL returned"
-            exit 1
-          fi
+          # Set outputs
+          echo "deploy_url=$deploy_url" >> $GITHUB_OUTPUT
+          echo "site_url=$site_url" >> $GITHUB_OUTPUT
+          echo "deploy_id=$deploy_id" >> $GITHUB_OUTPUT
+          echo "logs_url=$logs_url" >> $GITHUB_OUTPUT
+          echo "function_logs=$function_logs" >> $GITHUB_OUTPUT
+          echo "edge_logs=$edge_logs" >> $GITHUB_OUTPUT
 
-          echo "deploy_url=$url" >> $GITHUB_OUTPUT
-          echo "logs_url=$logs" >> $GITHUB_OUTPUT
+          echo "Deployed to: $site_url"
 
       - name: Summary
         if: always()
         run: |
           echo "### Deployment Status: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **URL**: ${{ steps.deploy.outputs.deploy_url }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Logs**: ${{ steps.deploy.outputs.logs_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Production URL:** ${{ steps.deploy.outputs.site_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Deploy Preview:** ${{ steps.deploy.outputs.deploy_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Deploy ID:** \`${{ steps.deploy.outputs.deploy_id }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### Logs" >> $GITHUB_STEP_SUMMARY
+          echo "- [Build Logs](${{ steps.deploy.outputs.logs_url }})" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ steps.deploy.outputs.function_logs }}" != "" ]]; then
+            echo "- [Function Logs](${{ steps.deploy.outputs.function_logs }})" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [[ "${{ steps.deploy.outputs.edge_logs }}" != "" ]]; then
+            echo "- [Edge Function Logs](${{ steps.deploy.outputs.edge_logs }})" >> $GITHUB_STEP_SUMMARY
+          fi
