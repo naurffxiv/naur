@@ -1,6 +1,6 @@
 "use client";
 
-import type { FCWithChildren } from "@/types/common";
+import type { FCWithChildren } from "@naur/shared/types";
 import { SessionProvider } from "next-auth/react";
 
 /**

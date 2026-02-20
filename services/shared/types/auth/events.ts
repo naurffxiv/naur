@@ -1,4 +1,5 @@
-import type { DiscordRole } from "@/types/discord";
+import type { DiscordRole } from "../discord/entities";
+
 /**
  * Payload passed to the signIn event callback.
  * https://next-auth.js.org/configuration/events#signin

@@ -2,7 +2,7 @@
 
 import { extractRoleIds, hasAllRoles, hasAnyRole } from "@auth/core/roleUtils";
 
-import type { UserWithRoles } from "@/types/discord";
+import type { UserWithRoles } from "@naur/shared/types";
 import { useMemo } from "react";
 import { useSession } from "next-auth/react";
 
