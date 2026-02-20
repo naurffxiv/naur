@@ -2,7 +2,7 @@
 
 import { logInfo, logWarn } from "@/lib/logger/logger";
 
-import type { FCWithChildren } from "@/types/common";
+import type { FCWithChildren } from "@naur/shared/types";
 import LoadingSpinner from "@auth/components/Elements/LoadingSpinner";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";

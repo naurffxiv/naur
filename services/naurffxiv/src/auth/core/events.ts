@@ -1,4 +1,4 @@
-import { SignInEvent, SignOutEvent } from "@auth/types/auth-events";
+import { SignInEvent, SignOutEvent } from "@naur/shared/types";
 
 import { DEBUG_FLAGS } from "@auth/core/config";
 import { logDebug } from "@/lib/logger/logger";
