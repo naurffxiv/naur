@@ -1,0 +1,14 @@
+{
+  "name": "@naur/shared",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "exports": {
+    "./types": "./types/index.ts"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.14"
+  }
+}

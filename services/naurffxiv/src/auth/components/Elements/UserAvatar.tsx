@@ -1,6 +1,6 @@
 "use client";
 
-import type { DiscordSessionUser } from "@/types/discord";
+import type { DiscordSessionUser } from "@naur/shared/types";
 import Image from "next/image";
 import type { ReactElement } from "react";
 import { getDiscordAvatar } from "@/lib/discord/getDiscordAvatar";
