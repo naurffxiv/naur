@@ -6,5 +6,6 @@ drop table IF EXISTS strikes;
 drop table IF EXISTS exiles;
 drop table IF EXISTS users;
 drop table IF EXISTS commands;
+drop table IF EXISTS announcements;
 
 commit;

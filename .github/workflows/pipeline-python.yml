@@ -30,8 +30,11 @@ jobs:
           python-version: ${{ inputs.python-version }}
           cache: "pip"
 
+      - name: Register Problem Matchers
+        uses: ./.github/actions/setup-matchers
+
       - name: Install Linting Tools
-        run: pip install ruff
+        run: pip install ruff==0.15.0
 
       - name: Ruff Format
         if: matrix.check == 'format'
@@ -40,7 +43,7 @@ jobs:
           service: ${{ inputs.service }}
           step-number: 10
           step-name: "Ruff Format"
-          command: ruff format --check .
+          command: ruff format --check --output-format=github --preview .
           output-file: format.txt
           working-directory: services/${{ inputs.service }}
 
@@ -51,7 +54,7 @@ jobs:
           service: ${{ inputs.service }}
           step-number: 10
           step-name: "Ruff Lint"
-          command: ruff check .
+          command: ruff check --output-format=github .
           output-file: lint.txt
           working-directory: services/${{ inputs.service }}
 
@@ -84,7 +87,7 @@ jobs:
           service: ${{ inputs.service }}
           step-number: 20
           step-name: "Type Check"
-          command: ty check .
+          command: ty check --output-format=github --python=.venv .
           working-directory: services/${{ inputs.service }}
           fail-on-error: false
 

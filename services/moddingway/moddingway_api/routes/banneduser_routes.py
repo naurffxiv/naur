@@ -1,3 +1,5 @@
+import re
+
 import httpx
 from fastapi import APIRouter, HTTPException
 from fastapi_pagination import Page
@@ -11,6 +13,8 @@ from moddingway_api.utils.paginate import paginate, parse_pagination_params
 router = APIRouter(prefix="/bannedUsers")
 settings = get_settings()
 authHeader = {"Authorization": f"Bot {settings.discord_token}"}
+
+DISCORD_ID_REGEX = re.compile(r"^\d{17,21}$")
 
 
 class BanRequest(BaseModel):
@@ -37,6 +41,9 @@ async def get_banned_users() -> Page[Banned]:
 
 @router.post("")
 async def ban_user(request: BanRequest):
+    if not DISCORD_ID_REGEX.match(request.user_id):
+        raise HTTPException(status_code=400, detail="Invalid user_id format")
+
     url = (
         f"https://discord.com/api/v10/guilds/{settings.guild_id}/bans/{request.user_id}"
     )
@@ -57,6 +64,9 @@ async def ban_user(request: BanRequest):
 
 @router.delete("")
 async def unban_user(user_id: str):
+    if not DISCORD_ID_REGEX.match(user_id):
+        raise HTTPException(status_code=400, detail="Invalid user_id format")
+
     url = f"https://discord.com/api/v10/guilds/{settings.guild_id}/bans/{user_id}"
     headers = authHeader
 

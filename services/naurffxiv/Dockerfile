@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1.4
 
 FROM node:22-bookworm-slim AS base
+RUN corepack enable && corepack prepare pnpm@10.29.2 --activate
 
 # Prune stage: This breaks the app into "json" (dependencies) and "full" (source)
 FROM base AS prune
@@ -18,30 +19,30 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 COPY .gitignore .gitignore
 COPY --from=prune /app/out/json/ .
-COPY --from=prune /app/out/package-lock.json ./package-lock.json
+COPY --from=prune /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 # Remove prepare script to prevent husky/git hooks from running
-RUN npm pkg delete scripts.prepare
+RUN pnpm pkg delete scripts.prepare
 # Install dependencies (only the ones needed for this workspace)
-RUN npm ci
+RUN pnpm install --frozen-lockfile
 
 # Dev stage: for local development with hot reloading
 FROM base AS dev
 WORKDIR /app
 COPY --from=installer /app/ .
-COPY package.json turbo.json ./
+COPY package.json turbo.json pnpm-workspace.yaml ./
 COPY services/naurffxiv services/naurffxiv
-CMD ["npm", "run", "-w", "naurffxiv", "dev"]
+CMD ["sh", "-c", "pnpm install --ignore-scripts && pnpm --filter naurffxiv dev"]
 
 # Builder stage: Build the application
 FROM base AS builder
 WORKDIR /app
 COPY --from=installer /app/ .
-COPY package.json turbo.json ./
+COPY package.json turbo.json pnpm-workspace.yaml ./
 COPY services/naurffxiv services/naurffxiv
 
 # Build with cache mount for Next.js
 RUN --mount=type=cache,target=/app/.next/cache \
-    npm run -w naurffxiv build
+    pnpm --filter naurffxiv build
 
 # Runner stage
 FROM base AS runner

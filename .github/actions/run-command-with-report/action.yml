@@ -31,13 +31,13 @@ runs:
       working-directory: ${{ inputs.working-directory }}
       run: |
         set -o pipefail
+        set +e
         STATUS="success"
 
-        # Execute command block in a subshell with exit-on-error
-        if ! (
-          set -e
-          ${{ inputs.command }}
-        ) 2>&1 | tee ${{ inputs.output-file }}; then
+        ${{ inputs.command }} 2>&1 | tee ${{ inputs.output-file }}
+        EXIT_CODE=${PIPESTATUS[0]}
+
+        if [[ $EXIT_CODE -ne 0 ]]; then
           STATUS="failure"
           if [[ "${{ inputs.fail-on-error }}" != "true" ]]; then
             STATUS="warning"
