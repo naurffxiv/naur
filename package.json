@@ -33,7 +33,12 @@
     "start:naur": "pnpm --filter naurffxiv start"
   },
   "overrides": {
-    "glob": "^11.0.0",
-    "@next/swc-linux-x64-gnu": "14.2.33"
+    "glob": "^11.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "19.2.14",
+      "@types/react-dom": "19.2.3"
+    }
   }
 }
