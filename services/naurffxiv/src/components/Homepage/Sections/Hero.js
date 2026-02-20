@@ -18,7 +18,13 @@ export default function Header() {
           className="transition-colors bg-[#7289da] rounded-full max-w-fit py-4 px-6 hover:bg-[#007196]"
         >
           <span className="flex gap-5 font-medium">
-            <Image src={icons.Discord} alt="Discord" width="32" height="24" />
+            <Image
+              src={icons.Discord}
+              alt="Discord"
+              width="32"
+              height="24"
+              style={{ height: "auto" }}
+            />
             Join our Discord!
           </span>
         </a>

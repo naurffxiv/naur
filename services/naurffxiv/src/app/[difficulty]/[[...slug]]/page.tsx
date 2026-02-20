@@ -27,13 +27,11 @@ type QuickLinksEntry = {
 // --- Page Rendering ---
 // Called when a page is accessed (only once on build with static site generation)
 // Finds mdx file to render based on slug then processes the page accordingly
-// if we ever update to next.js 15, this will be a Promise and must be awaited
 type Params = { difficulty: string; slug?: string[] };
-export default async function MdxPage({
-  params,
-}: {
-  params: Params;
+export default async function MdxPage(props: {
+  params: Promise<Params>;
 }): Promise<JSX.Element> {
+  const params = await props.params;
   const { difficulty, slug = [] } = params;
 
   const {
@@ -104,11 +102,10 @@ async function getPages(params: Params): Promise<QuickLinksEntry[]> {
 
 // --- Page Metadata ---
 // set the title for each page based on title set on frontmatter
-export async function generateMetadata({
-  params,
-}: {
-  params: Params;
+export async function generateMetadata(props: {
+  params: Promise<Params>;
 }): Promise<Metadata> {
+  const params = await props.params;
   const { difficulty, slug = [] } = params;
 
   const { title, frontmatter, error } = await getProcessedMdxFromParams({

@@ -99,9 +99,18 @@ async function sendLogToWebhook(
     debug: 10181046,
   };
 
+  const DISCORD_EMBED_DESCRIPTION_LIMIT = 4096;
+  const body = JSON.stringify(payload, null, 2);
+  const prefix = "```json\n";
+  const suffix = "\n```";
+  const maxBodyLength =
+    DISCORD_EMBED_DESCRIPTION_LIMIT - prefix.length - suffix.length - 3;
+  const truncated =
+    body.length > maxBodyLength ? body.slice(0, maxBodyLength) + "..." : body;
+
   const embed = {
     title: `[${tag}] [${level.toUpperCase()}]`,
-    description: "```json\n" + JSON.stringify(payload, null, 2) + "\n```",
+    description: prefix + truncated + suffix,
     color: prettyColors[level],
     timestamp: new Date().toISOString(),
   };
