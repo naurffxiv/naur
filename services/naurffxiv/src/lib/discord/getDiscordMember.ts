@@ -4,7 +4,7 @@ import {
 } from "@/lib/discord/getDiscordMemberFromCache";
 
 import { MEMBER_CACHE_TTL_SECONDS } from "@/lib/discord/cache/constants";
-import type { ResolvedDiscordMember } from "@/types/discord";
+import type { ResolvedDiscordMember } from "@naur/shared/types";
 import { getDiscordMemberFromAPI } from "@/lib/discord/getDiscordMemberFromAPI";
 
 const CACHE_TTL = MEMBER_CACHE_TTL_SECONDS * 1000;
