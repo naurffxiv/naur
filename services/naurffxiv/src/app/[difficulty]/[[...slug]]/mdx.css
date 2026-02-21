@@ -50,21 +50,26 @@ nav.toc-collapse li:has(.toc-current) > div > a:not(.toc-current) {
   color: rgb(161, 199, 255);
 }
 
-/* show currently active section */
-nav.toc-collapse li div:has(.toc-current) > ul {
-  margin-bottom: 0 !important;
-  transition: all 0.2s ease-in-out;
-}
-
-/* show children of currently active section */
-nav.toc-collapse li:has(div > a.toc-current) > div > ul {
-  margin-bottom: 0 !important;
-}
-
 /* hide inactive sections (skips first div) */
 nav.toc-collapse div div > ul:not(.toc-current) {
-  margin-bottom: -150%;
-  transition: all 0.3s ease-in-out;
+  max-height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    all 0.3s ease-in-out,
+    visibility 0s 0.3s;
+}
+
+/* ensure active sections show their children */
+nav.toc-collapse li div:has(.toc-current) > ul,
+nav.toc-collapse li:has(div > a.toc-current) > div > ul {
+  max-height: 1000px;
+  visibility: visible;
+  pointer-events: auto;
+  transition:
+    all 0.2s ease-in-out,
+    visibility 0s;
 }
 
 /* collapsible toc dropdown arrow */
@@ -169,4 +174,10 @@ details[open] :last-child {
 /* Give extra space to buffs immediately following other buffs */
 .small-table .buff + .buff {
   padding-left: 5px;
+}
+
+/* contain margins to prevent "dead zones" between sections for the scrollspy */
+section {
+  padding-top: 0.1px;
+  padding-bottom: 0.1px;
 }
