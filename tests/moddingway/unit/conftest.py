@@ -1,5 +1,4 @@
 import datetime
-from typing import List, Optional
 
 import discord
 import pytest
@@ -9,9 +8,7 @@ from moddingway import constants
 from moddingway.constants import UserRole
 from moddingway.database.models import User
 
-DEFAULT_DATETIME_NOW = datetime.datetime(
-    2019, 11, 19, 8, 0, 0, tzinfo=datetime.timezone.utc
-)
+DEFAULT_DATETIME_NOW = datetime.datetime(2019, 11, 19, 8, 0, 0, tzinfo=datetime.UTC)
 
 
 @pytest.fixture(autouse=True)
@@ -48,9 +45,9 @@ def naur_guild(mocker: MockerFixture, create_role):
 @pytest.fixture
 def create_member(mocker: MockerFixture, naur_guild, create_role):
     def __create_member(
-        roles: List[constants.Role] | None = None,
+        roles: list[constants.Role] | None = None,
         allows_dms: bool = True,
-        id: Optional[int] = None,
+        id: int | None = None,
     ):
         if roles is None:
             roles = [constants.Role.VERIFIED]
@@ -76,14 +73,14 @@ def create_member(mocker: MockerFixture, naur_guild, create_role):
 @pytest.fixture
 def create_db_user(mocker: MockerFixture):
     def __create_db_user(
-        user_id: Optional[int] = None,
-        discord_user_id: Optional[str] = None,
-        discord_guild_id: Optional[str] = None,
-        user_role: Optional[UserRole] = None,
-        temporary_points: Optional[int] = None,
-        permanent_points: Optional[int] = None,
-        last_infraction_timestamp: Optional[datetime.datetime] = None,
-        get_strike_points: Optional[int] = None,
+        user_id: int | None = None,
+        discord_user_id: str | None = None,
+        discord_guild_id: str | None = None,
+        user_role: UserRole | None = None,
+        temporary_points: int | None = None,
+        permanent_points: int | None = None,
+        last_infraction_timestamp: datetime.datetime | None = None,
+        get_strike_points: int | None = None,
     ):
         mocked_user = mocker.Mock(
             spec=User,

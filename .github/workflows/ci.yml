@@ -44,11 +44,12 @@ jobs:
             e2e_required:
               - 'services/naurffxiv/src/app/api/**'
               - 'services/moddingway/moddingway_api/**'
+              - 'services/moddingway/pyproject.toml'
               - 'services/authingway/**'
               - 'services/apphost/**'
               - '**/package.json'
               - 'pnpm-lock.yaml'
-              - '**/requirements.txt'
+              - '**/uv.lock'
               - '**/*.csproj'
               - '**/Dockerfile'
               - 'tests/e2e/**'
