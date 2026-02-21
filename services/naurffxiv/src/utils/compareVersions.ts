@@ -1,5 +1,7 @@
+import type { GitHubRelease } from "./fetchGithubReleases";
+
 // Parse a version string like "v1.2.3" into an array of numbers [1, 2, 3]
-export function parseVersion(tag) {
+export function parseVersion(tag: string): number[] {
   return tag
     .replace(/^v/, "") // Strip the "v" if it exists
     .split(".") // Split by dot
@@ -8,7 +10,7 @@ export function parseVersion(tag) {
 
 // Compare two release objects based on their version numbers
 // Returns >0 if b is newer, <0 if a is newer, 0 if equal
-export function compareVersions(a, b) {
+export function compareVersions(a: GitHubRelease, b: GitHubRelease): number {
   const vA = parseVersion(a.tag_name);
   const vB = parseVersion(b.tag_name);
 
