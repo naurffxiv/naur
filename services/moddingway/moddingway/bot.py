@@ -4,6 +4,7 @@ import discord
 from discord.ext.commands import Bot
 
 from moddingway import workers
+from moddingway.commands.announcement_commands import create_announcement_commands
 from moddingway.commands.ban_commands import create_ban_commands
 from moddingway.commands.exile_commands import create_exile_commands
 from moddingway.commands.forum_commands import create_forum_commands
@@ -44,6 +45,7 @@ class ModdingwayBot(Bot):
         create_bot_errors(self)
         create_warning_commands(self)
         create_forum_commands(self)
+        create_announcement_commands(self)
         logger.info("Registering commands finished")
 
     def _register_events(self):
