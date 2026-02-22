@@ -1,6 +1,6 @@
 import { images } from "../lib/assets";
 
-export const markdownFolders = ["ultimate", "savage", "extreme"];
+export const markdownFolders = ["ultimate", "savage", "criterion", "extreme"];
 
 export const reservedSlugs = ["index", "groups", "sidebar", "title", "order"];
 
@@ -72,6 +72,15 @@ export const savageList = [
     url: "/savage/m12s",
     img: images.m12s,
     alt: "m12s",
+  },
+];
+
+export const criterionList = [
+  {
+    title: "Another Merchant's Tale",
+    url: "/criterion/merchants-tale",
+    img: "/images/thumbnails/criterion/placeholder.avif",
+    alt: "Another Merchant's Tale",
   },
 ];
 
