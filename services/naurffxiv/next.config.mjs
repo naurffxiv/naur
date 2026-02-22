@@ -60,9 +60,7 @@ const nextConfig = {
       },
     ],
   },
-  experimental: {
-    outputFileTracingRoot: path.join(__dirname, "../../"),
-  },
+  outputFileTracingRoot: path.join(__dirname, "../../"),
   async redirects() {
     return [
       {

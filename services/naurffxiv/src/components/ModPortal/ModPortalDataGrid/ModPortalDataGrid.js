@@ -36,6 +36,7 @@ const slotProps = {
       quickFilterParser: (searchInput) =>
         searchInput.split(",").map((v) => v.trim()),
       quickFilterFormatter: (quickFilterValues) => quickFilterValues.join(","),
+      inputProps: { id: "mod-portal-search", name: "mod-portal-search" },
     },
     showQuickFilter: true,
   },

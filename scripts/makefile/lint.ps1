@@ -9,12 +9,22 @@ param(
 )
 
 . "$PSScriptRoot/_lib.ps1"
+. "$PSScriptRoot/_config.ps1"
 
 $ProjectRoot = Resolve-ProjectRoot
 Push-Location $ProjectRoot
 try {
     $Failures = @()
+    $pmLint = Get-PackageManagerCmd -CommandType "LintCmd"
+    $pmTypecheck = Get-PackageManagerCmd -CommandType "TypecheckCmd"
 
+    # Get service paths from registry
+    $moddingwayPath = Get-ServicePath -ServiceName "Moddingway" -ProjectRoot $ProjectRoot
+    $findingwayPath = Get-ServicePath -ServiceName "Findingway" -ProjectRoot $ProjectRoot
+    $clearingwayPath = Get-ServicePath -ServiceName "Clearingway" -ProjectRoot $ProjectRoot
+
+    # .NET services to lint
+    $dotnetServices = @("AppHost", "Authingway")
     function Run-Lint {
         param([string]$Name, [string]$Path, [scriptblock]$Command)
         Write-Log -Level Info -Message "Linting $Name..."
@@ -39,11 +49,11 @@ try {
     }
 
     Run-Lint -Name "Naurffxiv (Next.js)" -Path "." -Command {
-        if ($Fix) { npm run lint:naur -- --fix } else { npm run lint:naur }
-        if ($LASTEXITCODE -eq 0) { npm run typecheck -w naurffxiv }
+        if ($Fix) { Invoke-Expression "$pmLint --fix" } else { Invoke-Expression $pmLint }
+        if ($LASTEXITCODE -eq 0) { Invoke-Expression $pmTypecheck }
     }
 
-    Run-Lint -Name "Moddingway (Python)" -Path "services/moddingway" -Command {
+    Run-Lint -Name "Moddingway (Python)" -Path $moddingwayPath -Command {
         if ($Fix) {
             ruff check . --fix
             if ($LASTEXITCODE -ne 0) { throw "ruff check failed (fix)" }
@@ -57,23 +67,24 @@ try {
             if ($LASTEXITCODE -ne 0) { throw "ruff format --check failed" }
         }
         if ($LASTEXITCODE -eq 0) {
-            if (Test-Path "venv/Scripts/python.exe") { venv/Scripts/python.exe -m ty check . } else { ty check . }
+            $pythonExe = Get-PythonPath -Path "."
+            if ($pythonExe) { & $pythonExe -m ty check . } else { ty check . }
         }
     }
 
-    Run-Lint -Name "Findingway (Go)" -Path "services/findingway" -Command {
+    Run-Lint -Name "Findingway (Go)" -Path $findingwayPath -Command {
         if ($Fix) { golangci-lint run --fix } else { golangci-lint run }
     }
 
-    Run-Lint -Name "Clearingway (Go)" -Path "services/clearingway" -Command {
+    Run-Lint -Name "Clearingway (Go)" -Path $clearingwayPath -Command {
         if ($Fix) { golangci-lint run --fix } else { golangci-lint run }
     }
 
     Run-Lint -Name ".NET Services" -Path "." -Command {
-        $projects = @("services/authingway/Naur.Authingway.csproj", "services/apphost/Naur.AppHost.csproj")
-        foreach ($proj in $projects) {
+        foreach ($serviceName in $dotnetServices) {
+            $proj = Get-ServicePath -ServiceName $serviceName -ProjectRoot $ProjectRoot
             if ($Fix) { dotnet format $proj } else { dotnet format $proj --verify-no-changes }
-            if ($LASTEXITCODE -ne 0) { throw "dotnet format failed for $proj" }
+            if ($LASTEXITCODE -ne 0) { throw "dotnet format failed for $serviceName" }
         }
     }
 
