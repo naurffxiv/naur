@@ -64,7 +64,7 @@ async def submit_form(request: FormRequest):
 
         if len(form.reason) > MAX_APPEAL_REASON_LENGTH:
             return {
-                "detail": "Appeal reason max length is 1024 characters. Please shorten the appeal reason."
+                "detail": f"Appeal reason max length is {MAX_APPEAL_REASON_LENGTH} characters. Please shorten the appeal reason."
             }
 
         result = banforms_database.add_form(form)
