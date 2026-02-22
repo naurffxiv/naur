@@ -79,7 +79,7 @@ export const criterionList = [
   {
     title: "Another Merchant's Tale",
     url: "/criterion/merchants-tale",
-    img: "/images/thumbnails/criterion/placeholder.avif",
+    img: "/images/thumbnails/Hidden.avif",
     alt: "Another Merchant's Tale",
   },
 ];
