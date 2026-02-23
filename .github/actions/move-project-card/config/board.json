@@ -1,0 +1,16 @@
+{
+  "_update_command": "gh api graphql -f query='query($login: String!, $number: Int!) { organization(login: $login) { projectV2(number: $number) { id title fields(first: 20) { nodes { ... on ProjectV2SingleSelectField { id name options { id name } } } } } } }' -f login='naurffxiv' -F number=10",
+  "projectId": "PVT_kwDOCipJPs4BBv7D",
+  "statusFieldId": "PVTSSF_lADOCipJPs4BBv7Dzg0KdAc",
+  "options": {
+    "Backlog": "f75ad846",
+    "In design": "4af60d8a",
+    "To do": "08afe404",
+    "In progress": "47fc9ee4",
+    "Blocked": "cb55f9ec",
+    "Change requested": "31d52c99",
+    "In review": "4cc61d42",
+    "QA Review": "970442d3",
+    "Done": "98236657"
+  }
+}

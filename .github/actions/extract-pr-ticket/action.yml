@@ -1,0 +1,28 @@
+name: Extract PR Ticket
+description: Extracts a ticket number from the active pull request's title or body.
+
+outputs:
+  found:
+    description: "'true' if a numeric ticket was found, 'false' otherwise."
+    value: ${{ steps.extract.outputs.found }}
+  ticket:
+    description: "The extracted numeric ticket ID (if found)."
+    value: ${{ steps.extract.outputs.ticket }}
+  match:
+    description: "The full regex match string."
+    value: ${{ steps.extract.outputs.match }}
+  is_dependabot:
+    description: "'true' if the PR was authored by Dependabot."
+    value: ${{ steps.extract.outputs.is_dependabot }}
+
+runs:
+  using: composite
+  steps:
+    - name: Parse ticket from event
+      id: extract
+      shell: bash
+      env:
+        ACTOR: ${{ github.actor }}
+        PR_USER: ${{ github.event.pull_request.user.login }}
+        EVENT_PATH: ${{ github.event_path }}
+      run: bash "$GITHUB_ACTION_PATH/extract.sh"
