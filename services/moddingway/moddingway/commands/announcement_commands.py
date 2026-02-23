@@ -89,6 +89,10 @@ def create_announcement_commands(bot: Bot) -> None:
             await interaction.response.send_message(
                 "Announcement not found.", ephemeral=True
             )
+        elif announcement_json["sent_flag"]:
+            await interaction.response.send_message(
+                "Announcement already published.", ephemeral=True
+            )
         else:
             await interaction.response.send_message(
                 f"Are you sure you want to publish this announcement (ID: {announcement_id})",
