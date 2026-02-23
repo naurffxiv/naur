@@ -9,6 +9,7 @@ from moddingway.commands.exile_commands import create_exile_commands
 from moddingway.commands.forum_commands import create_forum_commands
 from moddingway.commands.helper import create_bot_errors
 from moddingway.commands.note_commands import create_note_commands
+from moddingway.commands.send_message_commands import create_send_message_commands
 from moddingway.commands.slowmode_commands import create_slowmode_commands
 from moddingway.commands.strikes_command import create_strikes_commands
 from moddingway.commands.warning_commands import create_warning_commands
@@ -41,6 +42,7 @@ class ModdingwayBot(Bot):
         create_slowmode_commands(self)
         create_strikes_commands(self)
         create_note_commands(self)
+        create_send_message_commands(self)
         create_bot_errors(self)
         create_warning_commands(self)
         create_forum_commands(self)
