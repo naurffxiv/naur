@@ -29,6 +29,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
+      - name: Generate GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
       - name: Extract ticket number from PR
         id: extract
         uses: ./.github/actions/extract-pr-ticket
@@ -46,7 +53,7 @@ jobs:
         if: steps.extract.outputs.found == 'true'
         uses: ./.github/actions/move-project-card
         with:
-          token: ${{ secrets.PAT_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
           ticket: ${{ steps.extract.outputs.ticket }}
           status: ${{ steps.status.outputs.status }}
           project-number: ${{ env.PROJECT_NUMBER }}
