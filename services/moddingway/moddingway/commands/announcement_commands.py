@@ -1,4 +1,5 @@
 import logging
+import math
 
 import discord
 from discord.ext.commands import Bot
@@ -45,6 +46,66 @@ class AnnouncementPublishView(discord.ui.View):
         await self.interaction.edit_original_response(view=self)
         async with create_response_context(interaction) as response_message:
             response_message.set_string("Announcement publishing cancelled.")
+
+
+class AnnouncementPaginator(discord.ui.View):
+    def __init__(self, data, author):
+        super().__init__(timeout=60)  # Buttons disable after 60s of inactivity
+        self.data = data
+        self.author = author
+        self.current_page = 1
+        self.per_page = 10
+        self.total_pages = math.ceil(len(data) / self.per_page)
+        self.message: discord.Message | None = None
+
+    def create_embed(self):
+        start = (self.current_page - 1) * self.per_page
+        end = start + self.per_page
+        page_data = self.data[start:end]
+
+        embed = discord.Embed(title="Announcements")
+
+        for row in page_data:
+            announcement_id, revisions, sent_flag, discord_message_id = row
+            status = "Sent" if sent_flag else "Unsent"
+            embed.add_field(
+                name=f"ID: {announcement_id} | {status} | Latest edit: <@{revisions[-1]['author_id']}>", ## TODO: the mention is not working
+                value=revisions[-1]["content"],
+                inline=False,
+            )
+
+        embed.set_footer(text=f"Page {self.current_page}/{self.total_pages}")
+        return embed
+
+    @discord.ui.button(label="Previous", style=discord.ButtonStyle.gray)
+    async def prev_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
+        if interaction.user != self.author:
+            return await interaction.response.send_message(
+                "This isn't your menu!", ephemeral=True
+            )
+
+        if self.current_page > 1:
+            self.current_page -= 1
+            await interaction.response.edit_message(
+                embed=self.create_embed(), view=self
+            )
+
+    @discord.ui.button(label="Next", style=discord.ButtonStyle.gray)
+    async def next_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
+        if interaction.user != self.author:
+            return await interaction.response.send_message(
+                "This isn't your menu!", ephemeral=True
+            )
+
+        if self.current_page < self.total_pages:
+            self.current_page += 1
+            await interaction.response.edit_message(
+                embed=self.create_embed(), view=self
+            )
 
 
 def create_announcement_commands(bot: Bot) -> None:
@@ -104,3 +165,21 @@ def create_announcement_commands(bot: Bot) -> None:
                 ),
                 ephemeral=True,
             )
+
+    @bot.tree.command()
+    @discord.app_commands.check(is_user_admin)
+    async def list_announcements(
+        interaction: discord.Interaction,
+        ephemeral: bool,
+        sent_status: bool | None = None,
+    ):
+        """List announcements"""
+        announcement_list = await announcement_service.list_announcements_service(
+            status=sent_status
+        )
+
+        view = AnnouncementPaginator(announcement_list, interaction.user)
+        await interaction.response.send_message(
+            embed=view.create_embed(), view=view, ephemeral=ephemeral
+        )
+        view.message = await interaction.original_response()

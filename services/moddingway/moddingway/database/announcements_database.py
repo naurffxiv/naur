@@ -95,3 +95,25 @@ def set_sent(announcement_id: int, discord_msg_id: int) -> bool:
             )
 
         return True
+
+
+def select_announcements_bulk(status: bool | None = None):
+    conn = DatabaseConnection()
+
+    with conn.get_cursor() as cursor:
+        query = """
+        SELECT announcementID, announcementRevisions, sentFLAG, discordMessageID
+        FROM announcements
+        WHERE sentFLAG = %s OR %s IS NULL
+        """
+
+        params = (status, status)
+
+        cursor.execute(query, params)
+
+        results = cursor.fetchall()
+
+        if not results:
+            raise ValueError("Cant find announcement with specified parameters.")
+
+        return results
