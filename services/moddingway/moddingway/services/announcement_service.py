@@ -43,7 +43,8 @@ async def add_announcement(
     announcement_embed.add_field(name="Status", value="Unsent", inline=True)
 
     announcement_embed.set_footer(text=f"Announcement ID {new_id}")
-    sent_message = await channel.send(embed=announcement_embed)
+    if isinstance(channel, discord.abc.Messageable):
+        sent_message = await channel.send(embed=announcement_embed)
     if sent_message:
         log_info_and_add_field(
             logging_embed,
@@ -55,26 +56,24 @@ async def add_announcement(
     return new_id
 
 
-## should sent announcement be able to get sent again?
-
-
 async def publish_announcement(logging_embed, channel, announcement_id):
 
     announcement_json = announcements_database.get_announcement(
         announcement_id=announcement_id
     )
-    revisions = announcement_json.get("revisions", [])
-    latest_revision_dict = revisions[-1]
-    latest_revision = AnnouncementRevision(**latest_revision_dict)
-    publish_embed = discord.Embed(
-        description=latest_revision.content
-    )  # put it in embed so it can support 4k characters
-    sent_message = await channel.send(embed=publish_embed)
-    if sent_message:
-        announcements_database.set_sent(
-            announcement_id=announcement_id, discord_msg_id=sent_message.id
-        )
+    if announcement_json:
+        revisions = announcement_json.get("revisions", [])
+        latest_revision_dict = revisions[-1]
+        latest_revision = AnnouncementRevision(**latest_revision_dict)
+        publish_embed = discord.Embed(
+            description=latest_revision.content
+        )  # put it in embed so it can support 4k characters
+        sent_message = await channel.send(embed=publish_embed)
+        if sent_message:
+            announcements_database.set_sent(
+                announcement_id=announcement_id, discord_msg_id=sent_message.id
+            )
 
-        log_info_and_add_field(
-            logging_embed, logger, "Result", "Published announcement"
-        )
+            log_info_and_add_field(
+                logging_embed, logger, "Result", "Published announcement"
+            )
