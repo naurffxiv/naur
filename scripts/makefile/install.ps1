@@ -3,29 +3,25 @@
   Parallel install of monorepo dependencies.
 
 .DESCRIPTION
-  Restores .NET, downloads Go modules, runs npm install at the repo root and prepares Python venvs.
+  Restores .NET, downloads Go modules, runs package manager install at the repo root and prepares Python venvs.
 #>
 
 [CmdletBinding()]
-param(
-    [string]$AppHostPrj = "services/AppHost/Naur.AppHost.csproj",
-    [string]$AuthPrj    = "services/authingway/Authingway.csproj",
-    [string]$NaurDir    = "services/naurffxiv",
-    [string]$ModDir     = "services/moddingway",
-    [string]$FindDir    = "services/findingway",
-    [string]$ClearDir   = "services/clearingway"
-)
+param()
 
 . "$PSScriptRoot/_lib.ps1"
+. "$PSScriptRoot/_config.ps1"
 
 $ProjectRoot = Resolve-ProjectRoot
+$pmInstall = Get-PackageManagerCmd -CommandType "InstallCmd"
+$pmExec = Get-PackageManagerCmd -CommandType "ExecCmd"
 
 $Tasks = @(
-    @{ Name = "AppHost";     Action = { param($p) dotnet restore $p --verbosity quiet }; Arg = Join-Path $ProjectRoot $AppHostPrj }
-    @{ Name = "Authingway";  Action = { param($p) dotnet restore $p --verbosity quiet }; Arg = Join-Path $ProjectRoot $AuthPrj }
-    @{ Name = "Root-npm";    Action = { param($p) Set-Location $p; npm install --loglevel error }; Arg = $ProjectRoot }
-    @{ Name = "Findingway";  Action = { param($p) Set-Location $p; go mod download }; Arg = Join-Path $ProjectRoot $FindDir }
-    @{ Name = "Clearingway"; Action = { param($p) Set-Location $p; go mod download }; Arg = Join-Path $ProjectRoot $ClearDir }
+    @{ Name = "AppHost";     Action = { param($p) dotnet restore $p --verbosity quiet }; Arg = Get-ServicePath -ServiceName "AppHost" -ProjectRoot $ProjectRoot }
+    @{ Name = "Authingway";  Action = { param($p) dotnet restore $p --verbosity quiet }; Arg = Get-ServicePath -ServiceName "Authingway" -ProjectRoot $ProjectRoot }
+    @{ Name = "Root-pnpm";   Action = { param($p, $cmd) Set-Location $p; Invoke-Expression $cmd }; Arg = @($ProjectRoot, $pmInstall) }
+    @{ Name = "Findingway";  Action = { param($p) Set-Location $p; go mod download }; Arg = Get-ServicePath -ServiceName "Findingway" -ProjectRoot $ProjectRoot }
+    @{ Name = "Clearingway"; Action = { param($p) Set-Location $p; go mod download }; Arg = Get-ServicePath -ServiceName "Clearingway" -ProjectRoot $ProjectRoot }
     @{ Name = "Moddingway";  Action = {
         param($p)
         Push-Location $p
@@ -43,24 +39,31 @@ $Tasks = @(
         } finally {
             Pop-Location
         }
-    }; Arg = Join-Path $ProjectRoot $ModDir }
+    }; Arg = Get-ServicePath -ServiceName "Moddingway" -ProjectRoot $ProjectRoot }
+    @{ Name = "Playwright";  Action = {
+        param($p, $cmd)
+        Set-Location $p
+        if (Test-Path "package.json") {
+            Invoke-Expression "$cmd playwright install chromium --with-deps"
+        }
+    }; Arg = @((Get-ServicePath -ServiceName "E2ETests" -ProjectRoot $ProjectRoot), $pmExec) }
 )
 
 $jobs = foreach ($t in $Tasks) {
-    if ($t.Arg) { Start-TaskJob -Name $t.Name -ScriptBlock $t.Action -ArgumentList @($t.Arg) }
-    else       { Start-TaskJob -Name $t.Name -ScriptBlock $t.Action }
+    $taskArgs = if ($t.Arg -is [array]) { $t.Arg } else { @($t.Arg) }
+    Start-TaskJob -Name $t.Name -ScriptBlock $t.Action -ArgumentList $taskArgs
 }
 
 $results = Wait-TaskJobs -Jobs $jobs
 
 $successCount = ($results | Where-Object { $_.Success }).Count
-Write-Host "($successCount) services installation finished." -ForegroundColor Green
+Write-Host "($successCount) services installation finished." -ForegroundColor $Theme.Ok
 
 $failed = $results | Where-Object { -not $_.Success }
 if ($failed) {
     Write-Log -Level Error -Message "One or more install tasks failed."
     foreach ($f in $failed) {
-        Write-Host "`n--- Output for $($f.Name) ---" -ForegroundColor Yellow
+        Write-Host "`n--- Output for $($f.Name) ---" -ForegroundColor $Theme.Warn
         $f.Output | ForEach-Object { Write-Host $_ }
     }
     exit 1
@@ -69,14 +72,15 @@ if ($failed) {
 # Verify artifacts
 Write-Log -Level Info -Message "Verifying Service Artifacts"
 
-$services = @(
-    @{ Name = "AppHost";     Path = Join-Path $ProjectRoot $AppHostPrj; Type = "DotNet" }
-    @{ Name = "Authingway";  Path = Join-Path $ProjectRoot $AuthPrj;  Type = "DotNet" }
-    @{ Name = "Naurffxiv";   Path = Join-Path $ProjectRoot $NaurDir;  Type = "Node" }
-    @{ Name = "Moddingway";  Path = Join-Path $ProjectRoot $ModDir;   Type = "Python" }
-    @{ Name = "Findingway";  Path = Join-Path $ProjectRoot $FindDir;  Type = "Go" }
-    @{ Name = "Clearingway"; Path = Join-Path $ProjectRoot $ClearDir; Type = "Go" }
-)
+$registry = Get-ServiceRegistry
+$services = foreach ($key in $registry.Keys) {
+    $svc = $registry[$key]
+    @{
+        Name = $svc.DisplayName
+        Path = Get-ServicePath -ServiceName $key -ProjectRoot $ProjectRoot
+        Type = $svc.Type
+    }
+}
 
 $failedChecks = @()
 foreach ($s in $services) {
@@ -84,32 +88,33 @@ foreach ($s in $services) {
         Write-Log -Level Error -Message "$($s.Name): Directory not found"
         $failedChecks += $s.Name; continue
     }
-    $isInstalled = switch ($s.Type) {
-        "Node"   { Test-Path (Join-Path $s.Path "node_modules") }
-        "Python" { Test-Path (Join-Path $s.Path "venv") }
-        "Go"     { Test-Path (Join-Path $s.Path "go.mod") }
-        "DotNet" {
-            $projName = [System.IO.Path]::GetFileNameWithoutExtension($s.Path)
-            $artifactsObjPath = Join-Path $ProjectRoot "artifacts/obj/$projName"
-            (Test-Path $artifactsObjPath) -and (Get-ChildItem $artifactsObjPath -ErrorAction SilentlyContinue)
-        }
-        Default { $false }
-    }
+
+    $isInstalled = Test-ServiceHealth -Type $s.Type -Path $s.Path -ProjectRoot $ProjectRoot
+
     if ($isInstalled) { Write-Log -Level Ok -Message "$($s.Name) ($($s.Type)) ready" } else { Write-Log -Level Warn -Message "$($s.Name): Verification failed"; $failedChecks += $s.Name }
 }
 
 # Pre-commit hooks
+$pmName = Get-PMName
+$prekCheckFailed = $false
 try {
-    & npx prek --version > $null 2>&1
-    Write-Log -Level Ok -Message "prek (pre-commit hooks) installed"
+    & $pmName prek --version > $null 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        $prekCheckFailed = $true
+    }
 } catch {
-    Write-Log -Level Error -Message "prek: Validation failed. Run 'npm install' manually."
-    $failedChecks += "prek"
+    $prekCheckFailed = $true
 }
 
+if ($prekCheckFailed) {
+    Write-Log -Level Error -Message "prek: Validation failed. Run '$pmName install' manually."
+    $failedChecks += "prek"
+} else {
+    Write-Log -Level Ok -Message "prek (pre-commit hooks) installed"
+}
 if ($failedChecks.Count -gt 0) {
     Write-Log -Level Error -Message "Monorepo setup is incomplete."
     exit 1
 }
 
-Write-Host "`n  [SUCCESS] Monorepo is fully installed and ready!" -ForegroundColor Cyan
+Write-Host "`n  [SUCCESS] Monorepo is fully installed and ready!" -ForegroundColor $Theme.Info

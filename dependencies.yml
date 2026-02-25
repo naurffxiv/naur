@@ -5,12 +5,12 @@ services:
     lockfile: services/naurffxiv/package-lock.json
     audited_packages:
       - name: next
-        version: 14.2.35
+        version: 15.5.12
         license: MIT
         security_tier: critical
         source: https://github.com/vercel/next.js
       - name: react
-        version: 18.3.1
+        version: 19.2.4
         license: MIT
         security_tier: critical
         source: https://github.com/facebook/react
@@ -25,13 +25,13 @@ services:
     lockfile: services/moddingway/requirements.lock
     audited_packages:
       - name: fastapi
-        version: 0.115.11
+        version: 0.128.0
         license: MIT
         security_tier: critical
         source: https://github.com/tiangolo/fastapi
   authingway:
     runtime: dotnet
-    manifest_file: services/authingway/Authingway.csproj
+    manifest_file: services/authingway/Naur.Authingway.csproj
     audited_packages:
       - name: Aspire.Npgsql.EntityFrameworkCore.PostgreSQL
         version: 13.1.0
@@ -56,13 +56,13 @@ services:
     vendor_dir: services/clearingway/vendor
     audited_packages:
       - name: github.com/bwmarrin/discordgo
-        version: v0.28.2-0.20240514123316-2c9c884e4fae
+        version: v0.29.0
         license: BSD-3-Clause
         security_tier: high
         source: https://github.com/bwmarrin/discordgo
   apphost:
     runtime: dotnet
-    manifest_file: services/AppHost/Naur.AppHost.csproj
+    manifest_file: services/apphost/Naur.AppHost.csproj
     audited_packages:
       - name: Aspire.Hosting.AppHost
         version: 13.1.0
@@ -73,15 +73,15 @@ services:
     runtime: node
     manifest_file: tests/e2e/package.json
     audited_packages:
-      - name: '@playwright/test'
+      - name: "@playwright/test"
         version: 1.58.0
         license: MIT
         security_tier: medium
         source: https://github.com/microsoft/playwright
 metadata:
   update_policy: manual
-  last_audit: 2026-01-21
-  next_audit: 2026-02-04
+  last_audit: 2026-02-08
+  next_audit: 2026-03-08
   security_tiers:
     critical: Core framework or authentication packages
     high: Network-facing or data-processing packages

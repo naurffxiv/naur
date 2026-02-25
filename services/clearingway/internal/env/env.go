@@ -8,11 +8,12 @@ import (
 )
 
 type Env struct {
-	CONFIG_PATH          string
-	FFLOGS_CLIENT_ID     string
-	FFLOGS_CLIENT_SECRET string
-	DISCORD_TOKEN        string
-	ENV                  EnvType
+	CONFIG_PATH           string
+	FFLOGS_CLIENT_ID      string
+	FFLOGS_CLIENT_SECRET  string
+	DISCORD_TOKEN         string
+	DISCORD_TEST_GUILD_ID string
+	ENV                   EnvType
 }
 
 type EnvType string
@@ -62,12 +63,17 @@ func LoadEnv() (*Env, error) {
 		return nil, errors.New("DISCORD_TOKEN not set in environment")
 	}
 
+	// Load optional env variables - typically for development/testing
+	// These should be checked if they're nil before use
+	discordTestGuildId, _ := os.LookupEnv("DISCORD_TEST_GUILD_ID")
+
 	// -------------- RETURN ENV --------------
 	return &Env{
-		CONFIG_PATH:          configPath,
-		FFLOGS_CLIENT_ID:     fflogsClientId,
-		FFLOGS_CLIENT_SECRET: fflogsClientSecret,
-		DISCORD_TOKEN:        discordToken,
-		ENV:                  envType,
+		CONFIG_PATH:           configPath,
+		FFLOGS_CLIENT_ID:      fflogsClientId,
+		FFLOGS_CLIENT_SECRET:  fflogsClientSecret,
+		DISCORD_TOKEN:         discordToken,
+		DISCORD_TEST_GUILD_ID: discordTestGuildId,
+		ENV:                   envType,
 	}, nil
 }

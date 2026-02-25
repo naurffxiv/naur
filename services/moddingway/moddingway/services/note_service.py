@@ -1,19 +1,20 @@
-import discord
 import logging
-from moddingway.database import users_database
-from moddingway.util import log_info_and_embed, log_info_and_add_field, send_dm
+from datetime import datetime
+
+import discord
+
 from moddingway.database import notes_database, users_database
 from moddingway.database.models import Note
-from datetime import datetime
+from moddingway.util import log_info_and_add_field, log_info_and_embed, send_dm
 
 logger = logging.getLogger(__name__)
 
 
 async def add_note(
     logging_embed: discord.Embed,
-    user: discord.User,
+    user: discord.User | discord.Member,
     note_text: str,
-    author: discord.Member,
+    author: discord.User | discord.Member,
     is_warning=False,
 ):
     # find user in DB
@@ -67,7 +68,7 @@ async def get_note_by_id(
         )
         return f"\n* ID: {db_note.note_id} | Note: {db_note.content} | Note Creator: <@{db_note.created_by}> | Last Editor: <@{db_note.last_editor}>"
     else:
-        return
+        return "Note not found"
 
 
 async def get_user_notes(
@@ -129,7 +130,7 @@ async def delete_user_note(
             logging_embed,
             logger,
             "Result",
-            f"Note not found, no action will be taken",
+            "Note not found, no action will be taken",
         )
         return "Note not found in database, no action will be taken"
 
@@ -142,25 +143,25 @@ async def delete_user_note(
             logging_embed,
             logger,
             "Result",
-            f"Note deleted",
+            "Note deleted",
         )
 
-        result = f"Successfully deleted note: {note_id}"
+        result_msg = f"Successfully deleted note: {note_id}"
     else:
         log_info_and_add_field(
             logging_embed,
             logger,
             "Result",
-            f"Error deleting note",
+            "Error deleting note",
         )
-        result = "There was an error deleting note from the database"
+        result_msg = "There was an error deleting note from the database"
 
-    return result
+    return result_msg
 
 
 async def update_user_note(
     logging_embed: discord.Embed,
-    last_author: discord.Member,
+    last_author: discord.User | discord.Member,
     new_note: str,
     note_id: int,
 ) -> str:
@@ -170,7 +171,7 @@ async def update_user_note(
             logging_embed,
             logger,
             "Result",
-            f"Note not found",
+            "Note not found",
         )
         return "Note not found in database"
     old_note = db_note.content
@@ -185,7 +186,7 @@ async def update_user_note(
             logging_embed,
             logger,
             "Result",
-            f"Note updated",
+            "Note updated",
         )
         return "Note succesfully updated"
     else:

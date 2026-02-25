@@ -1,7 +1,6 @@
-from . import DatabaseConnection
-from discord import Role
 import logging
 
+from . import DatabaseConnection
 
 logger = logging.getLogger(__name__)
 

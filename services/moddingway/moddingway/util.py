@@ -1,25 +1,22 @@
 import logging
 import re
 from contextlib import asynccontextmanager
-from datetime import timedelta, datetime, timezone
-from typing import Optional
+from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 
 import discord
 
-from moddingway.constants import Role, ERROR_MESSAGES
+from moddingway.constants import ERROR_MESSAGES, Role
 from moddingway.settings import get_settings
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
 
 
-class EmbedField(object):
+@dataclass
+class EmbedField:
     name: str
     value: str
-
-    def __init__(self, name, value):
-        self.name = name
-        self.value = value
 
 
 class UnableToNotify(RuntimeError):
@@ -58,10 +55,11 @@ async def create_interaction_embed_context(
 
         yield embed
     except Exception as e:
-        embed.add_field(name="Error", value=e, inline=False)
+        embed.add_field(name="Error", value=f"{e!s}", inline=False)
         raise e
     finally:
-        await log_channel.send(embed=embed)
+        if isinstance(log_channel, discord.abc.Messageable):
+            await log_channel.send(embed=embed)
 
 
 def log_info_and_embed(embed: discord.Embed, logger, message: str):
@@ -89,8 +87,8 @@ def log_info_and_add_field(embed: discord.Embed, logger, name: str, value: str):
 def _split_chunks(message_content: str, from_index: int, max_chunk_length: int = 2000):
     max_index = from_index + max_chunk_length
 
-    # if remaining message is shorter than max chunk size
-    if len(message_content) < max_index:
+    # If remaining message is shorter than or equal to max chunk length, return the end
+    if len(message_content) <= max_index:
         return len(message_content)
 
     # split based on newline
@@ -104,30 +102,33 @@ def _split_chunks(message_content: str, from_index: int, max_chunk_length: int =
         return space_index + 1
 
     # else just send a chunk of max_chunk_length characters
+    # But wait, if message_content[max_index] is a space, we should consume it!
+    if max_index < len(message_content) and message_content[max_index] in (" ", "\n"):
+        return max_index + 1
+
     return max_index
 
 
 def chunk_message(message_content: str, max_chunk_length: int = 2000):
     from_index = 0
-    to_index = 0
-    while to_index < len(message_content):
+
+    while from_index < len(message_content):
         to_index = _split_chunks(message_content, from_index, max_chunk_length)
-        line = message_content[from_index:to_index].strip()
-        if len(line) == 0:
-            from_index = to_index
-            continue
-        yield line
+        chunk = message_content[from_index:to_index].strip()
+        if chunk:
+            yield chunk
         from_index = to_index
 
 
 async def send_chunked_message(channel: discord.abc.GuildChannel, message_content: str):
     for chunk in chunk_message(message_content):
-        await channel.send(chunk)
+        if isinstance(channel, discord.abc.Messageable):
+            await channel.send(chunk)
 
 
 async def send_dm(
     logging_embed: discord.Embed,
-    member: discord.Member,
+    member: discord.User | discord.Member,
     messageContent: str,
     context: str,
 ):
@@ -136,8 +137,8 @@ async def send_dm(
         await channel.send(content=messageContent)
     except Exception as e:
         # Check if error has a code
-        if hasattr(e, "code") and isinstance(getattr(e, "code"), int):
-            code = getattr(e, "code")
+        if hasattr(e, "code") and isinstance(e.code, int):
+            code = e.code
             error_template_msg = ERROR_MESSAGES.get(
                 code
             )  # Check if Error Code is present in constants.py
@@ -153,7 +154,7 @@ async def send_dm(
             logging_embed,
             logger,
             "DM Status",
-            f"Failed to send DM to <@{member.id}> for {context}, {e}",
+            f"Failed to send DM to <@{member.id}> for {context}, {e!s}",
         )
 
 
@@ -187,7 +188,7 @@ def user_has_role(user: discord.Member, role: Role) -> bool:
     )
 
 
-def calculate_time_delta(delta_string: Optional[str]) -> Optional[timedelta]:
+def calculate_time_delta(delta_string: str | None) -> timedelta | None:
     if not delta_string:
         return None
 
@@ -216,13 +217,20 @@ def calculate_time_delta(delta_string: Optional[str]) -> Optional[timedelta]:
 
 
 async def is_user_moderator(interaction: discord.Interaction):
-    return user_has_role(interaction.user, Role.MOD)
+    if isinstance(interaction.user, discord.Member):
+        return user_has_role(interaction.user, Role.MOD)
+    return False
 
 
-def timestamp_to_epoch(timestamp: Optional[datetime]) -> Optional[int]:
+def timestamp_to_epoch(timestamp: datetime | None) -> int | None:
     if timestamp is None:
         return None
-    return round(timestamp.replace(tzinfo=timezone.utc).timestamp())
+    # If already timezone-aware, convert to UTC; otherwise, assume UTC
+    if timestamp.tzinfo is None:
+        timestamp = timestamp.replace(tzinfo=UTC)
+    else:
+        timestamp = timestamp.astimezone(UTC)
+    return round(timestamp.timestamp())
 
 
 # TODO: MOD-166 add this check every time we are using the logging_channel_id
@@ -248,7 +256,7 @@ def get_log_channel(self):
 
 async def find_and_assign_role(
     member: discord.Member, role_enum: Role
-) -> tuple[bool, str, Optional[discord.Role]]:
+) -> tuple[bool, str, discord.Role | None]:
     """
     Finds a role by enum and assigns it to a member.
 
@@ -264,10 +272,10 @@ async def find_and_assign_role(
     """
     try:
         # Find the role by name using the enum value
-        role = discord.utils.get(member.guild.roles, name=role_enum)
+        role = discord.utils.get(member.guild.roles, name=role_enum.value)
 
         if role is None:
-            error_msg = f"Role '{role_enum}' not found in the server."
+            error_msg = f"Role '{role_enum.value}' not found in the server."
             logger.error(error_msg)
             return False, error_msg, None
 
@@ -283,7 +291,7 @@ async def find_and_assign_role(
         logger.error(error_msg)
         return False, error_msg, None
     except Exception as e:
-        error_msg = f"Failed to assign role: {str(e)}"
+        error_msg = f"Failed to assign role: {e!s}"
         logger.error(error_msg)
         return False, error_msg, None
 

@@ -4,25 +4,20 @@
 #>
 
 [CmdletBinding()]
-param(
-    [string]$AppHostPrj   = "services/AppHost/Naur.AppHost.csproj",
-    [string]$AuthPrj      = "services/authingway/Authingway.csproj",
-    [string]$NaurDir      = "services/naurffxiv",
-    [string]$ModDir       = "services/moddingway",
-    [string]$FindDir      = "services/findingway",
-    [string]$ClearDir     = "services/clearingway"
-)
+param()
 
 . "$PSScriptRoot/_lib.ps1"
+. "$PSScriptRoot/_config.ps1"
 
 $ProjectRoot = Resolve-ProjectRoot
+$pm = Get-PackageManagerCmd -CommandType "BuildCmd"
 
 $Workloads = @(
-    @{ Name = "AppHost"; Action = { param($p) dotnet build $p --verbosity quiet --nologo }; Arg = Join-Path $ProjectRoot $AppHostPrj }
-    @{ Name = "Authingway"; Action = { param($p) dotnet build $p --verbosity quiet --nologo }; Arg = Join-Path $ProjectRoot $AuthPrj }
-    @{ Name = "Naurffxiv"; Action = { param($p) Set-Location $p; npm run build }; Arg = Join-Path $ProjectRoot $NaurDir }
-    @{ Name = "Findingway"; Action = { param($p) Set-Location $p; go build ./... }; Arg = Join-Path $ProjectRoot $FindDir }
-    @{ Name = "Clearingway"; Action = { param($p) Set-Location $p; go build ./... }; Arg = Join-Path $ProjectRoot $ClearDir }
+    @{ Name = "AppHost"; Action = { param($p) dotnet build $p --verbosity quiet --nologo }; Arg = Get-ServicePath -ServiceName "AppHost" -ProjectRoot $ProjectRoot }
+    @{ Name = "Authingway"; Action = { param($p) dotnet build $p --verbosity quiet --nologo }; Arg = Get-ServicePath -ServiceName "Authingway" -ProjectRoot $ProjectRoot }
+    @{ Name = "Naurffxiv"; Action = { param($p, $pm) Set-Location $p; Invoke-Expression $pm }; Arg = @(Get-ServicePath -ServiceName "Naurffxiv" -ProjectRoot $ProjectRoot), $pm }
+    @{ Name = "Findingway"; Action = { param($p) Set-Location $p; go build ./... }; Arg = Get-ServicePath -ServiceName "Findingway" -ProjectRoot $ProjectRoot }
+    @{ Name = "Clearingway"; Action = { param($p) Set-Location $p; go build ./... }; Arg = Get-ServicePath -ServiceName "Clearingway" -ProjectRoot $ProjectRoot }
     @{ Name = "Moddingway"; Action = {
             param($p)
             Push-Location $p
@@ -31,18 +26,21 @@ $Workloads = @(
                 & $python -m ty check ; if ($LASTEXITCODE -ne 0) { throw "Ty Type-Check failed" }
             }
             finally { Pop-Location }
-        }; Arg = Join-Path $ProjectRoot $ModDir
+        }; Arg = Get-ServicePath -ServiceName "Moddingway" -ProjectRoot $ProjectRoot
     }
 )
 
-$jobs = foreach ($w in $Workloads) { Start-TaskJob -Name $w.Name -ScriptBlock $w.Action -ArgumentList @($w.Arg) }
+$jobs = foreach ($w in $Workloads) {
+    $workloadArgs = if ($w.Arg -is [array]) { $w.Arg } else { @($w.Arg) }
+    Start-TaskJob -Name $w.Name -ScriptBlock $w.Action -ArgumentList $workloadArgs
+}
 $results = Wait-TaskJobs -Jobs $jobs
 
 $failed = $results | Where-Object { -not $_.Success }
 if ($failed) {
     Write-Log -Level Error -Message "Build failures detected."
     foreach ($f in $failed) {
-        Write-Host "`n--- Details for $($f.Name) ---" -ForegroundColor Yellow
+        Write-Host "`n--- Details for $($f.Name) ---" -ForegroundColor $Theme.Warn
         $f.Output | ForEach-Object { Write-Host $_ }
     }
     exit 1

@@ -1,0 +1,17 @@
+name: "Setup Problem Matchers"
+description: "Registers problem matchers for CI/CD pipelines"
+runs:
+  using: "composite"
+  steps:
+    - name: Register Matchers
+      shell: bash
+      run: |
+        echo "::add-matcher::.github/matchers/csc.json"
+        echo "::add-matcher::.github/matchers/dotnet-format.json"
+        echo "::add-matcher::.github/matchers/eslint-stylish.json"
+        echo "::add-matcher::.github/matchers/eslint-compact.json"
+        echo "::add-matcher::.github/matchers/tsc.json"
+        echo "::add-matcher::.github/matchers/golangci-lint.json"
+        echo "::add-matcher::.github/matchers/python.json"
+        echo "::add-matcher::.github/matchers/prettier.json"
+        echo "::add-matcher::.github/matchers/error.json"

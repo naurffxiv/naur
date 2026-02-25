@@ -37,6 +37,7 @@ class DatabaseConnection:
             self._connection.set_session(autocommit=True)
         except Exception as e:
             logger.error(f"Failed to connect to database: {e}", exc_info=e)
+            raise ValueError(f"Failed to connect to database: {e}") from e
 
     def create_tables(self):
         """
@@ -44,7 +45,7 @@ class DatabaseConnection:
         """
         with self.get_cursor() as cursor:
             script_file_path = os.path.join("postgres", "create_tables.sql")
-            with open(script_file_path, "r") as fd:
+            with open(script_file_path) as fd:
                 script = fd.read()
                 cursor.execute(script)
 

@@ -32,7 +32,7 @@ jobs:
           CONTENT=$(printf "%s\n%s" "$PR_TITLE" "$PR_BODY")
 
           # Ticket pattern regex
-          REGEX='^[[:space:]]*(ticket[: ]+([0-9]+|NA)|(fix(es|ed|ing)?|clos(e[ds]?|ing)|resolv(e[ds]?|ing)|ref(s)?)[[:space:]]+#?[0-9]+|chore\(deps\)|chore\(release\)|\bNA\b)'
+          REGEX='^[[:space:]]*(ticket[: ]+#?([0-9]+|NA)|(fix(es|ed|ing)?|clos(e[ds]?|ing)|resolv(e[ds]?|ing)|ref(s)?)[[:space:]]+#?([0-9]+|NA)|chore\(deps\)|chore\(release\)|\bNA\b)'
 
           if echo "$CONTENT" | grep -qiE "$REGEX"; then
             MATCH=$(echo "$CONTENT" | grep -oiE "$REGEX" | head -n 1 | xargs)

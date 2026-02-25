@@ -3,15 +3,16 @@
   "version": "1.0.0",
   "engines": {
     "node": ">=22.12.0",
-    "npm": ">=10.9.0"
+    "pnpm": ">=10.29.2"
   },
   "description": "End-to-end tests for NAUR Monorepo",
   "scripts": {
-    "test": "npx -y playwright test"
+    "test": "playwright test",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.0",
-    "@types/node": "^22.0.0",
+    "@types/node": "^22.14.1",
     "eslint-plugin-playwright": "^2.5.0",
     "typescript": "^5.9.3"
   }

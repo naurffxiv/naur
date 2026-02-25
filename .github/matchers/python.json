@@ -1,0 +1,30 @@
+{
+  "problemMatcher": [
+    {
+      "owner": "python",
+      "pattern": [
+        {
+          "regexp": "^\\s*File\\s\\\"(.*)\\\",\\sline\\s(\\d+),\\sin\\s(.*)$",
+          "file": 1,
+          "line": 2
+        },
+        {
+          "regexp": "^\\s*raise\\s(.*)\\(\\'(.*)\\'\\)$",
+          "message": 2
+        }
+      ]
+    },
+    {
+      "owner": "python-compact",
+      "pattern": [
+        {
+          "regexp": "^(.+\\.py):(\\d+):(\\d+): (.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "message": 4
+        }
+      ]
+    }
+  ]
+}

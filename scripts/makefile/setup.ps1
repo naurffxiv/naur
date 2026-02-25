@@ -7,15 +7,12 @@
 param()
 
 . "$PSScriptRoot/_lib.ps1"
+. "$PSScriptRoot/_config.ps1"
 
-$coreStack = @(
-    @{ Name = ".NET 10";      Cmd = "dotnet"; Id = "Microsoft.DotNet.SDK.10" }
-    @{ Name = "Node.js";      Cmd = "node";   Id = "OpenJS.NodeJS" }
-    @{ Name = "Python 3.11";  Cmd = "python"; Id = "Python.Python.3.11" }
-    @{ Name = "Go";           Cmd = "go";     Id = "GoLang.Go" }
-    @{ Name = "PowerShell 7"; Cmd = "pwsh";   Id = "Microsoft.PowerShell" }
-    @{ Name = "Docker";       Cmd = "docker"; Id = "Docker.DockerDesktop" }
-)
+$pmName = Get-PMName
+$coreStack = Get-PrerequisiteRegistry
+
+$coreStack = @($coreStack) + @(@{ Name = $pmName; Cmd = $pmName; Id = "$pmName.$pmName" })
 
 if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
     Write-Log -Level Error -Message "winget is not installed. Please install App Installer from the Microsoft Store."
@@ -24,7 +21,9 @@ if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
 
 $missing = @()
 foreach ($tool in $coreStack) {
-    if (-not (Get-Command $tool.Cmd -ErrorAction SilentlyContinue)) {
+    $present = Test-ToolPresence -Tool $tool
+
+    if (-not $present) {
         Write-Log -Level Warn -Message "$($tool.Name) missing"
         $missing += $tool
     } else {
@@ -33,11 +32,13 @@ foreach ($tool in $coreStack) {
 }
 
 if ($missing.Count -gt 0) {
+    $failed = @()
     foreach ($tool in $missing) {
         Write-Log -Level Info -Message "Installing $($tool.Name)..."
         winget install -e --id $tool.Id --silent --accept-source-agreements --accept-package-agreements
         if ($LASTEXITCODE -ne 0) {
             Write-Log -Level Error -Message "Failed to install $($tool.Name)"
+            $failed += $tool
         }
     }
 
@@ -47,13 +48,19 @@ if ($missing.Count -gt 0) {
 
     Write-Log -Level Info -Message "Verifying installations..."
     foreach ($tool in $missing) {
-        if (Get-Command $tool.Cmd -ErrorAction SilentlyContinue) {
+        $verified = Test-ToolPresence -Tool $tool
+
+        if ($verified) {
             Write-Log -Level Ok -Message "$($tool.Name)"
         } else {
             Write-Log -Level Error -Message "$($tool.Name) - restart may be required"
         }
     }
-    Write-Log -Level Ok -Message "Prerequisites installation process completed."
+    if ($failed.Count -gt 0) {
+        Write-Log -Level Warn -Message "Prerequisites installation completed with $($failed.Count) failure(s)."
+    } else {
+        Write-Log -Level Ok -Message "Prerequisites installation process completed."
+    }
 } else {
     Write-Log -Level Info -Message "No system installations required."
 }

@@ -40,13 +40,14 @@ jobs:
             findingway  : ['services/findingway/**']
             clearingway : ['services/clearingway/**']
             authingway  : ['services/authingway/**']
-            AppHost     : ['services/AppHost/**']
+            AppHost     : ['services/apphost/**']
             e2e_required:
               - 'services/naurffxiv/src/app/api/**'
               - 'services/moddingway/moddingway_api/**'
               - 'services/authingway/**'
-              - 'services/AppHost/**'
+              - 'services/apphost/**'
               - '**/package.json'
+              - 'pnpm-lock.yaml'
               - '**/requirements.txt'
               - '**/*.csproj'
               - '**/Dockerfile'
@@ -92,7 +93,7 @@ jobs:
     uses: ./.github/workflows/pipeline-python.yml
     with:
       service: moddingway
-      python-version: "3.11"
+      python-version: "3.14"
       should_run: ${{ github.event_name == 'push' || needs.detect-changes.outputs.moddingway == 'true' }}
     secrets: inherit
 
@@ -104,12 +105,11 @@ jobs:
       needs.detect-changes.outputs.AppHost == 'true'
     strategy:
       matrix:
-        service: [authingway, AppHost]
+        service: [authingway, apphost]
       fail-fast: false
     uses: ./.github/workflows/pipeline-dotnet.yml
     with:
       service: ${{ matrix.service }}
-      dotnet-version: "10.0.101"
       should_run: ${{ github.event_name == 'push' || needs.detect-changes.outputs[matrix.service] == 'true' }}
     secrets: inherit
 
@@ -126,7 +126,7 @@ jobs:
     uses: ./.github/workflows/pipeline-go.yml
     with:
       service: ${{ matrix.service }}
-      go-version: "1.24.0"
+      go-version: "1.25.0"
       should_run: ${{ github.event_name == 'push' || needs.detect-changes.outputs[matrix.service] == 'true' }}
     secrets: inherit
 

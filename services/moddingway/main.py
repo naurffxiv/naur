@@ -19,6 +19,7 @@ if __name__ == "__main__":
 
     intents = discord.Intents.default()
     intents.members = True
+    intents.message_content = True
     bot = ModdingwayBot(command_prefix="/", intents=intents)
 
     database_connection = DatabaseConnection()

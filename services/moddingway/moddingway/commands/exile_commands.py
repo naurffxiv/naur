@@ -1,4 +1,3 @@
-import datetime
 import logging
 from random import choice
 
@@ -7,19 +6,19 @@ from discord.ext.commands import Bot
 
 from moddingway.constants import Role
 from moddingway.services.exile_service import (
+    delete_exile_by_id,
     exile_user,
     format_time_string,
     get_active_exiles,
     get_user_exiles,
     unexile_user,
-    delete_exile_by_id,
 )
 from moddingway.settings import get_settings
 from moddingway.util import (
     calculate_time_delta,
     is_user_moderator,
-    user_has_role,
     log_info_and_add_field,
+    user_has_role,
 )
 from moddingway.workers.autounexile import autounexile_users
 
@@ -41,6 +40,12 @@ class RouletteDeleteView(discord.ui.View):
         self.clear_items()
         await self.original_interaction.edit_original_response(view=self)
 
+        if not isinstance(interaction.user, discord.Member):
+            await interaction.response.send_message(
+                "This command must be run in a server.", ephemeral=False
+            )
+            return
+
         safety_options = [True, True, True, True, True, False]
         exile_duration_options = [1, 6, 12, 18, 24]
         safety_choice = choice(safety_options)
@@ -61,15 +66,20 @@ class RouletteDeleteView(discord.ui.View):
             )
             return
         async with create_response_context(interaction, False) as response_message:
+            channel_mention = getattr(
+                interaction.channel, "mention", "#unknown-channel"
+            )
             async with create_logging_embed(
                 interaction,
                 action="/roulette",
                 duration=format_time_string(duration_string),
-                custom_response=f"User <@{interaction.user.id}> lost a roulette in {interaction.channel.mention} and was exiled.",
+                custom_response=f"User <@{interaction.user.id}> lost a roulette in {channel_mention} and was exiled.",
                 reason=reason,
             ) as logging_embed:
-
                 exile_duration = calculate_time_delta(duration_string)
+                if exile_duration is None:
+                    response_message.set_string("Invalid exile duration.")
+                    return
                 error_message = await exile_user(
                     logging_embed, interaction.user, exile_duration, reason
                 )
@@ -147,6 +157,9 @@ def create_exile_commands(bot: Bot) -> None:
                 duration=format_time_string(duration),
                 reason=reason,
             ) as logging_embed:
+                if exile_duration is None:
+                    response_message.set_string("Invalid exile duration.")
+                    return
                 error_message = await exile_user(
                     logging_embed, user, exile_duration, reason
                 )
@@ -162,7 +175,7 @@ def create_exile_commands(bot: Bot) -> None:
     async def roulette(interaction: discord.Interaction):
         """Test your luck, fail and be exiled..."""
         await interaction.response.send_message(
-            f"Are you sure you want to do this? You have a 1/6 chance in being exiled for up to 24 hours.",
+            "Are you sure you want to do this? You have a 1/6 chance in being exiled for up to 24 hours.",
             view=RouletteDeleteView(interaction=interaction, timeout=30),
             ephemeral=True,
         )
@@ -178,8 +191,8 @@ def create_exile_commands(bot: Bot) -> None:
                 msg = await get_user_exiles(user)
                 response_message.set_string(msg)
             except Exception as e:
-                logger.error(f"Error in get_user_exiles: {str(e)}")
-                async with create_logging_embed(interaction, user=user, error=str(e)):
+                logger.error(f"Error in get_user_exiles: {e!s}")
+                async with create_logging_embed(interaction, user=user, error=f"{e!s}"):
                     response_message.set_string(
                         "An error occurred while fetching user exiles."
                     )

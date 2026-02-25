@@ -1,21 +1,50 @@
+VENV := venv
+
+ifeq ($(OS),Windows_NT)
+    VENV_PYTHON := $(VENV)/Scripts/python.exe
+    BASE_PYTHON := py -3.14
+    RM_VENV := if exist $(VENV) rmdir /s /q $(VENV)
+else
+    VENV_PYTHON := $(VENV)/bin/python
+    BASE_PYTHON := python3
+    RM_VENV := rm -rf $(VENV)
+endif
+
+PY := $(if $(wildcard $(VENV_PYTHON)),$(VENV_PYTHON),$(BASE_PYTHON))
+
 format:
-	python3 -m black .
+	@$(PY) -m ruff format .
+	@$(PY) -m ruff check --fix .
+
+lint: format ty
 
 stop:
 	docker compose down
 
 install:
-	pip3 install -r requirements.txt
+	@echo "Creating virtual environment and installing dependencies..."
+	@$(RM_VENV)
+	@$(BASE_PYTHON) -m venv $(VENV)
+	@$(VENV_PYTHON) -m pip install --upgrade pip
+	@$(VENV_PYTHON) -m pip install -r requirements-dev.txt
 
-clean:
+clean-venv:
+	@$(RM_VENV)
+
+clean-docker:
 	docker image prune -a
+
+clean: clean-docker clean-venv
 
 build:
 	docker compose build python-app
 
 run:
-	docker compose down python-app-local
+	docker compose down --remove-orphans
 	docker compose up python-app-local --build
+
+python-run:
+	$(PY) main.py
 
 database-run:
 	docker compose -f postgres.yml down
@@ -42,9 +71,15 @@ database-clean-ephemeral:
 	docker exec postgres_db_ephemeral psql -f scripts/postgres/seed_data.sql -U moddingwayLocalDB moddingway
 
 api:
-	uvicorn moddingway_api.main:app --port 8000
+	$(PY) -m uvicorn moddingway_api.main:app --port 8000
 
 api-reload:
-	uvicorn moddingway_api.main:app --port 8000 --reload
+	$(PY) -m uvicorn moddingway_api.main:app --port 8000 --reload
 
-.PHONY: format stop install clean build run database-run
+test:
+	$(PY) -m pytest ../../tests/moddingway/unit
+
+ty:
+	@$(PY) -m ty check .
+
+.PHONY: format lint stop install clean clean-venv clean-docker build run database-run database-run-ephemeral database-clean database-clean-ephemeral api api-reload test ty python-run

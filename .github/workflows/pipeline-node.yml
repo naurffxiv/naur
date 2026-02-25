@@ -27,14 +27,17 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
-          cache: "npm"
-          cache-dependency-path: package-lock.json
+          cache: "pnpm"
+
+      - name: Register Problem Matchers
+        uses: ./.github/actions/setup-matchers
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Prettier
         uses: ./.github/actions/run-command-with-report
@@ -42,7 +45,7 @@ jobs:
           service: ${{ inputs.service }}
           step-number: 10
           step-name: "Prettier"
-          command: npx turbo run prettier:check --filter=${{ inputs.service }}
+          command: pnpm exec prettier --check --ignore-unknown "services/${{ inputs.service }}/**/*"
           output-file: prettier.txt
 
       - name: TypeScript
@@ -52,8 +55,9 @@ jobs:
           service: ${{ inputs.service }}
           step-number: 10
           step-name: "TypeScript"
-          command: npx turbo run typecheck --filter=${{ inputs.service }}
+          command: pnpm typecheck
           output-file: tsc.txt
+          working-directory: services/${{ inputs.service }}
 
       - name: ESLint
         uses: ./.github/actions/run-command-with-report
@@ -62,8 +66,9 @@ jobs:
           service: ${{ inputs.service }}
           step-number: 10
           step-name: "ESLint"
-          command: npx turbo run lint --filter=${{ inputs.service }}
+          command: pnpm lint
           output-file: eslint.txt
+          working-directory: services/${{ inputs.service }}
 
       - name: Build
         uses: ./.github/actions/run-command-with-report
@@ -71,8 +76,9 @@ jobs:
           service: ${{ inputs.service }}
           step-number: 20
           step-name: "Build"
-          command: npx turbo run build --filter=${{ inputs.service }}
+          command: pnpm build
           output-file: build.txt
+          working-directory: services/${{ inputs.service }}
 
       - name: Upload Build Artifact
         if: inputs.upload-build-artifact == true && success()
@@ -95,14 +101,14 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
-          cache: "npm"
-          cache-dependency-path: package-lock.json
+          cache: "pnpm"
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Unit Tests
         uses: ./.github/actions/run-command-with-report
@@ -110,6 +116,7 @@ jobs:
           service: ${{ inputs.service }}
           step-number: 30
           step-name: "Unit Tests"
-          command: npx turbo run test --filter=${{ inputs.service }} --if-present 2>&1 || echo "No test script found"
+          command: pnpm test 2>&1 || echo "No test script found"
           output-file: test.txt
+          working-directory: services/${{ inputs.service }}
           fail-on-error: false
