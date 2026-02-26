@@ -4,18 +4,18 @@ import fs from "fs";
 import path from "path";
 import sharp from "sharp";
 
-const opt = process.argv[2];
+const opt: string | undefined = process.argv[2];
 
 /*
   compresses images according to the settings below
   input is based on current working directory,
   make sure you're at the base project directory
-  
-  run with `node scripts/compress-images.js` or `npm run compress`
+
+  run with `tsx scripts/compress-images.ts` or `npm run compress`
 
   there are multiple modes to compress with, you can switch between them by adding a number arg
-  e.g 
-  `node scripts/compress-images.js 2`
+  e.g
+  `tsx scripts/compress-images.ts 2`
   `npm run compress 2`
 
   (worse quality, intended to be compressed variants of images)
@@ -23,7 +23,7 @@ const opt = process.argv[2];
   2 - convert to avif with 50 quality
 
   (better quality, intended to "replace" original assets which are too large to serve in the imagemodal)
-  3 - resize to 2560, keep as png 
+  3 - resize to 2560, keep as png
   4 - resize to 2560, convert to jpeg with 75 quality
 
   (banner specific - for savage/extreme/ultimate entries)
@@ -33,8 +33,8 @@ const opt = process.argv[2];
 const output_path = "./compressed";
 const images = await glob(`./uncompressed/**/*.png`);
 
-images.forEach(async (image_path) => {
-  const image_output_path = path.join(
+images.forEach(async (image_path: string) => {
+  const image_output_path: string = path.join(
     output_path,
     path.dirname(image_path).substring(image_path.indexOf(path.sep)),
   );

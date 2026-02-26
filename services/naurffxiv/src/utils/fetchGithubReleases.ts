@@ -1,7 +1,7 @@
 export const GH_REPO = "/naurffxiv/naurffxiv";
 // TODO: will need to update to naurffxiv.com when repo changes
 
-interface GitHubRelease {
+export interface GitHubRelease {
   tag_name: string;
   [key: string]: unknown;
 }
@@ -15,7 +15,7 @@ export async function fetchGithubReleases(): Promise<GitHubRelease[]> {
         Accept: "application/vnd.github+json",
       },
       next: { revalidate: 3600 },
-    });
+    } as RequestInit);
 
     if (!response.ok) {
       throw new Error(
