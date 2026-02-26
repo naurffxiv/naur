@@ -1,5 +1,9 @@
 name: "Security Scan"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 on:
   workflow_dispatch:
   schedule:
@@ -11,9 +15,13 @@ on:
       - ".github/workflows/security.yml"
       - "services/**"
       - "tests/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "**/uv.lock"
+      - "**/go.mod"
+      - "**/*.csproj"
   pull_request:
-    branches:
-      - main
+    branches: ["**"] # use [skip ci] to skip this workflow
 
 jobs:
   detect-changes:
@@ -21,49 +29,141 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       languages: ${{ steps.set-matrix.outputs.languages }}
-      any_changed: ${{ steps.filter.outputs.any_changed }}
-      workflow_changed: ${{ steps.filter.outputs.workflow }}
-      changes: ${{ steps.filter.outputs.changes }}
+      services: ${{ steps.set-matrix.outputs.services }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Filter Paths
         id: filter
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
         with:
           filters: |
-            javascript:
-              - 'services/naurffxiv/**'
-              - 'package.json'
-              - 'package-lock.json'
-            python:
-              - 'services/moddingway/**'
-              - 'pyproject.toml'
-              - 'requirements.txt'
-              - 'requirements-dev.txt'
-            go:
-              - 'services/clearingway/**'
-              - 'services/findingway/**'
-              - 'go.mod'
-              - 'go.sum'
-            csharp:
-              - 'services/authingway/**'
-              - 'services/apphost/**'
-              - '**/*.csproj'
-              - '**/*.sln'
             workflow:
-              - '.github/workflows/security.yml'
+              - '.github/workflows/**'
+            naurffxiv:
+              - 'services/naurffxiv/**'
+              - 'tests/naurffxiv/**'
+            moddingway:
+              - 'services/moddingway/**'
+              - 'tests/moddingway/**'
+            clearingway:
+              - 'services/clearingway/**'
+              - 'tests/clearingway/**'
+            findingway:
+              - 'services/findingway/**'
+              - 'tests/findingway/**'
+            authingway:
+              - 'services/authingway/**'
+              - 'tests/authingway/**'
+            apphost:
+              - 'services/apphost/**'
 
-      - name: Set Language Matrix
+      - name: Set Language and Service Matrix
         id: set-matrix
-        run: echo 'languages=["javascript", "python", "go", "csharp"]' >> $GITHUB_OUTPUT
+        run: |
+          # Export service filter outputs for indirect expansion
+          CHANGED_naurffxiv="${{ steps.filter.outputs.naurffxiv }}"
+          CHANGED_moddingway="${{ steps.filter.outputs.moddingway }}"
+          CHANGED_clearingway="${{ steps.filter.outputs.clearingway }}"
+          CHANGED_findingway="${{ steps.filter.outputs.findingway }}"
+          CHANGED_authingway="${{ steps.filter.outputs.authingway }}"
+          CHANGED_apphost="${{ steps.filter.outputs.apphost }}"
+
+          languages=()
+          services=()
+
+          # Derive languages from which services changed
+          [[ "${CHANGED_naurffxiv}" == "true" ]] && languages+=("javascript")
+          [[ "${CHANGED_moddingway}" == "true" ]] && languages+=("python")
+          [[ "${CHANGED_clearingway}" == "true" || "${CHANGED_findingway}" == "true" ]] && languages+=("go")
+          [[ "${CHANGED_authingway}" == "true" || "${CHANGED_apphost}" == "true" ]] && languages+=("csharp")
+
+          for svc in naurffxiv moddingway clearingway findingway authingway apphost; do
+            var="CHANGED_$svc"
+            [[ "${!var}" == "true" ]] && services+=("services/$svc")
+          done
+
+          # Fallback for workflow changes or non-PR events
+          if [[ "${{ steps.filter.outputs.workflow }}" == "true" || "${{ github.event_name }}" != "pull_request" ]]; then
+            languages=(
+              "javascript"
+              "python"
+              "go"
+              "csharp"
+            )
+            services=(
+              "services/naurffxiv"
+              "services/clearingway"
+              "services/findingway"
+              "services/moddingway"
+              "services/authingway"
+              "services/apphost"
+            )
+          fi
+
+          # Output Matrices
+          if [ ${#languages[@]} -eq 0 ]; then
+            echo "languages=[]" >> $GITHUB_OUTPUT
+          else
+            echo "languages=$(printf '%s\n' "${languages[@]}" | jq -R . | jq -s -c .)" >> $GITHUB_OUTPUT
+          fi
+          if [ ${#services[@]} -eq 0 ]; then
+            echo "services=[]" >> $GITHUB_OUTPUT
+          else
+            echo "services=$(printf '%s\n' "${services[@]}" | jq -R . | jq -s -c .)" >> $GITHUB_OUTPUT
+          fi
+
+  secret-scan:
+    name: Secret Scanning (Gitleaks)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        run: |
+          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.24.2/gitleaks_8.24.2_linux_x64.tar.gz | tar -xz
+          ./gitleaks detect --source . --verbose --redact \
+            --log-opts="${{ github.event_name == 'pull_request' && 'origin/main..HEAD' || '--all' }}" \
+            --report-format sarif \
+            --report-path gitleaks-results.sarif
+
+      - name: Upload Gitleaks results to GitHub Security
+        uses: github/codeql-action/upload-sarif@89a39a4e59826350b863aa6b6252a07ad50cf83e # v4.32.4
+        if: always()
+        with:
+          sarif_file: gitleaks-results.sarif
+          category: gitleaks
+
+  dependency-review:
+    name: Dependency Review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Review dependencies
+        uses: actions/dependency-review-action@05fe4576374b728f0c523d6a13d64c25081e0803 # v4.8.3
+        with:
+          fail-on-severity: high
+          comment-summary-in-pr: on-failure
 
   analyze:
     name: CodeQL Analysis (${{ matrix.language }})
     needs: detect-changes
+    if: needs.detect-changes.outputs.languages != '[]'
     runs-on: ubuntu-latest
-    timeout-minutes: 360
+    timeout-minutes: 30
     permissions:
       actions: read
       contents: read
@@ -76,18 +176,18 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Initialize CodeQL
         id: init
-        uses: github/codeql-action/init@v4
+        uses: github/codeql-action/init@89a39a4e59826350b863aa6b6252a07ad50cf83e # v4.32.4
         with:
           languages: ${{ matrix.language }}
           queries: security-extended
 
       - name: Autobuild
         if: matrix.language != 'csharp' && steps.init.outcome == 'success'
-        uses: github/codeql-action/autobuild@v4
+        uses: github/codeql-action/autobuild@89a39a4e59826350b863aa6b6252a07ad50cf83e # v4.32.4
 
       - name: Build C#
         if: matrix.language == 'csharp' && steps.init.outcome == 'success'
@@ -97,17 +197,14 @@ jobs:
 
       - name: Perform CodeQL Analysis
         if: steps.init.outcome == 'success'
-        uses: github/codeql-action/analyze@v4
+        uses: github/codeql-action/analyze@89a39a4e59826350b863aa6b6252a07ad50cf83e # v4.32.4
         with:
           category: "/language:${{matrix.language}}"
 
   security-scan:
     name: Vulnerability Scanning (Trivy - ${{ matrix.service }})
     needs: detect-changes
-    if: |
-      github.event_name != 'pull_request' ||
-      needs.detect-changes.outputs.workflow_changed == 'true' ||
-      needs.detect-changes.outputs.any_changed == 'true'
+    if: needs.detect-changes.outputs.services != '[]' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -115,22 +212,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service:
-          [
-            "services/naurffxiv",
-            "services/clearingway",
-            "services/findingway",
-            "services/moddingway",
-            "services/authingway",
-            "services/apphost",
-          ]
+        service: ${{ fromJSON(needs.detect-changes.outputs.services) }}
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.33.1
+        uses: aquasecurity/trivy-action@c1824fd6edce30d7ab345a9989de00bbd46ef284 # 0.34.0
         env:
           TRIVY_SKIP_VERSION_CHECK: "true"
         with:
@@ -142,7 +231,7 @@ jobs:
           exit-code: "0" # Don't fail the SARIF generation step, we fail later in the table step
 
       - name: Run Trivy (Table Output)
-        uses: aquasecurity/trivy-action@0.33.1
+        uses: aquasecurity/trivy-action@c1824fd6edce30d7ab345a9989de00bbd46ef284 # 0.34.0
         env:
           TRIVY_SKIP_VERSION_CHECK: "true"
         with:
@@ -153,7 +242,7 @@ jobs:
           exit-code: "1"
 
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@89a39a4e59826350b863aa6b6252a07ad50cf83e # v4.32.4
         if: always()
         with:
           sarif_file: "trivy-results-${{ strategy.job-index }}.sarif"
@@ -162,7 +251,7 @@ jobs:
   security-summary:
     name: Security Summary
     runs-on: ubuntu-latest
-    needs: [analyze, security-scan]
+    needs: [secret-scan, dependency-review, analyze, security-scan]
     if: always()
     permissions:
       contents: read
@@ -171,16 +260,21 @@ jobs:
         run: |
           echo "### Security Scan Results" >> $GITHUB_STEP_SUMMARY
 
+          SECRET_RESULT="${{ needs.secret-scan.result }}"
+          DEP_RESULT="${{ needs.dependency-review.result }}"
           ANALYZE_RESULT="${{ needs.analyze.result }}"
           SCAN_RESULT="${{ needs.security-scan.result }}"
 
+          echo "- Secret Scanning: $SECRET_RESULT" >> $GITHUB_STEP_SUMMARY
+          echo "- Dependency Review: $DEP_RESULT" >> $GITHUB_STEP_SUMMARY
           echo "- CodeQL Analysis: $ANALYZE_RESULT" >> $GITHUB_STEP_SUMMARY
           echo "- Trivy Vulnerability Scan: $SCAN_RESULT" >> $GITHUB_STEP_SUMMARY
 
-          if [[ "$ANALYZE_RESULT" == "failure" ]] || [[ "$SCAN_RESULT" == "failure" ]] || \
-             [[ "$ANALYZE_RESULT" == "cancelled" ]] || [[ "$SCAN_RESULT" == "cancelled" ]]; then
-            echo "::error::Security checks failed or were cancelled."
-            echo "Security checks failed" >> $GITHUB_STEP_SUMMARY
-            exit 1
-          fi
+          for result in "$SECRET_RESULT" "$DEP_RESULT" "$ANALYZE_RESULT" "$SCAN_RESULT"; do
+            if [[ "$result" == "failure" || "$result" == "cancelled" ]]; then
+              echo "::error::Security checks failed or were cancelled."
+              echo "Security checks failed." >> $GITHUB_STEP_SUMMARY
+              exit 1
+            fi
+          done
           echo "All security checks passed or skipped." >> $GITHUB_STEP_SUMMARY

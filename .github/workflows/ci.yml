@@ -3,45 +3,65 @@ name: CI
 on:
   pull_request:
     types: [opened, reopened, synchronize, edited]
-    branches: [main]
+    branches: ["**"] # use [skip ci] to skip this workflow
   push:
     branches: [main]
 
-permissions:
-  pull-requests: write
-  contents: read
-  actions: read
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   detect-changes:
     name: Detect Service Changes
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       naurffxiv: ${{ steps.filter.outputs.naurffxiv }}
       moddingway: ${{ steps.filter.outputs.moddingway }}
       authingway: ${{ steps.filter.outputs.authingway }}
       findingway: ${{ steps.filter.outputs.findingway }}
       clearingway: ${{ steps.filter.outputs.clearingway }}
-      AppHost: ${{ steps.filter.outputs.AppHost }}
+      apphost: ${{ steps.filter.outputs.apphost }}
       run_e2e: ${{ steps.e2e-check.outputs.run_e2e }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
         id: filter
         with:
           filters: |
-            naurffxiv   : ['services/naurffxiv/**']
-            moddingway  : ['services/moddingway/**']
-            findingway  : ['services/findingway/**']
-            clearingway : ['services/clearingway/**']
-            authingway  : ['services/authingway/**']
-            AppHost     : ['services/apphost/**']
+            _ci: &ci
+              - '.github/workflows/ci.yml'
+            naurffxiv:
+              - *ci
+              - 'services/naurffxiv/**'
+              - '.github/workflows/pipeline-node.yml'
+              - '.github/workflows/deploy-pr-netlify.yml'
+              - '.github/workflows/deploy-netlify.yml'
+            moddingway:
+              - *ci
+              - 'services/moddingway/**'
+              - '.github/workflows/pipeline-python.yml'
+            findingway:
+              - *ci
+              - 'services/findingway/**'
+              - '.github/workflows/pipeline-go.yml'
+            clearingway:
+              - *ci
+              - 'services/clearingway/**'
+              - '.github/workflows/pipeline-go.yml'
+            authingway:
+              - *ci
+              - 'services/authingway/**'
+              - '.github/workflows/pipeline-dotnet.yml'
+            apphost:
+              - *ci
+              - 'services/apphost/**'
+              - '.github/workflows/pipeline-dotnet.yml'
             e2e_required:
+              - *ci
               - 'services/naurffxiv/src/app/api/**'
               - 'services/moddingway/moddingway_api/**'
               - 'services/moddingway/pyproject.toml'
@@ -53,6 +73,7 @@ jobs:
               - '**/*.csproj'
               - '**/Dockerfile'
               - 'tests/e2e/**'
+              - '.github/workflows/pipeline-e2e.yml'
 
       - name: Check E2E Status
         id: e2e-check
@@ -75,11 +96,18 @@ jobs:
   #          fi
 
   ci-check-ticket:
+    permissions:
+      contents: read
+      pull-requests: write
     uses: ./.github/workflows/pipeline-ticket.yml
 
   ci-node:
     needs: [detect-changes]
     if: github.event_name == 'push' || needs.detect-changes.outputs.naurffxiv == 'true'
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
     uses: ./.github/workflows/pipeline-node.yml
     with:
       service: naurffxiv
@@ -91,6 +119,9 @@ jobs:
   ci-python:
     needs: [detect-changes]
     if: github.event_name == 'push' || needs.detect-changes.outputs.moddingway == 'true'
+    permissions:
+      contents: read
+      actions: read
     uses: ./.github/workflows/pipeline-python.yml
     with:
       service: moddingway
@@ -103,7 +134,10 @@ jobs:
     if: |
       github.event_name == 'push' ||
       needs.detect-changes.outputs.authingway == 'true' ||
-      needs.detect-changes.outputs.AppHost == 'true'
+      needs.detect-changes.outputs.apphost == 'true'
+    permissions:
+      contents: read
+      actions: read
     strategy:
       matrix:
         service: [authingway, apphost]
@@ -120,6 +154,10 @@ jobs:
       github.event_name == 'push' ||
       needs.detect-changes.outputs.findingway == 'true' ||
       needs.detect-changes.outputs.clearingway == 'true'
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
     strategy:
       matrix:
         service: [findingway, clearingway]
@@ -131,9 +169,29 @@ jobs:
       should_run: ${{ github.event_name == 'push' || needs.detect-changes.outputs[matrix.service] == 'true' }}
     secrets: inherit
 
+  ci-dependency-audit:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - name: Install uv
+        uses: astral-sh/setup-uv@eac588ad8def6316056a12d4907a9d4d84ff7a3b # v7.3.0
+      - name: Dependency Audit
+        uses: ./.github/actions/run-command-with-report
+        with:
+          service: global
+          step-number: 5
+          step-name: "Dependency Audit"
+          command: uv run --with pyyaml --with ruamel-yaml python scripts/check-dependency-sync.py
+
   deploy-preview:
     needs: [detect-changes, ci-node]
     if: github.event_name == 'pull_request' && needs.detect-changes.outputs.naurffxiv == 'true'
+    permissions:
+      contents: read
+      pull-requests: write
     uses: ./.github/workflows/deploy-pr-netlify.yml
     with:
       pr_number: "${{ github.event.pull_request.number }}"
@@ -143,6 +201,9 @@ jobs:
   e2e:
     needs: [detect-changes, ci-node, ci-python, ci-dotnet, ci-go]
     if: "!failure() && !cancelled() && needs.detect-changes.outputs.run_e2e == 'true'"
+    permissions:
+      contents: read
+      actions: read
     uses: ./.github/workflows/pipeline-e2e.yml
     with:
       should_run: ${{ needs.detect-changes.outputs.run_e2e == 'true' }}
@@ -157,10 +218,15 @@ jobs:
         ci-python,
         ci-dotnet,
         ci-go,
+        ci-dependency-audit,
         deploy-preview,
         e2e,
       ]
     if: always()
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
     uses: ./.github/workflows/report.yml
     with:
       run_e2e: ${{ needs.detect-changes.outputs.run_e2e }}

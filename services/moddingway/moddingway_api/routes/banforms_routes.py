@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 from fastapi import APIRouter, HTTPException
 from fastapi_pagination import Page
 
+from moddingway.constants import MAX_APPEAL_REASON_LENGTH
 from moddingway.database import banforms_database, users_database
 from moddingway.database.models import BanForm
 from moddingway.settings import get_settings
@@ -60,6 +61,11 @@ async def submit_form(request: FormRequest):
             reason=request.reason,
             submission_timestamp=datetime.now(UTC),
         )
+
+        if len(form.reason) > MAX_APPEAL_REASON_LENGTH:
+            return {
+                "detail": f"Appeal reason max length is {MAX_APPEAL_REASON_LENGTH} characters. Please shorten the appeal reason."
+            }
 
         result = banforms_database.add_form(form)
 

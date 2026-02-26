@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS roles (
 CREATE TABLE IF NOT EXISTS forms (
 	formID INT GENERATED ALWAYS AS IDENTITY,
 	userID INT NOT null,
-	reason TEXT,
+	reason VARCHAR(1024),
 	approvalNotes TEXT,
 	approval BOOL,
 	approvedByUserID INT,
@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS forms (
 
 CREATE TABLE IF NOT EXISTS announcements (
 	announcementID INT GENERATED ALWAYS AS IDENTITY,
-	discordMessageID VARCHAR(20),
+	discordMessageLink VARCHAR(40),
 	announcementRevisions JSONB NOT NULL, --holds the last 3 revisions, version number and editor of the announcements [{“version”:x, “content”:”Announcement goes here.”, “author_id”: xxxxxxxxxxxx}]
 	sentFLAG BOOL NOT NULL DEFAULT FALSE,
 	PRIMARY KEY(announcementID)
