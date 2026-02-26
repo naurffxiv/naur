@@ -18,18 +18,18 @@ def insert_announcement(announcement_rev: AnnouncementRevision) -> int:
     revisions_data = [announcement_rev.model_dump()]
 
     sent_flag = False
-    discord_msg_id = None
+    discord_msg_link = None
 
     with conn.get_cursor() as cursor:
         query = """
             INSERT INTO announcements
-            (announcementRevisions, sentFLAG, discordMessageID)
+            (announcementRevisions, sentFLAG, discordMessageLink)
             VALUES
             (%s,%s,%s)
             RETURNING announcementID
         """
 
-        params = (json.dumps(revisions_data), sent_flag, discord_msg_id)
+        params = (json.dumps(revisions_data), sent_flag, discord_msg_link)
 
         cursor.execute(query, params)
         res = cursor.fetchone()
@@ -45,7 +45,7 @@ def get_announcement(announcement_id: int) -> dict[str, Any] | None:
 
     with conn.get_cursor() as cursor:
         query = """
-            SELECT announcementID, announcementRevisions, sentFLAG, discordMessageID
+            SELECT announcementID, announcementRevisions, sentFLAG, discordMessageLink
             FROM announcements
             WHERE announcementID = %s
         """
@@ -59,7 +59,7 @@ def get_announcement(announcement_id: int) -> dict[str, Any] | None:
         announcement_id = res[0]
         revisions_data = res[1]
         sent_flag = res[2]
-        discord_msg_id = res[3]
+        discord_msg_link = res[3]
 
         if isinstance(revisions_data, str):
             revisions_data = json.loads(revisions_data)
@@ -68,24 +68,24 @@ def get_announcement(announcement_id: int) -> dict[str, Any] | None:
             "announcement_id": announcement_id,
             "revisions": revisions_data,
             "sent_flag": sent_flag,
-            "discord_msg_id": discord_msg_id,
+            "discord_msg_link": discord_msg_link,
         }
 
 
-def set_sent(announcement_id: int, discord_msg_id: int) -> bool:
+def set_sent(announcement_id: int, discord_msg_link: str) -> bool:
     conn = DatabaseConnection()
 
     with conn.get_cursor() as cursor:
         query = """
             UPDATE announcements
             SET
-                discordMessageID = %s,
+                discordMessageLink = %s,
                 sentFLAG = %s
             WHERE announcementID = %s
         """
 
-        # Setting sent_flag to True and linking it to the announcement messages id
-        params = (discord_msg_id, True, announcement_id)
+        # Setting sent_flag to True and linking it to the announcement channel id and message id
+        params = (discord_msg_link, True, announcement_id)
 
         cursor.execute(query, params)
 
