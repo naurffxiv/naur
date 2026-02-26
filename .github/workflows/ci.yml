@@ -32,13 +32,36 @@ jobs:
         id: filter
         with:
           filters: |
-            naurffxiv   : ['services/naurffxiv/**']
-            moddingway  : ['services/moddingway/**']
-            findingway  : ['services/findingway/**']
-            clearingway : ['services/clearingway/**']
-            authingway  : ['services/authingway/**']
-            apphost     : ['services/apphost/**']
+            _ci: &ci
+              - '.github/workflows/ci.yml'
+            naurffxiv:
+              - *ci
+              - 'services/naurffxiv/**'
+              - '.github/workflows/pipeline-node.yml'
+              - '.github/workflows/deploy-pr-netlify.yml'
+              - '.github/workflows/deploy-netlify.yml'
+            moddingway:
+              - *ci
+              - 'services/moddingway/**'
+              - '.github/workflows/pipeline-python.yml'
+            findingway:
+              - *ci
+              - 'services/findingway/**'
+              - '.github/workflows/pipeline-go.yml'
+            clearingway:
+              - *ci
+              - 'services/clearingway/**'
+              - '.github/workflows/pipeline-go.yml'
+            authingway:
+              - *ci
+              - 'services/authingway/**'
+              - '.github/workflows/pipeline-dotnet.yml'
+            apphost:
+              - *ci
+              - 'services/apphost/**'
+              - '.github/workflows/pipeline-dotnet.yml'
             e2e_required:
+              - *ci
               - 'services/naurffxiv/src/app/api/**'
               - 'services/moddingway/moddingway_api/**'
               - 'services/authingway/**'
@@ -49,6 +72,7 @@ jobs:
               - '**/*.csproj'
               - '**/Dockerfile'
               - 'tests/e2e/**'
+              - '.github/workflows/pipeline-e2e.yml'
 
       - name: Check E2E Status
         id: e2e-check

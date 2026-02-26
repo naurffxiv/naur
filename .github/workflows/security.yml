@@ -40,7 +40,7 @@ jobs:
         with:
           filters: |
             workflow:
-              - '.github/workflows/security.yml'
+              - '.github/workflows/**'
             naurffxiv:
               - 'services/naurffxiv/**'
               - 'tests/naurffxiv/**'
@@ -103,8 +103,16 @@ jobs:
           fi
 
           # Output Matrices
-          echo "languages=$(printf '%s\n' "${languages[@]}" | jq -R . | jq -s -c .)" >> $GITHUB_OUTPUT
-          echo "services=$(printf '%s\n' "${services[@]}" | jq -R . | jq -s -c .)" >> $GITHUB_OUTPUT
+          if [ ${#languages[@]} -eq 0 ]; then
+            echo "languages=[]" >> $GITHUB_OUTPUT
+          else
+            echo "languages=$(printf '%s\n' "${languages[@]}" | jq -R . | jq -s -c .)" >> $GITHUB_OUTPUT
+          fi
+          if [ ${#services[@]} -eq 0 ]; then
+            echo "services=[]" >> $GITHUB_OUTPUT
+          else
+            echo "services=$(printf '%s\n' "${services[@]}" | jq -R . | jq -s -c .)" >> $GITHUB_OUTPUT
+          fi
 
   secret-scan:
     name: Secret Scanning (Gitleaks)
