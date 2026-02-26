@@ -71,7 +71,8 @@ async def publish_announcement(logging_embed, channel, announcement_id):
         sent_message = await channel.send(embed=publish_embed)
         if sent_message:
             announcements_database.set_sent(
-                announcement_id=announcement_id, discord_msg_id=sent_message.id
+                announcement_id=announcement_id,
+                discord_msg_link=str(channel.id) + "/" + str(sent_message.id),
             )
 
             log_info_and_add_field(

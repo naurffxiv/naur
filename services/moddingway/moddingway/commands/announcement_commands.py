@@ -5,11 +5,14 @@ from discord.ext.commands import Bot
 
 from moddingway.database import announcements_database
 from moddingway.services import announcement_service
+from moddingway.settings import get_settings
 from moddingway.util import is_user_admin
 
 from .helper import create_logging_embed, create_response_context
 
 logger = logging.getLogger(__name__)
+
+settings = get_settings()
 
 
 class AnnouncementPublishView(discord.ui.View):
@@ -90,8 +93,14 @@ def create_announcement_commands(bot: Bot) -> None:
                 "Announcement not found.", ephemeral=True
             )
         elif announcement_json["sent_flag"]:
+            messageLink = (
+                "https://discord.com/channels/"
+                + str(settings.guild_id)
+                + "/"
+                + announcement_json["discord_msg_link"]
+            )
             await interaction.response.send_message(
-                "Announcement already published.", ephemeral=True
+                f"Announcement already published: {messageLink}", ephemeral=True
             )
         else:
             await interaction.response.send_message(
