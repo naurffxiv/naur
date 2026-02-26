@@ -100,7 +100,7 @@ class AnnouncementPaginator(
 
         embed.set_footer(text=f"Page {self.current_page}/{self.total_pages}")
         return embed
-
+    ##TODO: buttons go unresponsivbe for a while when you click on them on the end pages, make it more responsive
     @discord.ui.button(label="Previous", style=discord.ButtonStyle.gray)
     async def prev_button(
         self, interaction: discord.Interaction, button: discord.ui.Button
