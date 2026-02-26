@@ -80,12 +80,6 @@ async def publish_announcement(logging_embed, channel, announcement_id):
         )
 
 
-def format_announcement(row) -> str:
-    announcement_id, revisions, sent_flag, discord_message_id = row
-    status = "Sent" if sent_flag else "Pending"
-    return f"**ID {announcement_id}** | {status} | Revisions: {revisions} | Discord ID: {discord_message_id or 'N/A'}"
-
-
 async def list_announcements_service(status: bool | None = None):
     announcement_list = announcements_database.select_announcements_bulk(status)
     return announcement_list

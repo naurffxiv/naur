@@ -51,13 +51,15 @@ class AnnouncementPublishView(discord.ui.View):
             response_message.set_string("Announcement publishing cancelled.")
 
 
-class AnnouncementPaginator(discord.ui.View):
+class AnnouncementPaginator(
+    discord.ui.View
+):  ##TODO: grey out buttons if not functional ?
     def __init__(self, data, author):
         super().__init__(timeout=60)  # Buttons disable after 60s of inactivity
         self.data = data
         self.author = author
         self.current_page = 1
-        self.per_page = 10
+        self.per_page = 8
         self.total_pages = math.ceil(len(data) / self.per_page)
         self.message: discord.Message | None = None
 
@@ -69,12 +71,31 @@ class AnnouncementPaginator(discord.ui.View):
         embed = discord.Embed(title="Announcements")
 
         for row in page_data:
-            announcement_id, revisions, sent_flag, discord_message_id = row
-            status = "Sent" if sent_flag else "Unsent"
+            announcement_id, revisions, sent_flag, discord_message_link = row
+            messageLink = (
+                "https://discord.com/channels/"
+                + str(settings.guild_id)
+                + "/"
+                + str(discord_message_link)
+            )
+            status = f"Sent: {messageLink}" if sent_flag else "Unsent"
+
             embed.add_field(
-                name=f"ID: {announcement_id} | {status} | Latest edit: <@{revisions[-1]['author_id']}>", ## TODO: the mention is not working
-                value=revisions[-1]["content"],
-                inline=False,
+                name=f"Announcement ID: {announcement_id}",
+                value=revisions[-1][
+                    "content"
+                ],  ##TODO: this needs to be trimmed too many long announcements would hit the embed limit
+                inline=True,
+            )
+            embed.add_field(
+                name="Latest Revision",
+                value=f"<@{revisions[-1]['author_id']}>",
+                inline=True,
+            )
+            embed.add_field(
+                name="Status",
+                value=status,
+                inline=True,
             )
 
         embed.set_footer(text=f"Page {self.current_page}/{self.total_pages}")
@@ -192,3 +213,45 @@ def create_announcement_commands(bot: Bot) -> None:
             embed=view.create_embed(), view=view, ephemeral=ephemeral
         )
         view.message = await interaction.original_response()
+
+    @bot.tree.command()
+    @discord.app_commands.check(is_user_admin)
+    async def show_announcement(
+        interaction: discord.Interaction,
+        announcement_id: int,
+    ):
+        """Show announcement"""
+
+        announcement_json = announcements_database.get_announcement(
+            announcement_id=announcement_id
+        )
+        if announcement_json is None:
+            await interaction.response.send_message(
+                "Announcement not found.", ephemeral=True
+            )
+        else:
+            messageLink = (
+                "https://discord.com/channels/"
+                + str(settings.guild_id)
+                + "/"
+                + str(announcement_json["discord_msg_link"])
+            )
+            status = (
+                f"Sent: {messageLink}" if announcement_json["sent_flag"] else "Unsent"
+            )
+            announcement_embed = discord.Embed(
+                title="Announcement Draft",
+                description=announcement_json["revisions"][-1]["content"],
+            )
+            announcement_embed.add_field(
+                name="Latest Revision",
+                value=f"<@{announcement_json['revisions'][-1]['author_id']}>",
+                inline=True,
+            )
+            announcement_embed.add_field(name="Status", value=status, inline=True)
+
+            announcement_embed.set_footer(
+                text=f"Announcement ID {announcement_json['announcement_id']}"
+            )
+
+            await interaction.response.send_message(embed=announcement_embed)

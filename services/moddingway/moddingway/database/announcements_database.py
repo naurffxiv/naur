@@ -102,7 +102,7 @@ def select_announcements_bulk(status: bool | None = None):
 
     with conn.get_cursor() as cursor:
         query = """
-        SELECT announcementID, announcementRevisions, sentFLAG, discordMessageID
+        SELECT announcementID, announcementRevisions, sentFLAG, discordMessageLink
         FROM announcements
         WHERE sentFLAG = %s OR %s IS NULL
         """
