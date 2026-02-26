@@ -1,7 +1,7 @@
 import { visit } from "unist-util-visit";
 
 /*
-    This rehype plugin searches for <section> tags and then checks whether its first child 
+    This rehype plugin searches for <section> tags and then checks whether its first child
     is a header tag from h2-h6. If it is, transfer the header's id to the section instead.
 
     This makes it so that fragments target the section. It also improves IntersectionObserver
@@ -18,8 +18,11 @@ export default function rehypeHeaderSections() {
 
       if (allowedTags.indexOf(firstChild.tagName) === -1) return;
 
+      // Add scroll margin to prevent the sticky navbar from obscuring the heading
       node.properties.id = firstChild.properties.id;
-      node.properties.class = "scroll-mt-20";
+      node.properties.className = `${
+        node.properties.className ? node.properties.className + " " : ""
+      }scroll-mt-[5.5rem]`;
       firstChild.properties.id = null;
     });
   };
