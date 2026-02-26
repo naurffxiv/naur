@@ -28,7 +28,12 @@ export default function rehypeHeaderSections() {
       }
 
       node.properties["id"] = firstChild.properties["id"];
-      node.properties["className"] = ["scroll-mt-20"];
+
+      const existingClasses = Array.isArray(node.properties["className"])
+        ? (node.properties["className"] as string[])
+        : [];
+      node.properties["className"] = [...existingClasses, "scroll-mt-[5.5rem]"];
+
       delete firstChild.properties["id"];
     });
   };

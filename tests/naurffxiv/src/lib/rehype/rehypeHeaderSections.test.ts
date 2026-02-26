@@ -26,7 +26,7 @@ test('Section with h2 first child', () => {
 
   const section = tree.children[0] as Element;
   expect(section.properties?.['id']).toBe('test-id');
-  expect(section.properties?.['className']).toEqual(expect.arrayContaining(['scroll-mt-20']));
+  expect(section.properties?.['className']).toEqual(expect.arrayContaining(['scroll-mt-[5.5rem]']));
 
   const h2 = section.children[0] as Element;
   expect(h2.properties?.['id']).toBeUndefined();
@@ -54,7 +54,7 @@ test('Section with h3-h6 first child', () => {
     rehypeHeaderSections()(tree);
     const section = tree.children[0] as Element;
     expect(section.properties?.['id']).toBe(`${h}-id`);
-    expect(section.properties?.['className']).toEqual(expect.arrayContaining(['scroll-mt-20']));
+    expect(section.properties?.['className']).toEqual(expect.arrayContaining(['scroll-mt-[5.5rem]']));
   }
 });
 
