@@ -1,0 +1,69 @@
+name: Sync Project Board
+description: >
+  Resolves a GitHub issue by ticket number, finds (or adds) its item on a
+  Projects V2 board, and moves it to the specified Status column.
+
+inputs:
+  token:
+    description: "PAT with repo + project scopes (e.g. secrets.PAT_TOKEN)"
+    required: true
+  ticket:
+    description: "The issue number to move (numeric, no # prefix)"
+    required: true
+  status:
+    description: "Target Status option name (e.g. 'In Progress' or 'In Review')"
+    required: true
+  project-number:
+    description: "The Projects V2 board number"
+    required: true
+  repo-owner:
+    description: "Repository owner"
+    required: true
+  repo-name:
+    description: "Repository name"
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Resolve Issue node ID
+      id: issue
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        TICKET: ${{ inputs.ticket }}
+        REPO_OWNER: ${{ inputs.repo-owner }}
+        REPO_NAME: ${{ inputs.repo-name }}
+      run: bash "$GITHUB_ACTION_PATH/scripts/resolve-issue.sh"
+
+    - name: Load Board Configuration
+      id: project
+      if: steps.issue.outputs.found == 'true'
+      shell: bash
+      env:
+        TARGET_STATUS: ${{ inputs.status }}
+      run: bash "$GITHUB_ACTION_PATH/scripts/resolve-project.sh"
+
+    - name: Resolve Project item ID for the Issue
+      id: item
+      if: steps.issue.outputs.found == 'true'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        ISSUE_ID: ${{ steps.issue.outputs.issue_id }}
+        PROJECT_ID: ${{ steps.project.outputs.project_id }}
+        PROJECT_NUMBER: ${{ inputs.project-number }}
+      run: bash "$GITHUB_ACTION_PATH/scripts/resolve-item.sh"
+
+    - name: Move ticket to target status
+      if: steps.issue.outputs.found == 'true'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        PROJECT_ID: ${{ steps.project.outputs.project_id }}
+        ITEM_ID: ${{ steps.item.outputs.item_id }}
+        FIELD_ID: ${{ steps.project.outputs.status_field_id }}
+        OPTION_ID: ${{ steps.project.outputs.option_id }}
+        TICKET: ${{ inputs.ticket }}
+        TARGET_STATUS: ${{ inputs.status }}
+      run: bash "$GITHUB_ACTION_PATH/scripts/move-ticket.sh"

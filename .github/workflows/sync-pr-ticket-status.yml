@@ -1,0 +1,61 @@
+name: Ticket Board Sync
+
+on:
+  pull_request:
+    types:
+      - opened
+      - converted_to_draft
+      - ready_for_review
+      - review_requested
+      - reopened
+      - closed
+  pull_request_review:
+    types:
+      - submitted
+
+jobs:
+  sync-ticket-status:
+    name: Move Ticket on Project Board
+    runs-on: ubuntu-latest
+
+    env:
+      PROJECT_NUMBER: 10
+
+    # PAT_TOKEN requires repo and project scopes
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Generate GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
+      - name: Extract ticket number from PR
+        id: extract
+        uses: ./.github/actions/extract-pr-ticket
+      - name: Determine target board status
+        id: status
+        if: steps.extract.outputs.found == 'true'
+        env:
+          IS_DRAFT: ${{ github.event.pull_request.draft }}
+          EVENT_NAME: ${{ github.event_name }}
+          REVIEW_STATE: ${{ github.event.review.state }}
+          IS_MERGED: ${{ github.event.pull_request.merged }}
+        run: |
+          ./.github/actions/move-project-card/scripts/determine-status.sh "$EVENT_NAME" "$REVIEW_STATE" "$IS_DRAFT" "$IS_MERGED" >> "$GITHUB_OUTPUT"
+      - name: Sync ticket to board
+        if: steps.extract.outputs.found == 'true'
+        uses: ./.github/actions/move-project-card
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          ticket: ${{ steps.extract.outputs.ticket }}
+          status: ${{ steps.status.outputs.status }}
+          project-number: ${{ env.PROJECT_NUMBER }}
+          repo-owner: ${{ github.repository_owner }}
+          repo-name: ${{ github.event.repository.name }}
