@@ -46,6 +46,10 @@ STATUS_MAP = {"failure": "❌", "warning": "⚠️", "skipped": "🚫", "success
 STATUS_BADGE = {"failure": "❌ FAILED", "warning": "⚠️ WARNING"}
 SERVICE_STATUS_ICON = {"Failed": "🔴", "Warning": "🟡", "Passed": "🟢"}
 
+DEFAULT_CHECK_ORDER = 999
+DEFAULT_COLUMN_ORDER = 999
+DEFAULT_GLOBAL_CHECK_ORDER = 99
+
 
 def _td(content: str, align: str = "center") -> str:
     return f'<td align="{align}">{content}</td>'
@@ -117,7 +121,8 @@ class CIReportGenerator:
     def _render_global_validation(self, global_checks: Dict[str, Any]) -> str:
         md = "### Global Validation\n\n"
         for name, entry in sorted(
-            global_checks.items(), key=lambda x: x[1].get("order", 99)
+            global_checks.items(),
+            key=lambda x: x[1].get("order", DEFAULT_GLOBAL_CHECK_ORDER),
         ):
             icon = STATUS_MAP.get(entry["status"], "✅")
             message = entry.get("message", "")
@@ -140,7 +145,7 @@ class CIReportGenerator:
             checks = self.services[svc]
             failure_order = min(
                 (
-                    e.get("order", 999)
+                    e.get("order", DEFAULT_CHECK_ORDER)
                     for e in checks.values()
                     if e["status"] == "failure"
                 ),
@@ -158,7 +163,7 @@ class CIReportGenerator:
                 else:
                     fallback = (
                         STATUS_MAP["skipped"]
-                        if COLUMN_ORDER.get(col, 999) > failure_order
+                        if COLUMN_ORDER.get(col, DEFAULT_COLUMN_ORDER) > failure_order
                         else "-"
                     )
                     cells += _td(fallback)
