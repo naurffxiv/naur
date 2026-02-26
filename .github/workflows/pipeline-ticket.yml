@@ -9,37 +9,36 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
+      - name: Extract Ticket
+        id: extract
+        if: github.event_name == 'pull_request'
+        uses: ./.github/actions/extract-pr-ticket
+
       - name: Check for Ticket Reference
         id: ticket
         env:
+          MATCH: ${{ steps.extract.outputs.match }}
+          IS_DEPENDABOT: ${{ steps.extract.outputs.is_dependabot }}
           EVENT_NAME: ${{ github.event_name }}
-          ACTOR: ${{ github.actor }}
-          PR_USER: ${{ github.event.pull_request.user.login }}
         run: |
           report() {
-            bash .github/scripts/save_report.sh "global" "00" "Ticket Check" "$1" "$2" "$3"
+            local conclusion="$1"
+            local log_file="${2:-}"
+            local summary="${3:-}"
+            bash .github/scripts/save_report.sh "global" "00" "Ticket Check" "$conclusion" "$log_file" "$summary"
           }
 
-          # Skip if not a PR or if Dependabot
-          if [[ "$EVENT_NAME" != "pull_request" || "$ACTOR" == "dependabot[bot]" || "$PR_USER" == "dependabot[bot]" ]]; then
+          if [[ "$EVENT_NAME" != "pull_request" || "$IS_DEPENDABOT" == "true" ]]; then
             report "success" "" "Skipped"
             exit 0
           fi
 
-          # Extract PR info
-          PR_BODY=$(jq -r .pull_request.body "$GITHUB_EVENT_PATH")
-          PR_TITLE=$(jq -r .pull_request.title "$GITHUB_EVENT_PATH")
-          CONTENT=$(printf "%s\n%s" "$PR_TITLE" "$PR_BODY")
-
-          # Ticket pattern regex
-          REGEX='^[[:space:]]*(ticket[: ]+#?([0-9]+|NA)|(fix(es|ed|ing)?|clos(e[ds]?|ing)|resolv(e[ds]?|ing)|ref(s)?)[[:space:]]+#?([0-9]+|NA)|chore\(deps\)|chore\(release\)|\bNA\b)'
-
-          if echo "$CONTENT" | grep -qiE "$REGEX"; then
-            MATCH=$(echo "$CONTENT" | grep -oiE "$REGEX" | head -n 1 | xargs)
-            report "success" "" "${MATCH:-Ticket Found}"
+          if [[ -n "$MATCH" ]]; then
+            TRIMMED_MATCH="$(printf '%s' "$MATCH" | xargs)"
+            report "success" "" "${TRIMMED_MATCH:-Ticket Found}"
           else
             echo "Ticket reference missing in PR Title or Body" > ticket_err.txt
-            report "failure" "ticket_err.txt"
+            report "failure" "ticket_err.txt" ""
             exit 1
           fi
 
@@ -52,3 +51,4 @@ jobs:
             logs-global-*.md
             report-global-*.json
           retention-days: 1
+          if-no-files-found: warn
