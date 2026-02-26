@@ -14,12 +14,12 @@
   "license": "MIT",
   "type": "commonjs",
   "devDependencies": {
-    "@j178/prek": "^0.3.0",
+    "@j178/prek": "^0.3.3",
     "@typescript-eslint/eslint-plugin": "^8.53.0",
-    "@typescript-eslint/parser": "^8.53.0",
+    "@typescript-eslint/parser": "^8.56.1",
     "eslint": "^8.57.1",
     "prettier": "^3.7.4",
-    "turbo": "^2.7.6",
+    "turbo": "^2.8.11",
     "typescript": "^5.9.3"
   },
   "scripts": {
