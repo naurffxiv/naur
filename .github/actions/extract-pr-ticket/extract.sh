@@ -21,21 +21,19 @@ fi
 
 echo "Reading PR content from $EVENT_PATH"
 PR_BODY=$(jq -r .pull_request.body "$EVENT_PATH" || echo "")
-PR_TITLE=$(jq -r .pull_request.title "$EVENT_PATH" || echo "")
-CONTENT=$(printf "%s\n%s" "$PR_TITLE" "$PR_BODY")
-echo "Content length: ${#CONTENT} characters"
+echo "Content length: ${#PR_BODY} characters"
 
 REGEX='^[[:space:]]*(ticket[: ]+#?([0-9]+|NA)|(fix(es|ed|ing)?|clos(e[ds]?|ing)|resolv(e[ds]?|ing)|ref(s)?)[[:space:]]+#?([0-9]+|NA)|chore\(deps\)|chore\(release\)|\bNA\b)'
 
 echo "Checking content against regex..."
-if ! echo "$CONTENT" | grep -qiE "$REGEX"; then
-  echo "No ticket reference found in PR title or body. Skipping."
+if ! echo "$PR_BODY" | grep -qiE "$REGEX"; then
+  echo "No ticket reference found in PR body. Skipping."
   echo "found=false" >> "$GITHUB_OUTPUT"
   exit 0
 fi
 
 echo "Match found. Extracting specific ticket..."
-MATCH=$(echo "$CONTENT" | grep -oiE "$REGEX" | head -n 1 || true)
+MATCH=$(echo "$PR_BODY" | grep -oiE "$REGEX" | head -n 1 || true)
 
 TICKET_NUMBER=$(echo "$MATCH" | grep -oE '[0-9]+' | head -n 1 || true)
 

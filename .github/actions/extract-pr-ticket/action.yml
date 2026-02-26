@@ -1,5 +1,5 @@
 name: Extract PR Ticket
-description: Extracts a ticket number from the active pull request's title or body.
+description: Extracts a ticket number from the active pull request's body.
 
 outputs:
   found:
