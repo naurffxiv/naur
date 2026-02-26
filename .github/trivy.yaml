@@ -2,25 +2,39 @@ scan:
   scanners:
     - vuln
     - secret
+    - misconfig
   skip-dirs:
-    - node_modules
+    # VCS
     - .git
+
+    # Node.js / Next.js
+    - node_modules
+    - .next
     - dist
+    - build
+    - coverage
+    - .turbo
+
+    # Python
+    - .venv
+    - __pycache__
+    - .pytest_cache
+    - .ruff_cache
+
+    # Go
+    - vendor
     - bin
+
+    # C#/.NET
+    - obj
 
 severity:
   - CRITICAL
   - HIGH
 
-format: table
-exit-code: 1
 ignore-unfixed: true
 dependency-tree: true
 timeout: 10m
 
 pkg:
   include-dev-deps: true
-
-ignore:
-  # Next.js HTTP request deserialization DoS - Fix: upgrade next >= 15.5.10
-  - GHSA-h25m-26qc-wcjf
