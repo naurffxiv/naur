@@ -34,7 +34,7 @@ services:
     manifest_file: services/authingway/Naur.Authingway.csproj
     audited_packages:
       - name: Aspire.Npgsql.EntityFrameworkCore.PostgreSQL
-        version: 13.1.0
+        version: 13.1.1
         license: MIT
         security_tier: high
         source: https://github.com/dotnet/aspnetcore
@@ -65,7 +65,7 @@ services:
     manifest_file: services/apphost/Naur.AppHost.csproj
     audited_packages:
       - name: Aspire.Hosting.AppHost
-        version: 13.1.0
+        version: 13.1.1
         license: MIT
         security_tier: critical
         source: https://github.com/dotnet/aspire
@@ -73,7 +73,7 @@ services:
     runtime: node
     manifest_file: tests/e2e/package.json
     audited_packages:
-      - name: "@playwright/test"
+      - name: '@playwright/test'
         version: 1.58.0
         license: MIT
         security_tier: medium

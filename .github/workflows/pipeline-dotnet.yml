@@ -17,8 +17,8 @@ jobs:
     if: inputs.should_run
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: zyactions/dotnet-setup@v1
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: zyactions/dotnet-setup@8f4b644ff5ff19bba913663df285b7b7278bb724 # v1.0.1
         with:
           global-json-file: global.json
 
@@ -26,7 +26,7 @@ jobs:
         uses: ./.github/actions/setup-matchers
 
       - name: Restore dependencies
-        uses: zyactions/dotnet-restore@v1
+        uses: zyactions/dotnet-restore@bffc71e1a5275122a2795bf2912804f0185db27c # v1.1.0
         with:
           working-directory: services/${{ inputs.service }}
 
@@ -56,8 +56,8 @@ jobs:
     if: inputs.should_run
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: zyactions/dotnet-setup@v1
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: zyactions/dotnet-setup@8f4b644ff5ff19bba913663df285b7b7278bb724 # v1.0.1
         with:
           global-json-file: global.json
 
@@ -65,7 +65,7 @@ jobs:
         uses: ./.github/actions/setup-matchers
 
       - name: Restore dependencies
-        uses: zyactions/dotnet-restore@v1
+        uses: zyactions/dotnet-restore@bffc71e1a5275122a2795bf2912804f0185db27c # v1.1.0
         with:
           working-directory: services/${{ inputs.service }}
 
@@ -84,8 +84,8 @@ jobs:
     if: inputs.should_run && inputs.service != 'apphost'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: zyactions/dotnet-setup@v1
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: zyactions/dotnet-setup@8f4b644ff5ff19bba913663df285b7b7278bb724 # v1.0.1
         with:
           global-json-file: global.json
 
@@ -93,7 +93,7 @@ jobs:
         uses: ./.github/actions/setup-matchers
 
       - name: Restore dependencies
-        uses: zyactions/dotnet-restore@v1
+        uses: zyactions/dotnet-restore@bffc71e1a5275122a2795bf2912804f0185db27c # v1.1.0
         with:
           working-directory: tests/${{ inputs.service }}
 
@@ -119,7 +119,7 @@ jobs:
 
       - name: Upload Coverage
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: coverage-dotnet-${{ inputs.service }}
           path: artifacts/bin/*/release/TestResults/*.xml
