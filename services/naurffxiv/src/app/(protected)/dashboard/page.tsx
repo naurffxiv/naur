@@ -15,7 +15,7 @@ import { useEffect } from "react";
 import { useRoleBasedContent } from "@auth/hooks/useRoles";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import type { DiscordRole } from "@/types/discord";
+import type { DiscordRole } from "@naur/shared/types";
 
 const CARD_DEFINITIONS = [
   {
@@ -127,7 +127,7 @@ export default function DashboardPage(): ReactElement {
                   key={href}
                   href={href}
                   className="
-                  flex flex-col justify-between bg-[#10242b] hover:bg-[#1c3a45] transition-colors 
+                  flex flex-col justify-between bg-[#10242b] hover:bg-[#1c3a45] transition-colors
                   p-5 rounded-xl shadow-md border border-gray-700 min-h-[150px]"
                   aria-label={title}
                 >

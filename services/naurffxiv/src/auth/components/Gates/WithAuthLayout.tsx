@@ -1,5 +1,5 @@
 import AuthGate from "@auth/components/Gates/AuthGate";
-import type { FCWithChildren } from "@/types/common";
+import type { FCWithChildren } from "@naur/shared/types";
 
 const WithAuthLayout: FCWithChildren = ({ children }) => {
   return <AuthGate>{children}</AuthGate>;

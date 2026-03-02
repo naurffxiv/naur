@@ -1,4 +1,4 @@
-import type { DiscordMember, DiscordRole } from "@/types/discord";
+import type { DiscordMember, DiscordRole } from "@naur/shared/types";
 import { logError, logWarn } from "@/lib/logger/logger";
 
 const DISCORD_API = "https://discord.com/api";
