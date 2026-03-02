@@ -1,8 +1,6 @@
 from datetime import timedelta
-from typing import List
 
 import pytest
-from pytest_mock.plugin import MockerFixture
 
 from moddingway import constants, util
 
@@ -23,7 +21,7 @@ exact_length_case = ("first second third", 6, ["first", "second", "third"])
         exact_length_case,
     ],
 )
-def test_chunk_message(input: str, max_chunk_length: int, output_array: List[str]):
+def test_chunk_message(input: str, max_chunk_length: int, output_array: list[str]):
     res = []
 
     for line in util.chunk_message(input, max_chunk_length):
@@ -63,7 +61,7 @@ def test_calculate_time_delta(input, expect):
     ],
 )
 def test_user_has_role(
-    input_roles: List[constants.Role],
+    input_roles: list[constants.Role],
     role: constants.Role,
     expected_result: bool,
     create_member,

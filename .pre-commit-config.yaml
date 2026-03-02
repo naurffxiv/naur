@@ -31,8 +31,8 @@ repos:
     hooks:
       - id: dependency-sync
         name: dependency-sync
-        entry: python scripts/check-dependency-sync.py
+        entry: uv run --with pyyaml --with ruamel-yaml python scripts/check-dependency-sync.py
         language: system
-        files: ^(dependencies\.yml|services/.*/(requirements\.txt|package\.json|go\.mod|.*\.csproj))$
+        files: ^(dependencies\.yml|services/.*/(uv\.lock|pyproject\.toml|package\.json|go\.mod|.*\.csproj))$
         pass_filenames: false
         priority: 2

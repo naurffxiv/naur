@@ -21,11 +21,11 @@ services:
         source: https://github.com/microsoft/TypeScript
   moddingway:
     runtime: python
-    manifest_file: services/moddingway/requirements.txt
-    lockfile: services/moddingway/requirements.lock
+    manifest_file: services/moddingway/pyproject.toml
+    lockfile: services/moddingway/uv.lock
     audited_packages:
       - name: fastapi
-        version: 0.128.0
+        version: 0.129.0
         license: MIT
         security_tier: critical
         source: https://github.com/tiangolo/fastapi
@@ -80,8 +80,8 @@ services:
         source: https://github.com/microsoft/playwright
 metadata:
   update_policy: manual
-  last_audit: 2026-02-08
-  next_audit: 2026-03-08
+  last_audit: 2026-02-18
+  next_audit: 2026-03-18
   security_tiers:
     critical: Core framework or authentication packages
     high: Network-facing or data-processing packages

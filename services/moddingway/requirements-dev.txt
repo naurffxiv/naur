@@ -1,8 +1,0 @@
--r requirements.txt
-pytest
-pytest-cov
-pytest-mock
-pytest-asyncio
-ruff==0.15.0
-ty==0.0.11
-mypy
