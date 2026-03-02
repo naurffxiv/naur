@@ -1,0 +1,78 @@
+name: QA Checklist Automation
+
+on:
+  pull_request:
+    types: [opened, converted_to_draft, ready_for_review, synchronize, edited]
+  pull_request_review:
+    types: [submitted]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  post-checklist:
+    name: Post QA Checklist
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-qa-ci')
+    permissions:
+      pull-requests: write
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Post QA Checklist
+        uses: ./.github/actions/post-qa-checklist
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          wiki-url: ${{ vars.QA_WIKI_URL }}
+
+  validate-checklist:
+    name: Validate QA Checklist
+    runs-on: ubuntu-latest
+    needs: post-checklist
+    if: github.event_name == 'pull_request' && github.event.pull_request.draft == false && !contains(github.event.pull_request.labels.*.name, 'skip-qa-ci')
+    permissions:
+      pull-requests: write
+      contents: write
+      issues: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Validate QA Checklist
+        uses: ./.github/actions/validate-qa-checklist
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          qa-team-slug: ${{ vars.QA_TEAM_SLUG || 'qa' }}
+
+  request-qa-on-approval:
+    name: Request QA Review on Code Approval
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request_review' && github.event.review.state == 'approved' && github.event.pull_request.draft == false && !contains(github.event.pull_request.labels.*.name, 'skip-qa-ci')
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Request QA Team Review
+        uses: ./.github/actions/request-qa-review
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          qa-team-slug: ${{ vars.QA_TEAM_SLUG || 'qa' }}
+
+  check-qa-approval:
+    name: QA Approval Gate
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false && !contains(github.event.pull_request.labels.*.name, 'skip-qa-ci')
+    permissions:
+      pull-requests: read
+      contents: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Check QA Approval Gate
+        uses: ./.github/actions/check-qa-approval
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}

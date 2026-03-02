@@ -2,8 +2,11 @@
 
 <!-- What does this PR do? -->
 
-<!-- Link a ticket: "Ticket #123", "Fixes #123", "Closes #123", "Resolves #123", or "Ticket NA" if none -->
-Closes #
+### Related Ticket
+
+<!-- Examples: Fixes #123, Resolves #123, Closes #123, or Closes #NA -->
+
+Closes #NA
 
 ## Type of Change
 
@@ -11,15 +14,17 @@ Closes #
 
 ## Testing
 
-<!-- How did you test this? -->
-
-<!--
-## Screenshots
-Add screenshots if applicable
--->
+<!-- Briefly describe how you verified these changes. -->
 
 ## Checklist
 
-- [ ] Self-reviewed
-- [ ] Documentation updated
-- [ ] Tests added/pass
+- [ ] Self-reviewed the code
+- [ ] Updated documentation (if needed)
+- [ ] Tests added and passing (if applicable)
+- [ ] Needs QA
+
+---
+
+> [!IMPORTANT]
+> Checking **Needs QA** triggers an automated checklist.
+> Open in **Draft mode** so you can fill it out before requesting review.
