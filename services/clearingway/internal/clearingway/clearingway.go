@@ -52,7 +52,11 @@ func (cw *Clearingway) initCommandHandler(session *discordgo.Session, loadedEnv 
 	handler := NewCommandHandler()
 
 	handler.Register(cw.PingCommand())
-	handler.Register(cw.GetClearsCommand())
+
+	if loadedEnv.ENV == env.Development {
+		log.Printf("Development environment set - registering non-production commands")
+		handler.Register(cw.GetClearsCommand())
+	}
 
 	session.AddHandler(func(session *discordgo.Session, ready *discordgo.Ready) {
 		// If env is development, register commands to test guild only

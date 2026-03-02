@@ -12,11 +12,15 @@ import (
 	"golang.org/x/oauth2/clientcredentials"
 )
 
+type GraphQLClientInterface interface {
+	Query(ctx context.Context, q interface{}, variables map[string]interface{}, opts ...graphql.Option) error
+}
+
 type FFLogs struct {
 	ClientId      string
 	ClientSecret  string
 	OAuthToken    *oauth2.Token
-	GraphQLClient *graphql.Client
+	GraphQLClient GraphQLClientInterface
 }
 
 // Init - Initializes the FFLogs struct by generating an OAuth token and setting up the GraphQL client
@@ -27,7 +31,7 @@ func Init(ctx context.Context, env *env.Env) *FFLogs {
 	}
 
 	// Generate initial OAuth token and set up GraphQL client
-	ffl.refreshOAuthClient(ctx)
+	ffl.RefreshOAuthClient(ctx)
 	return ffl
 }
 
@@ -54,8 +58,8 @@ func (ffl *FFLogs) newGraphQLClient(ctx context.Context) *graphql.Client {
 	return graphql.NewClient("https://www.fflogs.com/api/v2/client", httpClient)
 }
 
-// refreshOAuthClient - Refreshes the OAuth token and updates the GraphQL client with the new token
-func (ffl *FFLogs) refreshOAuthClient(ctx context.Context) {
+// RefreshOAuthClient - Refreshes the OAuth token and updates the GraphQL client with the new token
+func (ffl *FFLogs) RefreshOAuthClient(ctx context.Context) {
 	ffl.generateOAuthToken(ctx)
 	ffl.GraphQLClient = ffl.newGraphQLClient(ctx)
 }
@@ -65,7 +69,7 @@ func (ffl *FFLogs) refreshOAuthClient(ctx context.Context) {
 func (ffl *FFLogs) CheckCharacterClear(ctx context.Context, lodestoneId, encounterId int64) (bool, error) {
 	// Check if token is expired and refresh if necessary
 	if ffl.OAuthToken == nil || ffl.OAuthToken.Expiry.Before(time.Now()) {
-		ffl.refreshOAuthClient(ctx)
+		ffl.RefreshOAuthClient(ctx)
 	}
 
 	// Define the GraphQL query and variables and execute
