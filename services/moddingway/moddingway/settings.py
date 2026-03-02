@@ -35,6 +35,7 @@ class Settings(BaseModel):
     sticky_roles: list[
         int
     ]  # roles that grant access to channels that should be stripped/restored on exile/unexile
+    announcement_draft_channel: int
 
 
 def prod() -> Settings:
@@ -50,6 +51,7 @@ def prod() -> Settings:
         event_bot_id=579155972115660803,  # Raid-Helper#3806
         event_forum_id=1419357090841104544,  # PtC event forum
         event_warn_channel_id=1426273165491048538,  # event warn channel
+        announcement_draft_channel=1396619840126451862,  # announcement drafts get posted here when they are first created
         sticky_roles=STICKY_ROLES,
     )
 
@@ -103,6 +105,7 @@ def local() -> Settings:
         postgres_password=os.environ.get("POSTGRES_PASSWORD", ""),
         database_name=os.environ.get("POSTGRES_DB", "moddingway"),
         sticky_roles=literal_eval(os.environ.get("STICKY_ROLE_ARRAY") or "None") or [],
+        announcement_draft_channel=_check_env_convert("ANNOUNCEMENT_DRAFT_CHANNEL"),
     )
 
 

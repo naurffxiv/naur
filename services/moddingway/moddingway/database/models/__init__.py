@@ -1,3 +1,4 @@
+from .announcement import Announcement, AnnouncementRevision
 from .banform import BanForm
 from .exile import Exile
 from .note import Note

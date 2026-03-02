@@ -9,6 +9,7 @@ class Role(StrEnum):
     NON_VERIFIED = "Non-Verified"
     VERIFIED = "Verified"
     MOD = "Mod"
+    ADMIN = "Admin"
 
 
 class ExileStatus(IntEnum):
