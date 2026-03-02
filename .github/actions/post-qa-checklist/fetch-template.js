@@ -36,7 +36,17 @@ module.exports = async function fetchTemplate(github, wikiUrl) {
 
   let content;
 
-  if (wikiUrl.includes("github.com") && wikiUrl.includes("/wiki")) {
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(wikiUrl);
+  } catch {
+    // malformed URL; fall through to plain fetch below
+  }
+
+  if (
+    parsedUrl?.hostname === "github.com" &&
+    parsedUrl.pathname.includes("/wiki")
+  ) {
     const cleanUrl = wikiUrl.split("#")[0];
     const parts = cleanUrl.match(
       /github\.com\/([^/]+)\/([^/]+)\/wiki\/?([^?#]*)/,
