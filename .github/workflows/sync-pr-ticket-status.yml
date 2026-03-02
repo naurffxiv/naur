@@ -47,8 +47,23 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           REVIEW_STATE: ${{ github.event.review.state }}
           IS_MERGED: ${{ github.event.pull_request.merged }}
+          PR_BODY: ${{ github.event.pull_request.body }}
         run: |
-          ./.github/actions/move-project-card/scripts/determine-status.sh "$EVENT_NAME" "$REVIEW_STATE" "$IS_DRAFT" "$IS_MERGED" >> "$GITHUB_OUTPUT"
+          if printf '%s\n' "$PR_BODY" | grep -qiE "([-*+][[:space:]]*)?\[[xX]\][[:space:]]*Needs QA"; then
+            NEEDS_QA=true
+          else
+            NEEDS_QA=false
+          fi
+
+          SCRIPT_OUTPUT=$(./.github/actions/move-project-card/scripts/determine-status.sh "$EVENT_NAME" "$REVIEW_STATE" "$IS_DRAFT" "$IS_MERGED" "$NEEDS_QA")
+          STATUS=$(echo "$SCRIPT_OUTPUT" | grep "^status=" | cut -d= -f2)
+
+          if [ -z "$STATUS" ]; then
+            echo "::error::determine-status.sh produced no status output. Raw output: $SCRIPT_OUTPUT" >&2
+            exit 1
+          fi
+
+          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
       - name: Sync ticket to board
         if: steps.extract.outputs.found == 'true'
         uses: ./.github/actions/move-project-card

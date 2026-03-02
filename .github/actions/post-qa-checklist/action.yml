@@ -1,0 +1,22 @@
+name: "Post QA Checklist"
+description: 'Detects "Needs QA" in PR and posts the checklist template'
+inputs:
+  github-token:
+    description: "GitHub Token"
+    required: true
+  wiki-url:
+    description: "URL to the Wiki/Markdown template"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Post Checklist
+      uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          const script = require('${{ github.action_path }}/index.js');
+          await script({ github, context, core });
+      env:
+        QA_WIKI_URL: ${{ inputs.wiki-url }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
