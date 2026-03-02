@@ -2,9 +2,10 @@ package clearingway
 
 import (
 	"clearingway/internal/clearingway/config"
-	"clearingway/internal/commands"
 	"clearingway/internal/discord"
 	"clearingway/internal/env"
+	"clearingway/internal/fflogs"
+	"context"
 	"log"
 
 	"github.com/bwmarrin/discordgo"
@@ -13,11 +14,14 @@ import (
 type Clearingway struct {
 	Config         *config.BotConfig
 	Discord        *discord.Discord
-	CommandHandler *commands.CommandHandler
+	FFLogs         *fflogs.FFLogs
+	CommandHandler *CommandHandler
 }
 
 // NewBotInstance - Initializes a new Clearingway bot instance
 func NewBotInstance(loadedEnv *env.Env) (*Clearingway, error) {
+	ctx := context.Background()
+
 	// ============== LOAD CONFIG ==============
 	loadedConfig, err := config.InitBotConfig(loadedEnv.CONFIG_PATH)
 	if err != nil {
@@ -30,18 +34,25 @@ func NewBotInstance(loadedEnv *env.Env) (*Clearingway, error) {
 		return nil, err
 	}
 
-	return &Clearingway{
-		Config:         loadedConfig,
-		Discord:        discordClient,
-		CommandHandler: initCommandHandler(discordClient.Session, loadedEnv),
-	}, nil
+	// ============== INITIALIZE CLEARINGWAY ==============
+	cw := &Clearingway{
+		Config:  loadedConfig,
+		Discord: discordClient,
+		FFLogs:  fflogs.Init(ctx, loadedEnv),
+	}
+
+	// ============== INITIALIZE COMMAND HANDLER ==============
+	cw.CommandHandler = cw.initCommandHandler(discordClient.Session, loadedEnv)
+
+	return cw, nil
 }
 
 // initCommandHandler - Sets up the command handler and registers commands
-func initCommandHandler(session *discordgo.Session, loadedEnv *env.Env) *commands.CommandHandler {
-	handler := commands.NewHandler()
+func (cw *Clearingway) initCommandHandler(session *discordgo.Session, loadedEnv *env.Env) *CommandHandler {
+	handler := NewCommandHandler()
 
-	handler.Register(commands.PingCommand())
+	handler.Register(cw.PingCommand())
+	handler.Register(cw.GetClearsCommand())
 
 	session.AddHandler(func(session *discordgo.Session, ready *discordgo.Ready) {
 		// If env is development, register commands to test guild only
