@@ -3,7 +3,12 @@
 import { MenuItem, Typography, Box } from "@mui/material";
 import { ContentDropdown } from "./ContentDropdown";
 import { MobileContentAccordion } from "./MobileContentAccordion";
-import { ultimateList, savageList, extremeList } from "@/config/constants";
+import {
+  ultimateList,
+  savageList,
+  criterionList,
+  extremeList,
+} from "@/config/constants";
 
 export default function SharedNavLinks({ isMobile, onClick }) {
   const navItems = [
@@ -16,6 +21,7 @@ export default function SharedNavLinks({ isMobile, onClick }) {
     },
     { type: "dropdown", label: "Ultimate", data: ultimateList },
     { type: "dropdown", label: "Savage", data: savageList },
+    { type: "dropdown", label: "Criterion", data: criterionList },
     { type: "dropdown", label: "Extreme", data: extremeList },
   ];
 
