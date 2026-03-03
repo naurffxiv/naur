@@ -2,6 +2,7 @@ import {
   extremeList,
   otherList,
   savageList,
+  criterionList,
   ultimateList,
 } from "@/config/constants";
 
@@ -12,7 +13,7 @@ export default function Footer() {
     <footer>
       <div className="bg-gradient-to-b from-[#28506E] to-[#061A33] pt-10 pb-10 px-20 md:px-40">
         <div className="mx-auto max-w-screen-2xl">
-          <div className="grid grid-cols-1 xl:grid-cols-[1fr_1fr_1fr_1fr] gap-x-5">
+          <div className="grid grid-cols-1 xl:grid-cols-[1fr_1fr_1fr_1fr_1fr] gap-x-5">
             <FooterLinks
               title="Ultimate"
               links={ultimateList}
@@ -21,6 +22,11 @@ export default function Footer() {
             <FooterLinks
               title="Savage"
               links={savageList}
+              className="mt-5 xl:mt-0"
+            />
+            <FooterLinks
+              title="Criterion"
+              links={criterionList}
               className="mt-5 xl:mt-0"
             />
             <FooterLinks
