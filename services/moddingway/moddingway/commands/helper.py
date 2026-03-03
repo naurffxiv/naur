@@ -76,10 +76,15 @@ def create_bot_errors(bot: Bot) -> None:
                 ephemeral=True,
             )
 
-        # Handle CheckFailure error
+        elif isinstance(error, discord.app_commands.MissingRole):
+            await interaction.response.send_message(
+                f"You are missing the required '{error.missing_role}' role to use this command.",
+                ephemeral=True,
+            )
+
         elif isinstance(error, discord.app_commands.CheckFailure):
             await interaction.response.send_message(
-                "You do not have the 'Mod' role to use this command.",
+                "You do not meet the requirements to use this command.",
                 ephemeral=True,
             )
 
