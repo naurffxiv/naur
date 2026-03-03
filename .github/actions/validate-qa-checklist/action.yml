@@ -1,0 +1,22 @@
+name: "Validate QA Checklist"
+description: "Validates that the QA checklist is filled out and customized - fails if incomplete"
+inputs:
+  github-token:
+    description: "GitHub Token"
+    required: true
+  qa-team-slug:
+    description: "GitHub team slug to request for QA review"
+    required: false
+    default: "qa"
+runs:
+  using: "composite"
+  steps:
+    - name: Validate Checklist
+      uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          const script = require('${{ github.action_path }}/validate.js');
+          await script({ github, context, core });
+      env:
+        QA_TEAM_SLUG: ${{ inputs.qa-team-slug }}
