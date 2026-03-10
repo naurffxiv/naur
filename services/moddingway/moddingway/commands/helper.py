@@ -83,8 +83,9 @@ def create_bot_errors(bot: Bot) -> None:
             )
 
         elif isinstance(error, discord.app_commands.CheckFailure):
+            error_message = str(error)
             await interaction.response.send_message(
-                "You do not meet the requirements to use this command.",
+                f"You do not meet the requirements: {error_message}",
                 ephemeral=True,
             )
 

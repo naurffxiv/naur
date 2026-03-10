@@ -221,7 +221,7 @@ async def is_user_moderator(interaction: discord.Interaction):
         if user_has_role(interaction.user, Role.MOD):
             return True
         else:
-            raise discord.app_commands.MissingRole("Mod")
+            raise discord.app_commands.MissingRole(Role.MOD)
 
 
 async def is_user_admin(interaction: discord.Interaction):
@@ -229,7 +229,7 @@ async def is_user_admin(interaction: discord.Interaction):
         if user_has_role(interaction.user, Role.ADMIN):
             return True
         else:
-            raise discord.app_commands.MissingRole("Admin")
+            raise discord.app_commands.MissingRole(Role.ADMIN)
 
 
 def timestamp_to_epoch(timestamp: datetime | None) -> int | None:
