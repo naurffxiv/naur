@@ -29,9 +29,6 @@ class Settings(BaseModel):
     channel_automod_inactivity: dict[
         int, int
     ]  # key: channel id, value: inactive limit (minutes)
-    event_bot_id: int
-    event_forum_id: int
-    event_warn_channel_id: int
     sticky_roles: list[
         int
     ]  # roles that grant access to channels that should be stripped/restored on exile/unexile
@@ -47,9 +44,6 @@ def prod() -> Settings:
         postgres_port=os.environ.get("POSTGRES_PORT", ""),
         automod_inactivity=AUTOMOD_INACTIVITY,
         channel_automod_inactivity=CHANNEL_AUTOMOD_INACTIVITY,
-        event_bot_id=579155972115660803,  # Raid-Helper#3806
-        event_forum_id=1419357090841104544,  # PtC event forum
-        event_warn_channel_id=1426273165491048538,  # event warn channel
         sticky_roles=STICKY_ROLES,
     )
 
@@ -63,13 +57,6 @@ def local() -> Settings:
     if inactive_forum_channel_id != "" and inactive_forum_duration != "":
         automod_inactivity[int(inactive_forum_channel_id)] = int(
             inactive_forum_duration
-        )
-
-    inactive_event_forum_channel_id = os.environ.get("PTC_EVENT_FORUM_ID", "")
-    inactive_event_forum_duration = os.environ.get("PTC_EVENT_FORUM_DURATION", "")
-    if inactive_event_forum_channel_id != "" and inactive_event_forum_duration != "":
-        automod_inactivity[int(inactive_event_forum_channel_id)] = int(
-            inactive_event_forum_duration
         )
 
     pf_recruitment_channel_id = os.environ.get("PF_RECRUITMENT_CHANNEL_ID", "")
@@ -95,9 +82,6 @@ def local() -> Settings:
         postgres_port=os.environ.get("POSTGRES_PORT", "5432"),
         automod_inactivity=automod_inactivity,
         channel_automod_inactivity=channel_automod_inactivity,
-        event_bot_id=_check_env_convert("EVENT_BOT_ID"),
-        event_forum_id=_check_env_convert("PTC_EVENT_FORUM_ID"),
-        event_warn_channel_id=_check_env_convert("EVENT_WARN_CHANNEL"),
         notify_channel_id=int(notify_channel_id_str),
         postgres_username=os.environ.get("POSTGRES_USER", ""),
         postgres_password=os.environ.get("POSTGRES_PASSWORD", ""),
