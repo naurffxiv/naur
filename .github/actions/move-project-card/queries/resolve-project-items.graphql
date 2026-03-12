@@ -1,0 +1,14 @@
+query($issueId: ID!) {
+  node(id: $issueId) {
+    ... on Issue {
+      projectItems(first: 20) {
+        nodes {
+          id
+          project {
+            id
+          }
+        }
+      }
+    }
+  }
+}
