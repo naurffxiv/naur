@@ -1,4 +1,4 @@
-.PHONY: setup lint-tools lint format check validate-deps install build clean clean-all aspire-run aspire-watch troubleshoot kill-dev help all check-python
+.PHONY: setup lint-tools lint format check validate-deps validate-deps-fix install sync build clean clean-all aspire-run aspire-watch troubleshoot kill-dev help all check-python
 # VERBOSITY CONTROL
 Q := @
 ifdef VERBOSE
@@ -13,12 +13,8 @@ APPHOST_PRJ := $(APPHOST_DIR)/Naur.AppHost.csproj
 SCRIPTS_DIR := scripts/makefile
 PWSH 		:= pwsh -NoProfile -ExecutionPolicy Bypass -File
 WIN_PWSH    := powershell -NoProfile -ExecutionPolicy Bypass -File
-PYTHON_RAW  := $(firstword $(wildcard services/moddingway/venv/Scripts/python.exe) $(wildcard services/moddingway/venv/bin/python) python3 python)
-ifeq ($(OS),Windows_NT)
-    PYTHON := $(subst /,\,$(PYTHON_RAW))
-else
-    PYTHON := $(PYTHON_RAW)
-endif
+PYTHON      := uv run python
+DEP_SYNC    := uv run --with pyyaml --with ruamel-yaml python scripts/check-dependency-sync.py
 
 # DEFAULT TARGET
 .DEFAULT_GOAL := help
@@ -55,13 +51,19 @@ check-python:
 
 validate-deps: check-python
 	$(Q)echo Validating that dependencies.yml matches manifests...
-	$(Q)$(PYTHON) scripts/check-dependency-sync.py
+	$(Q)$(DEP_SYNC)
 
+validate-deps-fix: check-python
+	$(Q)echo Updating dependencies.yml to match manifests...
+	$(Q)$(DEP_SYNC) --fix
 
 
 install: check lint-tools
 	$(Q)$(PWSH) $(SCRIPTS_DIR)/install.ps1
 	$(Q)$(MAKE) validate-deps
+
+sync:
+	$(Q)$(PWSH) $(SCRIPTS_DIR)/sync-python.ps1
 
 # BUILD
 build:
