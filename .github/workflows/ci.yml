@@ -19,6 +19,7 @@ jobs:
       contents: read
     outputs:
       naurffxiv: ${{ steps.filter.outputs.naurffxiv }}
+      naurffxiv_deploy: ${{ steps.filter.outputs.naurffxiv_deploy }}
       moddingway: ${{ steps.filter.outputs.moddingway }}
       authingway: ${{ steps.filter.outputs.authingway }}
       findingway: ${{ steps.filter.outputs.findingway }}
@@ -40,6 +41,10 @@ jobs:
               - '.github/workflows/pipeline-node.yml'
               - '.github/workflows/deploy-pr-netlify.yml'
               - '.github/workflows/deploy-netlify.yml'
+            naurffxiv_deploy:
+              - 'services/naurffxiv/src/**'
+              - 'services/naurffxiv/*.config.*'
+              - 'services/naurffxiv/package.json'
             moddingway:
               - *ci
               - 'services/moddingway/**'
@@ -184,6 +189,16 @@ jobs:
           step-number: 5
           step-name: "Dependency Audit"
           command: uv run --with pyyaml --with ruamel-yaml python scripts/check-dependency-sync.py
+
+  deploy-production:
+    needs: [detect-changes, ci-node]
+    if: github.event_name == 'push' && needs.detect-changes.outputs.naurffxiv_deploy == 'true'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/deploy-netlify.yml
+    with:
+      service: naurffxiv
+    secrets: inherit
 
   deploy-preview:
     needs: [detect-changes, ci-node]

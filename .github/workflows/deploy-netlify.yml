@@ -9,6 +9,13 @@ on:
         type: choice
         options: [naurffxiv]
         default: naurffxiv
+  workflow_call:
+    inputs:
+      service:
+        description: "Service to deploy"
+        required: false
+        type: string
+        default: naurffxiv
 
 concurrency:
   group: production-deploy-${{ inputs.service }}
