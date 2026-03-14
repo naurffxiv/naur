@@ -1,6 +1,9 @@
 import { ALLOWED_SIGNIN_ROLES, DEBUG_FLAGS } from "@auth/core/config";
-import { Account, Session, User } from "next-auth";
-import { DiscordUserProfile, toUserWithRoles } from "@/types/discord";
+import { Account, Profile, Session, User } from "next-auth";
+import type { DiscordProfile } from "@naur/shared/types";
+import { toUserWithRoles } from "@naur/shared/types";
+
+type DiscordUserProfile = DiscordProfile | Profile;
 import { logDebug, logError, logWarn } from "@/lib/logger/logger";
 
 import { AdapterUser } from "next-auth/adapters";
