@@ -111,9 +111,6 @@ def select_announcements_bulk(status: bool | None = None):
 
         cursor.execute(query, params)
 
-        results = cursor.fetchall()
+        res = cursor.fetchall()
 
-        if not results:
-            raise ValueError("Cant find announcement with specified parameters.")
-
-        return results
+        return res

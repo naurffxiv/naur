@@ -15,6 +15,9 @@ logger = logging.getLogger(__name__)
 
 settings = get_settings()
 
+MAX_CHAR_LIMIT = 800
+TRUNCATE_OFFSET = 3
+
 
 class AnnouncementPublishView(discord.ui.View):
     def __init__(self, announcement_id, channel, interaction, bot, *args, **kwargs):
@@ -54,21 +57,29 @@ class AnnouncementPublishView(discord.ui.View):
 class AnnouncementPaginator(
     discord.ui.View
 ):  ##TODO: grey out buttons if not functional ?
-    def __init__(self, data, author):
+    def __init__(self, data, sent_status, author):
         super().__init__(timeout=60)  # Buttons disable after 60s of inactivity
         self.data = data
         self.author = author
+        self.sent_status = sent_status
         self.current_page = 1
-        self.per_page = 8
+        self.per_page = 6
         self.total_pages = math.ceil(len(data) / self.per_page)
         self.message: discord.Message | None = None
+        self.update_button_states()
 
     def create_embed(self):
         start = (self.current_page - 1) * self.per_page
         end = start + self.per_page
         page_data = self.data[start:end]
+        sent_status = self.sent_status
 
-        embed = discord.Embed(title="Announcements")
+        status_title = (
+            "Sent"
+            if sent_status is True
+            else ("Unsent" if sent_status is False else "All")
+        )
+        embed = discord.Embed(title=f"{status_title} Announcements")
 
         for row in page_data:
             announcement_id, revisions, sent_flag, discord_message_link = row
@@ -81,10 +92,8 @@ class AnnouncementPaginator(
             status = f"Sent: {messageLink}" if sent_flag else "Unsent"
 
             embed.add_field(
-                name=f"Announcement ID: {announcement_id}",
-                value=revisions[-1][
-                    "content"
-                ],  ##TODO: this needs to be trimmed too many long announcements would hit the embed limit
+                name="ID:",
+                value=announcement_id,
                 inline=True,
             )
             embed.add_field(
@@ -97,11 +106,24 @@ class AnnouncementPaginator(
                 value=status,
                 inline=True,
             )
+            embed.add_field(
+                name=" ",
+                value=check_over_800(
+                    revisions[-1]["content"]
+                ),  ##TODO:  1024 char limit here per value and 6000 for total chars in whole embed so limiting to 800 per announcement preview should be fine
+                inline=False,
+            )
 
         embed.set_footer(text=f"Page {self.current_page}/{self.total_pages}")
         return embed
-    ##TODO: buttons go unresponsivbe for a while when you click on them on the end pages, make it more responsive
-    @discord.ui.button(label="Previous", style=discord.ButtonStyle.gray)
+
+    def update_button_states(self):
+        # Access the decorated buttons directly
+        self.prev_button.disabled = self.current_page <= 1
+        self.next_button.disabled = self.current_page >= self.total_pages
+
+    # 2. Add disabled=True here so it is off by default
+    @discord.ui.button(label="Previous", style=discord.ButtonStyle.gray, disabled=True)
     async def prev_button(
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
@@ -110,11 +132,12 @@ class AnnouncementPaginator(
                 "This isn't your menu!", ephemeral=True
             )
 
-        if self.current_page > 1:
-            self.current_page -= 1
-            await interaction.response.edit_message(
-                embed=self.create_embed(), view=self
-            )
+        if self.current_page <= 1:
+            return await interaction.response.defer()
+
+        self.current_page -= 1
+        self.update_button_states()
+        await interaction.response.edit_message(embed=self.create_embed(), view=self)
 
     @discord.ui.button(label="Next", style=discord.ButtonStyle.gray)
     async def next_button(
@@ -125,11 +148,12 @@ class AnnouncementPaginator(
                 "This isn't your menu!", ephemeral=True
             )
 
-        if self.current_page < self.total_pages:
-            self.current_page += 1
-            await interaction.response.edit_message(
-                embed=self.create_embed(), view=self
-            )
+        if self.current_page >= self.total_pages:
+            return await interaction.response.defer()
+
+        self.current_page += 1
+        self.update_button_states()
+        await interaction.response.edit_message(embed=self.create_embed(), view=self)
 
 
 def create_announcement_commands(bot: Bot) -> None:
@@ -143,7 +167,7 @@ def create_announcement_commands(bot: Bot) -> None:
             str, 1, 4000
         ],  # Client side char check
     ):
-        """Draft an announcement"""
+        """Draft an announcement [4000 character limit]"""
         async with create_response_context(interaction) as response_message:
             async with create_logging_embed(
                 interaction, announcement_text
@@ -207,12 +231,18 @@ def create_announcement_commands(bot: Bot) -> None:
         announcement_list = await announcement_service.list_announcements_service(
             status=sent_status
         )
-
-        view = AnnouncementPaginator(announcement_list, interaction.user)
-        await interaction.response.send_message(
-            embed=view.create_embed(), view=view, ephemeral=ephemeral
-        )
-        view.message = await interaction.original_response()
+        if len(announcement_list) == 0:
+            await interaction.response.send_message(
+                "Can't find announcements with selected parameters.", ephemeral=True
+            )
+        else:
+            view = AnnouncementPaginator(
+                announcement_list, sent_status, interaction.user
+            )
+            await interaction.response.send_message(
+                embed=view.create_embed(), view=view, ephemeral=ephemeral
+            )
+            view.message = await interaction.original_response()
 
     @bot.tree.command()
     @discord.app_commands.check(is_user_admin)
@@ -255,3 +285,9 @@ def create_announcement_commands(bot: Bot) -> None:
             )
 
             await interaction.response.send_message(embed=announcement_embed)
+
+
+def check_over_800(text):
+    if len(text) > MAX_CHAR_LIMIT:
+        return text[: MAX_CHAR_LIMIT - TRUNCATE_OFFSET] + "..."
+    return text
