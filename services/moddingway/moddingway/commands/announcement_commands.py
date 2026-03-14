@@ -1,4 +1,5 @@
 import logging
+import math
 
 import discord
 from discord.ext.commands import Bot
@@ -13,6 +14,9 @@ from .helper import create_logging_embed, create_response_context
 logger = logging.getLogger(__name__)
 
 settings = get_settings()
+
+MAX_CHAR_LIMIT = 800
+TRUNCATE_OFFSET = 3
 
 
 class AnnouncementPublishView(discord.ui.View):
@@ -50,6 +54,108 @@ class AnnouncementPublishView(discord.ui.View):
             response_message.set_string("Announcement publishing cancelled.")
 
 
+class AnnouncementPaginator(
+    discord.ui.View
+):  ##TODO: grey out buttons if not functional ?
+    def __init__(self, data, sent_status, author):
+        super().__init__(timeout=60)  # Buttons disable after 60s of inactivity
+        self.data = data
+        self.author = author
+        self.sent_status = sent_status
+        self.current_page = 1
+        self.per_page = 6
+        self.total_pages = math.ceil(len(data) / self.per_page)
+        self.message: discord.Message | None = None
+        self.update_button_states()
+
+    def create_embed(self):
+        start = (self.current_page - 1) * self.per_page
+        end = start + self.per_page
+        page_data = self.data[start:end]
+        sent_status = self.sent_status
+
+        status_title = (
+            "Sent"
+            if sent_status is True
+            else ("Unsent" if sent_status is False else "All")
+        )
+        embed = discord.Embed(title=f"{status_title} Announcements")
+
+        for row in page_data:
+            announcement_id, revisions, sent_flag, discord_message_link = row
+            messageLink = (
+                "https://discord.com/channels/"
+                + str(settings.guild_id)
+                + "/"
+                + str(discord_message_link)
+            )
+            status = f"Sent: {messageLink}" if sent_flag else "Unsent"
+
+            embed.add_field(
+                name="ID:",
+                value=announcement_id,
+                inline=True,
+            )
+            embed.add_field(
+                name="Latest Revision",
+                value=f"<@{revisions[-1]['author_id']}>",
+                inline=True,
+            )
+            embed.add_field(
+                name="Status",
+                value=status,
+                inline=True,
+            )
+            embed.add_field(
+                name=" ",
+                value=check_over_800(
+                    revisions[-1]["content"]
+                ),  ##TODO:  1024 char limit here per value and 6000 for total chars in whole embed so limiting to 800 per announcement preview should be fine
+                inline=False,
+            )
+
+        embed.set_footer(text=f"Page {self.current_page}/{self.total_pages}")
+        return embed
+
+    def update_button_states(self):
+        # Access the decorated buttons directly
+        self.prev_button.disabled = self.current_page <= 1
+        self.next_button.disabled = self.current_page >= self.total_pages
+
+    # 2. Add disabled=True here so it is off by default
+    @discord.ui.button(label="Previous", style=discord.ButtonStyle.gray, disabled=True)
+    async def prev_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
+        if interaction.user != self.author:
+            return await interaction.response.send_message(
+                "This isn't your menu!", ephemeral=True
+            )
+
+        if self.current_page <= 1:
+            return await interaction.response.defer()
+
+        self.current_page -= 1
+        self.update_button_states()
+        await interaction.response.edit_message(embed=self.create_embed(), view=self)
+
+    @discord.ui.button(label="Next", style=discord.ButtonStyle.gray)
+    async def next_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
+        if interaction.user != self.author:
+            return await interaction.response.send_message(
+                "This isn't your menu!", ephemeral=True
+            )
+
+        if self.current_page >= self.total_pages:
+            return await interaction.response.defer()
+
+        self.current_page += 1
+        self.update_button_states()
+        await interaction.response.edit_message(embed=self.create_embed(), view=self)
+
+
 def create_announcement_commands(bot: Bot) -> None:
 
     @bot.tree.command()
@@ -61,7 +167,7 @@ def create_announcement_commands(bot: Bot) -> None:
             str, 1, 4000
         ],  # Client side char check
     ):
-        """Draft an announcement"""
+        """Draft an announcement [4000 character limit]"""
         async with create_response_context(interaction) as response_message:
             async with create_logging_embed(
                 interaction, announcement_text
@@ -113,3 +219,75 @@ def create_announcement_commands(bot: Bot) -> None:
                 ),
                 ephemeral=True,
             )
+
+    @bot.tree.command()
+    @discord.app_commands.check(is_user_admin)
+    async def list_announcements(
+        interaction: discord.Interaction,
+        ephemeral: bool,
+        sent_status: bool | None = None,
+    ):
+        """List announcements"""
+        announcement_list = await announcement_service.list_announcements_service(
+            status=sent_status
+        )
+        if len(announcement_list) == 0:
+            await interaction.response.send_message(
+                "Can't find announcements with selected parameters.", ephemeral=True
+            )
+        else:
+            view = AnnouncementPaginator(
+                announcement_list, sent_status, interaction.user
+            )
+            await interaction.response.send_message(
+                embed=view.create_embed(), view=view, ephemeral=ephemeral
+            )
+            view.message = await interaction.original_response()
+
+    @bot.tree.command()
+    @discord.app_commands.check(is_user_admin)
+    async def show_announcement(
+        interaction: discord.Interaction,
+        announcement_id: int,
+    ):
+        """Show announcement"""
+
+        announcement_json = announcements_database.get_announcement(
+            announcement_id=announcement_id
+        )
+        if announcement_json is None:
+            await interaction.response.send_message(
+                "Announcement not found.", ephemeral=True
+            )
+        else:
+            messageLink = (
+                "https://discord.com/channels/"
+                + str(settings.guild_id)
+                + "/"
+                + str(announcement_json["discord_msg_link"])
+            )
+            status = (
+                f"Sent: {messageLink}" if announcement_json["sent_flag"] else "Unsent"
+            )
+            announcement_embed = discord.Embed(
+                title="Announcement Draft",
+                description=announcement_json["revisions"][-1]["content"],
+            )
+            announcement_embed.add_field(
+                name="Latest Revision",
+                value=f"<@{announcement_json['revisions'][-1]['author_id']}>",
+                inline=True,
+            )
+            announcement_embed.add_field(name="Status", value=status, inline=True)
+
+            announcement_embed.set_footer(
+                text=f"Announcement ID {announcement_json['announcement_id']}"
+            )
+
+            await interaction.response.send_message(embed=announcement_embed)
+
+
+def check_over_800(text):
+    if len(text) > MAX_CHAR_LIMIT:
+        return text[: MAX_CHAR_LIMIT - TRUNCATE_OFFSET] + "..."
+    return text
