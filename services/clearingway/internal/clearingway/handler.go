@@ -1,4 +1,4 @@
-package commands
+package clearingway
 
 import (
 	"errors"
@@ -27,8 +27,8 @@ type Command struct {
 	Handler            func(s Session, i *discordgo.InteractionCreate) error
 }
 
-// NewHandler - Creates a new CommandHandler with an empty command registry.
-func NewHandler() *CommandHandler {
+// NewCommandHandler - Creates a new CommandHandler with an empty command registry.
+func NewCommandHandler() *CommandHandler {
 	return &CommandHandler{
 		commands: make(map[string]Command),
 	}
