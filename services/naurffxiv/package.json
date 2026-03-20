@@ -19,6 +19,7 @@
     "compress": "node scripts/compress-images.js"
   },
   "dependencies": {
+    "@naur/shared": "workspace:*",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mdx-js/loader": "^3.1.0",
