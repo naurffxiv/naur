@@ -7,6 +7,10 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+type FFLogsInterface interface {
+	CheckCharacterClear(ctx context.Context, lodestoneId, encounterId int64) (bool, error)
+}
+
 // GetClearsCommand - Returns a command that retrieves if a lodestone ID has cleared an encounter.
 func (cw *Clearingway) GetClearsCommand() Command {
 	return Command{

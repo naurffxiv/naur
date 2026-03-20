@@ -14,7 +14,7 @@ import (
 type Clearingway struct {
 	Config         *config.BotConfig
 	Discord        *discord.Discord
-	FFLogs         *fflogs.FFLogs
+	FFLogs         FFLogsInterface
 	CommandHandler *CommandHandler
 }
 
