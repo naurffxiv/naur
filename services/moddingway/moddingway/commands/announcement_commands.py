@@ -4,19 +4,17 @@ import math
 import discord
 from discord.ext.commands import Bot
 
+from moddingway.constants import MESSAGELINKPREFIX
 from moddingway.database import announcements_database
 from moddingway.services import announcement_service
 from moddingway.settings import get_settings
 from moddingway.util import is_user_admin
 
-from .helper import create_logging_embed, create_response_context
+from .helper import check_over_800, create_logging_embed, create_response_context
 
 logger = logging.getLogger(__name__)
 
 settings = get_settings()
-
-MAX_CHAR_LIMIT = 800
-TRUNCATE_OFFSET = 3
 
 
 class AnnouncementPublishView(discord.ui.View):
@@ -54,9 +52,7 @@ class AnnouncementPublishView(discord.ui.View):
             response_message.set_string("Announcement publishing cancelled.")
 
 
-class AnnouncementPaginator(
-    discord.ui.View
-):  ##TODO: grey out buttons if not functional ?
+class AnnouncementPaginator(discord.ui.View):
     def __init__(self, data, sent_status, author):
         super().__init__(timeout=60)  # Buttons disable after 60s of inactivity
         self.data = data
@@ -74,17 +70,18 @@ class AnnouncementPaginator(
         page_data = self.data[start:end]
         sent_status = self.sent_status
 
-        status_title = (
-            "Sent"
-            if sent_status is True
-            else ("Unsent" if sent_status is False else "All")
-        )
+        if sent_status is True:
+            status_title = "Sent"
+        elif sent_status is False:
+            status_title = "Unsent"
+        else:
+            status_title = "All"
         embed = discord.Embed(title=f"{status_title} Announcements")
 
         for row in page_data:
             announcement_id, revisions, sent_flag, discord_message_link = row
             messageLink = (
-                "https://discord.com/channels/"
+                MESSAGELINKPREFIX
                 + str(settings.guild_id)
                 + "/"
                 + str(discord_message_link)
@@ -110,7 +107,7 @@ class AnnouncementPaginator(
                 name=" ",
                 value=check_over_800(
                     revisions[-1]["content"]
-                ),  ##TODO:  1024 char limit here per value and 6000 for total chars in whole embed so limiting to 800 per announcement preview should be fine
+                ),  # 1024 char limit here per value and 6000 for total chars in whole embed so limiting to 800 per announcement preview should be fine
                 inline=False,
             )
 
@@ -122,7 +119,6 @@ class AnnouncementPaginator(
         self.prev_button.disabled = self.current_page <= 1
         self.next_button.disabled = self.current_page >= self.total_pages
 
-    # 2. Add disabled=True here so it is off by default
     @discord.ui.button(label="Previous", style=discord.ButtonStyle.gray, disabled=True)
     async def prev_button(
         self, interaction: discord.Interaction, button: discord.ui.Button
@@ -261,7 +257,7 @@ def create_announcement_commands(bot: Bot) -> None:
             )
         else:
             messageLink = (
-                "https://discord.com/channels/"
+                MESSAGELINKPREFIX
                 + str(settings.guild_id)
                 + "/"
                 + str(announcement_json["discord_msg_link"])
@@ -285,9 +281,3 @@ def create_announcement_commands(bot: Bot) -> None:
             )
 
             await interaction.response.send_message(embed=announcement_embed)
-
-
-def check_over_800(text):
-    if len(text) > MAX_CHAR_LIMIT:
-        return text[: MAX_CHAR_LIMIT - TRUNCATE_OFFSET] + "..."
-    return text
