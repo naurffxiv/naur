@@ -6,7 +6,6 @@ from contextlib import asynccontextmanager
 import discord
 from discord.ext.commands import Bot
 
-from moddingway.constants import MAX_CHAR_LIMIT, TRUNCATE_OFFSET
 from moddingway.settings import get_settings
 from moddingway.util import (
     EmbedField,
@@ -165,9 +164,3 @@ async def create_deferred_response_context(
             await msg.edit(content=helper.message)
         except Exception:
             logger.error("Updating placeholder message failed")
-
-
-def check_over_800(text):
-    if len(text) > MAX_CHAR_LIMIT:
-        return text[: MAX_CHAR_LIMIT - TRUNCATE_OFFSET] + "..."
-    return text

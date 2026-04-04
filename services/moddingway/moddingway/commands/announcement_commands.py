@@ -4,13 +4,13 @@ import math
 import discord
 from discord.ext.commands import Bot
 
-from moddingway.constants import MESSAGELINKPREFIX
+from moddingway.constants import MAX_CHAR_LIMIT, MESSAGE_LINK_PREFIX, TRUNCATE_OFFSET
 from moddingway.database import announcements_database
 from moddingway.services import announcement_service
 from moddingway.settings import get_settings
 from moddingway.util import is_user_admin
 
-from .helper import check_over_800, create_logging_embed, create_response_context
+from .helper import create_logging_embed, create_response_context
 
 logger = logging.getLogger(__name__)
 
@@ -80,8 +80,15 @@ class AnnouncementPaginator(discord.ui.View):
 
         for row in page_data:
             announcement_id, revisions, sent_flag, discord_message_link = row
+            shortened_rev = ""
+            if (
+                len(revisions[-1]["content"]) > MAX_CHAR_LIMIT
+            ):  # check if revision is over 800 chars, trim it down and add "..." to end to show that its cut off
+                shortened_rev = (
+                    revisions[-1]["content"][: MAX_CHAR_LIMIT - TRUNCATE_OFFSET] + "..."
+                )
             messageLink = (
-                MESSAGELINKPREFIX
+                MESSAGE_LINK_PREFIX
                 + str(settings.guild_id)
                 + "/"
                 + str(discord_message_link)
@@ -105,9 +112,7 @@ class AnnouncementPaginator(discord.ui.View):
             )
             embed.add_field(
                 name=" ",
-                value=check_over_800(
-                    revisions[-1]["content"]
-                ),  # 1024 char limit here per value and 6000 for total chars in whole embed so limiting to 800 per announcement preview should be fine
+                value=shortened_rev,  # 1024 char limit here per value and 6000 for total chars in whole embed so limiting to 800 per announcement preview should be fine
                 inline=False,
             )
 
@@ -257,7 +262,7 @@ def create_announcement_commands(bot: Bot) -> None:
             )
         else:
             messageLink = (
-                MESSAGELINKPREFIX
+                MESSAGE_LINK_PREFIX
                 + str(settings.guild_id)
                 + "/"
                 + str(announcement_json["discord_msg_link"])
