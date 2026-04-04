@@ -4,6 +4,7 @@
   "private": true,
   "workspaces": [
     "services/naurffxiv",
+    "services/shared",
     "tests/e2e"
   ],
   "engines": {
@@ -38,7 +39,8 @@
   "pnpm": {
     "overrides": {
       "@types/react": "19.2.14",
-      "@types/react-dom": "19.2.3"
+      "@types/react-dom": "19.2.3",
+      "rollup": ">=4.59.0"
     }
   }
 }

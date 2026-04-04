@@ -4,7 +4,7 @@ import { useHasAllRoles, useHasAnyRole } from "@auth/hooks/useRoles";
 
 import type { ReactElement } from "react";
 import type { ReactNode } from "react";
-import type { WithChildren } from "@/types/common";
+import type { WithChildren } from "@naur/shared/types";
 import { useMemo } from "react";
 
 type RoleContentProps = WithChildren & {
