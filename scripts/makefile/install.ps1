@@ -3,7 +3,7 @@
   Parallel install of monorepo dependencies.
 
 .DESCRIPTION
-  Restores .NET, downloads Go modules, runs package manager install at the repo root and prepares Python venvs.
+  Restores .NET, downloads Go modules, runs package manager install at the repo root and prepares Python venvs with uv.
 #>
 
 [CmdletBinding()]
@@ -16,6 +16,8 @@ $ProjectRoot = Resolve-ProjectRoot
 $pmInstall = Get-PackageManagerCmd -CommandType "InstallCmd"
 $pmExec = Get-PackageManagerCmd -CommandType "ExecCmd"
 
+Initialize-Uv
+
 $Tasks = @(
     @{ Name = "AppHost";     Action = { param($p) dotnet restore $p --verbosity quiet }; Arg = Get-ServicePath -ServiceName "AppHost" -ProjectRoot $ProjectRoot }
     @{ Name = "Authingway";  Action = { param($p) dotnet restore $p --verbosity quiet }; Arg = Get-ServicePath -ServiceName "Authingway" -ProjectRoot $ProjectRoot }
@@ -23,30 +25,26 @@ $Tasks = @(
     @{ Name = "Findingway";  Action = { param($p) Set-Location $p; go mod download }; Arg = Get-ServicePath -ServiceName "Findingway" -ProjectRoot $ProjectRoot }
     @{ Name = "Clearingway"; Action = { param($p) Set-Location $p; go mod download }; Arg = Get-ServicePath -ServiceName "Clearingway" -ProjectRoot $ProjectRoot }
     @{ Name = "Moddingway";  Action = {
-        param($p)
-        Push-Location $p
-        try {
-            $venvPython = Join-Path $p "venv\Scripts\python.exe"
-            if (-not (Test-Path $venvPython)) {
-                Write-Log -Level Info -Message "Venv missing in $p, recreating..."
-                if (Test-Path venv) { Remove-Item -Recurse -Force venv }
-                python -m venv venv
-                $venvPython = Join-Path $p "venv\Scripts\python.exe"
+            param($p, $root)
+            Push-Location $p
+            try {
+                Write-Log -Level Info -Message "Syncing $p..."
+                $syncScript = Join-Path $root "scripts/makefile/sync-moddingway.ps1"
+                & $syncScript
             }
-            & $venvPython -m pip install -q --upgrade pip
-            if (Test-Path requirements.txt) { & $venvPython -m pip install -q -r requirements.txt }
-            if (Test-Path requirements-dev.txt) { & $venvPython -m pip install -q -r requirements-dev.txt }
-        } finally {
-            Pop-Location
-        }
-    }; Arg = Get-ServicePath -ServiceName "Moddingway" -ProjectRoot $ProjectRoot }
-    @{ Name = "Playwright";  Action = {
-        param($p, $cmd)
-        Set-Location $p
-        if (Test-Path "package.json") {
-            Invoke-Expression "$cmd playwright install chromium --with-deps"
-        }
-    }; Arg = @((Get-ServicePath -ServiceName "E2ETests" -ProjectRoot $ProjectRoot), $pmExec) }
+            finally {
+                Pop-Location
+            }
+        }; Arg = @((Get-ServicePath -ServiceName "Moddingway" -ProjectRoot $ProjectRoot), $ProjectRoot)
+    }
+    @{ Name = "Playwright"; Action = {
+            param($p, $cmd)
+            Set-Location $p
+            if (Test-Path "package.json") {
+                Invoke-Expression "$cmd playwright install chromium --with-deps"
+            }
+        }; Arg = @((Get-ServicePath -ServiceName "E2ETests" -ProjectRoot $ProjectRoot), $pmExec)
+    }
 )
 
 $jobs = foreach ($t in $Tasks) {
@@ -79,17 +77,22 @@ $services = foreach ($key in $registry.Keys) {
         Name = $svc.DisplayName
         Path = Get-ServicePath -ServiceName $key -ProjectRoot $ProjectRoot
         Type = $svc.Type
+        Proj = if ($svc.ProjectPath) { [System.IO.Path]::GetFileNameWithoutExtension($svc.ProjectPath) } else { $null }
     }
 }
 
 $failedChecks = @()
-foreach ($s in $services) {
-    if (-not (Test-Path $s.Path)) {
+foreach ($s in @($services)) {
+    if ($null -eq $s -or [string]::IsNullOrWhiteSpace($s.Path)) { continue }
+
+    $checkPath = if ((Test-Path $s.Path -PathType Leaf)) { Split-Path $s.Path -Parent } else { $s.Path }
+
+    if (-not (Test-Path $checkPath)) {
         Write-Log -Level Error -Message "$($s.Name): Directory not found"
         $failedChecks += $s.Name; continue
     }
 
-    $isInstalled = Test-ServiceHealth -Type $s.Type -Path $s.Path -ProjectRoot $ProjectRoot
+    $isInstalled = Test-ServiceHealth -Type $s.Type -Path $checkPath -ProjectRoot $ProjectRoot -DotNetProjName $s.Proj
 
     if ($isInstalled) { Write-Log -Level Ok -Message "$($s.Name) ($($s.Type)) ready" } else { Write-Log -Level Warn -Message "$($s.Name): Verification failed"; $failedChecks += $s.Name }
 }

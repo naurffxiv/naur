@@ -22,8 +22,8 @@ $Workloads = @(
             param($p)
             Push-Location $p
             try {
-                $python = Join-Path $p "venv\Scripts\python.exe"
-                & $python -m ty check ; if ($LASTEXITCODE -ne 0) { throw "Ty Type-Check failed" }
+                uv run ty check . ../../tests/moddingway
+                if ($LASTEXITCODE -ne 0) { throw "Ty Type-Check failed" }
             }
             finally { Pop-Location }
         }; Arg = Get-ServicePath -ServiceName "Moddingway" -ProjectRoot $ProjectRoot

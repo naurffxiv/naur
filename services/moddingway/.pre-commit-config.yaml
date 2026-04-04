@@ -1,22 +1,40 @@
 # Python service configuration
 orphan: true
+default_install_hook_types:
+  - pre-commit
+  - post-checkout
+  - post-merge
+  - post-rewrite
 repos:
   - repo: builtin
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
 
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.0
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.10.4
+    hooks:
+      - id: uv-lock
+      - id: uv-sync
+        args: ["--locked", "--all-groups", "--link-mode=copy", "--quiet"]
+
+  - repo: local
     hooks:
       - id: ruff-check
-        args: [--fix, --exit-non-zero-on-fix]
+        name: ruff-check
+        entry: uv run ruff check --fix --exit-non-zero-on-fix
+        language: system
+        types: [python]
         priority: 1
       - id: ruff-format
+        name: ruff-format
+        entry: uv run ruff format
+        language: system
+        types: [python]
         priority: 0
-
-  - repo: https://foundry.fsky.io/vel/ty-pre-commit
-    rev: 0.0.11
-    hooks:
       - id: ty-check
-        args: [--python=venv/]
+        name: ty-check
+        entry: uv run ty check . ../../tests/moddingway
+        language: system
+        types: [python]
+        pass_filenames: false
