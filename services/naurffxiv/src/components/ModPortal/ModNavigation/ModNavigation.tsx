@@ -1,13 +1,14 @@
 "use client";
 
 import { MenuItem, MenuList, Typography } from "@mui/material";
+import { ReactNode } from "react";
 
 import { PathSelectedLink } from "./PathSelectedLink";
 
 /**
  * Mod Portal navigation bar
  * */
-export function ModNavigation() {
+export function ModNavigation(): ReactNode {
   return (
     <div>
       <Typography fontWeight={"bold"} fontSize={"18pt"}>

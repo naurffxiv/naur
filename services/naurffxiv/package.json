@@ -11,12 +11,12 @@
     "build": "pnpm exec next build",
     "start": "pnpm exec next start",
     "lint": "pnpm exec next lint",
-    "test": "echo \"Error: no test specified\" && exit 0",
+    "test": "pnpm --filter naurffxiv-tests test",
     "typecheck": "tsc --noEmit",
     "prettier:check": "prettier --check .",
     "prettier:write": "prettier --write .",
     "check:routes": "tsx scripts/middleware/validateRoutes.ts",
-    "compress": "node scripts/compress-images.js"
+    "compress": "tsx scripts/compress-images.ts"
   },
   "dependencies": {
     "@naur/shared": "workspace:*",
@@ -57,6 +57,7 @@
     "@eslint/js": "^9.24.0",
     "@netlify/plugin-nextjs": "^5.15.5",
     "@tailwindcss/typography": "^0.5.16",
+    "@types/hast": "^3.0.4",
     "@types/node": "^22.14.1",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",

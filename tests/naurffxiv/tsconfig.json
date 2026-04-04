@@ -1,0 +1,16 @@
+{
+  "extends": "../../services/naurffxiv/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["../../services/naurffxiv/src/*"],
+      "@auth/*": ["../../services/naurffxiv/src/auth/*"],
+      "@naur/shared/*": ["../../shared/*/index.ts"]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "../../services/naurffxiv/src/**/*.ts",
+    "../../services/naurffxiv/next-env.d.ts"
+  ]
+}
