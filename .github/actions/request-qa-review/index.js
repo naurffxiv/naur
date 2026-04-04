@@ -25,7 +25,7 @@ module.exports = async ({ github, context, core }) => {
         `Requested review from @${context.repo.owner}/${shared.QA_TEAM_SLUG}.`,
       );
     } catch (err) {
-      console.warn("Could not request QA team review:", err.message);
+      throw new Error(`Could not request QA team review: ${err.message}`);
     }
   } catch (error) {
     console.error("Request QA Review Error:", error);
