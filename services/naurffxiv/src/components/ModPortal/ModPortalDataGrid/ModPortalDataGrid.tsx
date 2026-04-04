@@ -1,12 +1,26 @@
-import { DataGrid, GridToolbar } from "@mui/x-data-grid";
+import {
+  DataGrid,
+  GridToolbar,
+  GridColDef,
+  GridRowsProp,
+} from "@mui/x-data-grid";
+import { ReactNode } from "react";
 
 const pageSizeOptions = [10, 25, 50, 100];
 const initialState = { pagination: { paginationModel: { pageSize: 10 } } };
 
+export interface ModPortalDataGridProps {
+  columns: GridColDef[];
+  rows: GridRowsProp;
+}
+
 /**
  * Standard customized DataGrid for Mod Portal tables
  * */
-export function ModPortalDataGrid({ columns, rows }) {
+export function ModPortalDataGrid({
+  columns,
+  rows,
+}: ModPortalDataGridProps): ReactNode {
   return (
     <DataGrid
       columns={columns}
@@ -33,9 +47,10 @@ const slotProps = {
     quickFilterProps: {
       // Default behavior is to treat space separation as different terms
       // override these two to allow searching space-containing values instead
-      quickFilterParser: (searchInput) =>
+      quickFilterParser: (searchInput: string): string[] =>
         searchInput.split(",").map((v) => v.trim()),
-      quickFilterFormatter: (quickFilterValues) => quickFilterValues.join(","),
+      quickFilterFormatter: (quickFilterValues: string[]): string =>
+        quickFilterValues.join(","),
       inputProps: { id: "mod-portal-search", name: "mod-portal-search" },
     },
     showQuickFilter: true,

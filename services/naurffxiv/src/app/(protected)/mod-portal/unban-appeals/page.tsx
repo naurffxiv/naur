@@ -3,10 +3,11 @@
 import { ReactNode } from "react";
 import { ModPortalDataGrid } from "@/components/ModPortal/ModPortalDataGrid/ModPortalDataGrid";
 import { makeData } from "@/components/ModPortal/makeData";
+import { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 
 const testData = makeData(100, ["userId", "created", "status", "banReason"]);
 
-const columns = [
+const columns: GridColDef[] = [
   { headerName: "Discord ID", field: "userId", width: 120 },
   { headerName: "Created", field: "created", width: 150 },
   { headerName: "Status", field: "status", width: 100, renderCell: StatusCell },
@@ -27,16 +28,14 @@ export default function ModPortalUnbanAppeals(): ReactNode {
 /**
  * Custom rendered cell to show the status colors
  * */
-function StatusCell({ field, row }: StatusCellProps): ReactNode {
-  const color = STATUS_COLORS[row[field]];
+function StatusCell({ field, row }: GridRenderCellParams): ReactNode {
+  const color =
+    STATUS_COLORS[row[field as keyof typeof row] as keyof typeof STATUS_COLORS];
 
-  return <div style={{ color }}>{row[field]}</div>;
+  return (
+    <div style={{ color }}>{row[field as keyof typeof row] as ReactNode}</div>
+  );
 }
-
-type StatusCellProps<T extends object = object> = {
-  row: T;
-  field: keyof T;
-};
 
 const STATUS_COLORS = {
   Pending: "#ffb200",

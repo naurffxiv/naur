@@ -43,16 +43,22 @@ const CONST_MAP = {
   // created: DATES,
   status: STATUSI,
   banReason: NOTES,
-};
+} satisfies Record<string, (string | number)[]>;
 
-export function makeData(count, keys) {
+export function makeData(
+  count: number,
+  keys: (keyof typeof CONST_MAP)[],
+): Array<{ id: number } & Record<string, string | number>> {
   return new Array(count).fill(null).map(makeItem(keys));
 }
 
-function makeItem(keys) {
-  return (_, i) => ({
+function makeItem(keys: (keyof typeof CONST_MAP)[]) {
+  return (
+    _: unknown,
+    i: number,
+  ): { id: number } & Record<string, string | number> => ({
     id: i,
-    ...keys.reduce((acc, k) => {
+    ...keys.reduce<Record<string, string | number>>((acc, k) => {
       const mockData = CONST_MAP[k];
       acc[k] = mockData[i % mockData.length];
 

@@ -1,3 +1,6 @@
+import type { StaticImageData } from "next/image";
+import type { SvgIconComponent } from "@mui/icons-material";
+
 // icons
 import Calendar from "@/assets/Icons/Calendar.png";
 import Chat from "@/assets/Icons/Chat.png";
@@ -16,6 +19,7 @@ import m10s from "@/assets/Images/m10s.avif";
 import m11s from "@/assets/Images/m11s.avif";
 import m12s from "@/assets/Images/m12s.avif";
 import recollection from "@/assets/Images/recollection.avif";
+
 export const icons = {
   Chat,
   Lightbulb,
@@ -25,7 +29,7 @@ export const icons = {
   Github,
   Naur,
   Patreon,
-};
+} satisfies Record<string, StaticImageData>;
 
 export const images = {
   Pandora,
@@ -34,6 +38,9 @@ export const images = {
   m11s,
   m12s,
   recollection,
-};
+} satisfies Record<string, StaticImageData>;
 
-export const iconsMui = { PersonSearchIcon };
+export const iconsMui = { PersonSearchIcon } satisfies Record<
+  string,
+  SvgIconComponent
+>;
