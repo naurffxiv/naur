@@ -5,7 +5,12 @@ import discord
 
 from moddingway.database import notes_database, users_database
 from moddingway.database.models import Note
-from moddingway.util import log_info_and_add_field, log_info_and_embed, send_dm
+from moddingway.util import (
+    log_info_and_add_field,
+    log_info_and_embed,
+    send_dm,
+    timestamp_to_epoch,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +71,8 @@ async def get_note_by_id(
         db_note.content = (
             f"[warning] {db_note.content}" if db_note.is_warning else db_note.content
         )
-        return f"\n* ID: {db_note.note_id} | Note: {db_note.content} | Note Creator: <@{db_note.created_by}> | Last Editor: <@{db_note.last_editor}>"
+        last_edited_epoch = timestamp_to_epoch(db_note.last_edited_timestamp)
+        return f"\n* ID: {db_note.note_id} | Note: {db_note.content} | Note Creator: <@{db_note.created_by}> | Last Editor: <@{db_note.last_editor}> | Last Edited: <t:{last_edited_epoch}:f>"
     else:
         return "Note not found"
 
@@ -88,9 +94,10 @@ async def get_user_notes(
         # Add [warning] prefix if it's a warning
         note_content = f"[warning] {note.content}" if note.is_warning else note.content
 
+        last_edited_epoch = timestamp_to_epoch(note.last_edited_timestamp)
         result = (
             result
-            + f"\n* ID: {note.note_id} | Note Creator: <@{note.created_by}> | Last Editor: <@{note.last_editor}> | Note: {note_content}"
+            + f"\n* ID: {note.note_id} | Note Creator: <@{note.created_by}> | Last Editor: <@{note.last_editor}> | Last Edited: <t:{last_edited_epoch}:f> | Note: {note_content}"
         )
 
     return result
@@ -112,9 +119,10 @@ async def get_user_warnings(
         # Add [warning] prefix if it's a warning
         note_content = f"[warning] {note.content}" if note.is_warning else note.content
 
+        last_edited_epoch = timestamp_to_epoch(note.last_edited_timestamp)
         result = (
             result
-            + f"\n* ID: {note.note_id} | Note Creator: <@{note.created_by}> | Last Editor: <@{note.last_editor}> | Note: {note_content}"
+            + f"\n* ID: {note.note_id} | Note Creator: <@{note.created_by}> | Last Editor: <@{note.last_editor}> | Last Edited: <t:{last_edited_epoch}:f> | Note: {note_content}"
         )
 
     return result
