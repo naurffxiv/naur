@@ -59,13 +59,13 @@ jobs:
           STATUS=$(echo "$SCRIPT_OUTPUT" | grep "^status=" | cut -d= -f2)
 
           if [ -z "$STATUS" ]; then
-            echo "::error::determine-status.sh produced no status output. Raw output: $SCRIPT_OUTPUT" >&2
-            exit 1
+            echo "No status output from determine-status.sh, skipping board move." >&2
+            exit 0
           fi
 
           echo "status=$STATUS" >> "$GITHUB_OUTPUT"
       - name: Sync ticket to board
-        if: steps.extract.outputs.found == 'true'
+        if: steps.extract.outputs.found == 'true' && steps.status.outputs.status != ''
         uses: ./.github/actions/move-project-card
         with:
           token: ${{ steps.app-token.outputs.token }}
