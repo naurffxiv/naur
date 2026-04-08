@@ -1,22 +1,22 @@
 "use client";
 
-import { useState } from "react";
-import { IconButton, Menu } from "@mui/material";
+import { useState, type ReactElement, type MouseEvent } from "react";
+import { IconButton, Menu, type SxProps, type Theme } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import SharedNavLinks from "./SharedNavLinks";
 
 /**
  * Mobile (thin screen) variant of the header navbar menu
  * */
-export function MobileMenu() {
-  const [anchorElNav, setAnchorElNav] = useState(null);
+export function MobileMenu(): ReactElement {
+  const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorElNav);
 
-  const handleClick = (event) => {
+  const handleClick = (event: MouseEvent<HTMLElement>): void => {
     setAnchorElNav(event.currentTarget);
   };
 
-  const handleClose = () => {
+  const handleClose = (): void => {
     setAnchorElNav(null);
   };
 
@@ -63,4 +63,4 @@ const sx = {
       justifyContent: "flex-end", // Right aligns the menu items
     },
   },
-};
+} satisfies Record<string, SxProps<Theme>>;
