@@ -67,6 +67,9 @@ importers:
       '@stefanprobst/rehype-extract-toc':
         specifier: ^3.0.0
         version: 3.0.0
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
       highlight.js:
         specifier: ^11.11.1
         version: 11.11.1

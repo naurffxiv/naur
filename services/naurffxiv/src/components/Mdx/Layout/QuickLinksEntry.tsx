@@ -1,8 +1,22 @@
 import clsx from "clsx";
+import { ReactElement } from "react";
+
+interface QuickLinkEntryData {
+  slug: string;
+  title: string;
+}
+interface QuickLinkEntryResult {
+  element: ReactElement;
+  active: boolean;
+}
 
 // returns a single quick link component
 // highlighted if the page matches the slug
-function QuickLinkEntry(entry, currentSlug, isFirst) {
+function QuickLinkEntry(
+  entry: QuickLinkEntryData,
+  currentSlug: string,
+  isFirst: boolean,
+): QuickLinkEntryResult {
   const isActive = entry.slug === currentSlug;
 
   const baseClasses =
