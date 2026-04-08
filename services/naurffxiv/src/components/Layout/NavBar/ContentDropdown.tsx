@@ -1,15 +1,38 @@
-import { Button, Menu, MenuItem, Typography } from "@mui/material";
-import React, { useState } from "react";
-
+import {
+  Button,
+  Menu,
+  MenuItem,
+  Typography,
+  Box,
+  type SxProps,
+  type Theme,
+} from "@mui/material";
+import { useState, type ReactElement, type MouseEvent } from "react";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+
+interface ContentDropdownProps {
+  data: Array<{ title: string; url: string }>;
+  name: string;
+}
 
 /**
  * Desktop version of content dropdown menu
  * For desktop dropdown outside hamburger menu
  * */
-export function ContentDropdown({ data, name }) {
-  const [anchorEl, setAnchorEl] = useState(null);
+export function ContentDropdown({
+  data,
+  name,
+}: ContentDropdownProps): ReactElement {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+
+  const handleClick = (event: MouseEvent<HTMLButtonElement>): void => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = (): void => {
+    setAnchorEl(null);
+  };
 
   return (
     <>
@@ -21,15 +44,15 @@ export function ContentDropdown({ data, name }) {
         sx={sx.button}
         onClick={handleClick}
       >
-        <Typography variant="h6" sx={sx.nameContainer}>
+        <Box sx={sx.nameContainer}>
           <Typography sx={sx.nameText}>{name}</Typography>
           <ArrowDropDownIcon viewBox="2 4 15 15" sx={sx.dropdownIcon} />
-        </Typography>
+        </Box>
       </Button>
       <Menu
         id={"basic-menu"}
         anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
+        open={open}
         onClose={handleClose}
         MenuListProps={{ "aria-labelledby": "basic-button" }}
       >
@@ -48,14 +71,6 @@ export function ContentDropdown({ data, name }) {
       </Menu>
     </>
   );
-
-  function handleClick(event) {
-    setAnchorEl(event.currentTarget);
-  }
-
-  function handleClose() {
-    setAnchorEl(null);
-  }
 }
 
 const sx = {
@@ -65,14 +80,14 @@ const sx = {
   },
   nameContainer: {
     flexGrow: 1,
-    display: { xs: "flex", md: "flex" },
+    display: { xs: "flex" },
   },
   nameText: {
     textAlign: "center",
   },
   dropdownIcon: {
-    marginY: "auto",
     fontSize: "15px",
+    marginY: "auto",
   },
   dropdownItemContainer: {
     justifyContent: "flex-start",
@@ -80,4 +95,4 @@ const sx = {
   dropdownItemText: {
     textAlign: "left",
   },
-};
+} satisfies Record<string, SxProps<Theme>>;
