@@ -1,15 +1,24 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, ReactElement } from "react";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import type { Toc } from "@stefanprobst/rehype-extract-toc";
+
+interface MdxFrontmatter {
+  collapseToc?: boolean;
+}
+interface TableOfContentsProps {
+  toc: Toc;
+  frontmatter: MdxFrontmatter;
+}
 
 /**
  * Custom hook to track the active section ID based on scroll position.
  */
-function useActiveId(ids, offset = 88) {
+function useActiveId(ids: string[], offset: number = 88): string {
   const [activeId, setActiveId] = useState("");
 
-  const updateActiveId = useCallback(() => {
+  const updateActiveId = useCallback((): void => {
     let currentActiveId = "";
     for (const id of ids) {
       const element = document.getElementById(id);
@@ -27,7 +36,7 @@ function useActiveId(ids, offset = 88) {
     setActiveId(currentActiveId);
   }, [ids, offset]);
 
-  useEffect(() => {
+  useEffect((): (() => void) => {
     window.addEventListener("scroll", updateActiveId, { passive: true });
     updateActiveId();
     return () => window.removeEventListener("scroll", updateActiveId);
@@ -36,7 +45,12 @@ function useActiveId(ids, offset = 88) {
   return activeId;
 }
 
-function recursiveToc(toc, collapse, activeId, level = 0) {
+function recursiveToc(
+  toc: Toc,
+  collapse: boolean | undefined,
+  activeId: string,
+  level: number = 0,
+): ReactElement {
   // ignore first level headers, head straight to h2
   const currLevel = level
     ? toc.map((li) => (
@@ -45,9 +59,9 @@ function recursiveToc(toc, collapse, activeId, level = 0) {
             <a
               href={`#${li.id}`}
               className={`toc-links ${activeId === li.id ? "toc-current" : ""}`}
-              onClick={(e) => {
+              onClick={(e): void => {
                 e.preventDefault();
-                const element = document.getElementById(li.id);
+                const element = document.getElementById(li.id!);
                 if (element) {
                   // Offset 88px aligns heading text exactly below the navbar.
                   const offset = 88;
@@ -107,12 +121,15 @@ function recursiveToc(toc, collapse, activeId, level = 0) {
   );
 }
 
-export default function TableOfContents({ toc, frontmatter }) {
-  const allIds = useMemo(() => {
-    const ids = [];
-    const recurse = (entries) => {
+export default function TableOfContents({
+  toc,
+  frontmatter,
+}: TableOfContentsProps): ReactElement {
+  const allIds = useMemo((): string[] => {
+    const ids: string[] = [];
+    const recurse = (entries: Toc): void => {
       entries.forEach((entry) => {
-        ids.push(entry.id);
+        if (entry.id !== undefined) ids.push(entry.id);
         if (entry.children) recurse(entry.children);
       });
     };

@@ -1,12 +1,18 @@
 "use client";
 
 import { ContentCopy } from "@mui/icons-material";
-import React from "react";
+import { useRef, ReactNode, ReactElement } from "react";
 
-export const CopyToClipboard = ({ children }) => {
-  const textInput = React.useRef(null);
+interface CopyToClipboardProps {
+  children: ReactNode;
+}
 
-  const onCopy = () => {
+export const CopyToClipboard = ({
+  children,
+}: CopyToClipboardProps): ReactElement => {
+  const textInput = useRef<HTMLDivElement>(null);
+
+  const onCopy = (): void => {
     if (textInput.current !== null && textInput.current.textContent !== null)
       navigator.clipboard.writeText(textInput.current.textContent);
   };
