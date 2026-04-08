@@ -1,15 +1,34 @@
-import { Box, Collapse, Typography, MenuList, MenuItem } from "@mui/material";
-import React, { useState } from "react";
-
+import {
+  Box,
+  Collapse,
+  Typography,
+  MenuList,
+  MenuItem,
+  type SxProps,
+  type Theme,
+} from "@mui/material";
+import { useState, type ReactElement } from "react";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+
+interface MobileContentAccordionProps {
+  data: Array<{ title: string; url: string }>;
+  name: string;
+}
 
 /**
  * Mobile (thin screen) version of content accordion
  * For mobile accordion inside hamburger menu
  * */
-export function MobileContentAccordion({ data, name }) {
+export function MobileContentAccordion({
+  data,
+  name,
+}: MobileContentAccordionProps): ReactElement {
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const handleClick = (): void => {
+    setMobileOpen(!mobileOpen);
+  };
 
   return (
     <Box sx={sx.root}>
@@ -37,10 +56,6 @@ export function MobileContentAccordion({ data, name }) {
       </Collapse>
     </Box>
   );
-
-  function handleClick() {
-    setMobileOpen(!mobileOpen);
-  }
 }
 
 const sx = {
@@ -70,4 +85,4 @@ const sx = {
   dropdownItemText: {
     fontSize: "0.9rem",
   },
-};
+} satisfies Record<string, SxProps<Theme>>;

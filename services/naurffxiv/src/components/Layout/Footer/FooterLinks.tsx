@@ -1,6 +1,23 @@
-export default function FooterLinks({ title, links, className }) {
+import { type ReactElement } from "react";
+
+interface Link {
+  url: string;
+  title: string;
+}
+
+interface FooterLinksProps {
+  title: string;
+  links: Link[];
+  className?: string;
+}
+
+export default function FooterLinks({
+  title,
+  links,
+  className,
+}: FooterLinksProps): ReactElement {
   return (
-    <div className={`list-none ${className}`}>
+    <div className={`list-none ${className || ""}`}>
       <p className="text-xl text-[#007EA7] font-bold">{title}</p>
       <ul className="columns-3xs">
         {links.map((item) => {
