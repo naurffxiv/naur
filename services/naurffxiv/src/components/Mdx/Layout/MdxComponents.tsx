@@ -1,3 +1,8 @@
+import {
+  type ReactElement,
+  type ElementType,
+  type ComponentPropsWithoutRef,
+} from "react";
 import Banner from "../Elements/Banner";
 import { Buff } from "../Elements/Buff/Buff";
 import { BuffAppendix } from "../Elements/Buff/BuffAppendix";
@@ -9,22 +14,29 @@ import LastUpdated from "../Elements/LastUpdated";
 import Streamable from "../Elements/Video/Streamable";
 import TwitchClip from "../Elements/Video/TwitchClip";
 import TwitchVoD from "../Elements/Video/TwitchVoD";
-import UnderConstruction from "../Elements/UnderConstruction.js";
+import UnderConstruction from "../Elements/UnderConstruction";
 import YouTube from "../Elements/Video/YouTube";
 
-export default function MDXComponents(mdxDir, lastUpdated) {
+interface MDXComponentsResult {
+  [key: string]: ElementType | undefined;
+}
+
+export default function MDXComponents(
+  mdxDir: string,
+  lastUpdated: string | null | undefined,
+): MDXComponentsResult {
   // NB: We track the first H1 to ensure <LastUpdated /> only renders once,
   // right after the main page title (the first <h1> in the MDX file).
   // We don't want the "Last Updated" date showing up after every section title.
   let firstH1Rendered = false;
 
   return {
-    a: (props) => {
-      if (props.href.startsWith("http"))
-        return <a target="_blank" {...props} />;
+    a: (props: ComponentPropsWithoutRef<"a">): ReactElement => {
+      if (typeof props.href === "string" && props.href.startsWith("http"))
+        return <a target="_blank" rel="noopener noreferrer" {...props} />;
       return <a {...props} />;
     },
-    h1: (props) => {
+    h1: (props: ComponentPropsWithoutRef<"h1">): ReactElement => {
       const isFirst = !firstH1Rendered;
       if (isFirst) {
         firstH1Rendered = true;
@@ -36,8 +48,10 @@ export default function MDXComponents(mdxDir, lastUpdated) {
         </>
       );
     },
-    img: (props) => <ImageModal {...props} />,
-    pre: (props) => (
+    img: (props: ComponentPropsWithoutRef<typeof ImageModal>): ReactElement => (
+      <ImageModal {...props} />
+    ),
+    pre: (props: ComponentPropsWithoutRef<"pre">): ReactElement => (
       <CopyToClipboard>
         <pre {...props}></pre>
       </CopyToClipboard>
@@ -48,8 +62,18 @@ export default function MDXComponents(mdxDir, lastUpdated) {
     TwitchClip,
     TwitchVoD,
     Streamable,
-    Buff: (props) => <Buff mdxDir={mdxDir} {...props} />,
-    BuffAppendix: (props) => <BuffAppendix mdxDir={mdxDir} {...props} />,
+    Buff: ({
+      mdxDir: _,
+      ...props
+    }: ComponentPropsWithoutRef<typeof Buff>): ReactElement => (
+      <Buff mdxDir={mdxDir} {...props} />
+    ),
+    BuffAppendix: ({
+      mdxDir: _,
+      ...props
+    }: ComponentPropsWithoutRef<typeof BuffAppendix>): ReactElement => (
+      <BuffAppendix mdxDir={mdxDir} {...props} />
+    ),
     UnderConstruction,
     Callout,
     Details,
