@@ -1,4 +1,12 @@
+import { type ReactNode, type ReactElement } from "react";
 import { Box } from "@mui/material";
+
+interface CalloutTypeConfig {
+  text: string;
+  backgroundColor: string;
+  borderColor: string;
+  icon: string;
+}
 
 const types = {
   warning: {
@@ -19,9 +27,17 @@ const types = {
     borderColor: "#28506E",
     icon: "ℹ️",
   },
-};
+} satisfies Record<string, CalloutTypeConfig>;
 
-export default function Callout({ children, type }) {
+interface CalloutProps {
+  children: ReactNode;
+  type: keyof typeof types;
+}
+
+export default function Callout({
+  children,
+  type,
+}: CalloutProps): ReactElement {
   return (
     <Box
       sx={{

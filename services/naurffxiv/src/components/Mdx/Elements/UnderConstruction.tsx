@@ -1,12 +1,19 @@
-import React from "react";
+import { type ReactElement } from "react";
 import { ReportProblem } from "@mui/icons-material";
+
+interface UnderConstructionProps {
+  title?: string;
+  message?: string;
+  showEstimate?: boolean;
+  estimatedCompletion?: string;
+}
 
 const UnderConstruction = ({
   title = "Page Under Construction",
   message = "We're working hard to bring you new content. Please check back soon!",
   showEstimate = false,
   estimatedCompletion = "soon",
-}) => {
+}: UnderConstructionProps): ReactElement => {
   return (
     <div className="flex flex-col items-center justify-center p-6 my-8 border border-yellow-300 rounded-lg bg-yellow-50">
       <div className="flex items-center gap-2 mb-2">

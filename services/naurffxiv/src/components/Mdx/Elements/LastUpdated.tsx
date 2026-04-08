@@ -1,5 +1,7 @@
 "use client";
 
+import { type ReactElement } from "react";
+
 interface LastUpdatedProps {
   lastUpdated: string | null | undefined;
 }
@@ -8,7 +10,9 @@ interface LastUpdatedProps {
  * LastUpdated component displays when a page was last modified
  * @param lastUpdated - ISO string of the date when the file was last modified
  */
-export default function LastUpdated({ lastUpdated }: LastUpdatedProps) {
+export default function LastUpdated({
+  lastUpdated,
+}: LastUpdatedProps): ReactElement | null {
   if (!lastUpdated) {
     return null;
   }
