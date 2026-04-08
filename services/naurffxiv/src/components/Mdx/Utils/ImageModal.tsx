@@ -1,16 +1,27 @@
 "use client";
 
 import Image from "next/image";
+import type { ImageProps } from "next/image";
 import Modal from "@mui/material/Modal";
 import { useState } from "react";
+import { ReactElement } from "react";
+
+interface ImageModalProps extends Omit<ImageProps, "src"> {
+  src: string;
+  compressedExt?: string;
+}
 
 // we can disable warnings for no alt-text as it will be provided by props
-export default function ImageModal({ src, compressedExt = "avif", ...props }) {
+export default function ImageModal({
+  src,
+  compressedExt = "avif",
+  ...props
+}: ImageModalProps): ReactElement {
   const [open, setOpen] = useState(false);
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+  const handleOpen = (): void => setOpen(true);
+  const handleClose = (): void => setOpen(false);
 
-  let compressed = src.substr(0, src.lastIndexOf(".")) + `.${compressedExt}`;
+  const compressed = src.substr(0, src.lastIndexOf(".")) + `.${compressedExt}`;
   return (
     <>
       <button onClick={handleOpen} className="not-prose">
