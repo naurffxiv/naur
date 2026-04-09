@@ -1,7 +1,0 @@
-discord==2.3.2
-pydantic==2.12.3
-psycopg2==2.9.11
-fastapi[standard]==0.128.0
-uvicorn
-fastapi-pagination
-python-dotenv
