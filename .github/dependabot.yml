@@ -19,11 +19,54 @@ updates:
     commit-message:
       prefix: "build"
     groups:
-      npm:
+      next-and-react:
+        patterns:
+          - "next"
+          - "@next/*"
+          - "react"
+          - "react-dom"
+          - "next-mdx-remote"
+      linting:
+        patterns:
+          - "eslint"
+          - "eslint-*"
+          - "prettier"
+          - "@typescript-eslint/*"
+      npm-other:
         patterns: ["*"]
+        exclude-patterns:
+          - "next"
+          - "@next/*"
+          - "react"
+          - "react-dom"
+          - "next-mdx-remote"
+          - "eslint"
+          - "eslint-*"
+          - "prettier"
+          - "@typescript-eslint/*"
+
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "build"
+    groups:
+      aspire:
+        patterns:
+          - "Aspire.*"
+      opentelemetry:
+        patterns:
+          - "OpenTelemetry.*"
+      nuget-other:
+        patterns: ["*"]
+        exclude-patterns:
+          - "Aspire.*"
+          - "OpenTelemetry.*"
 
   - package-ecosystem: "uv"
-    directory: "/"
+    directory: "/services/moddingway"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
@@ -34,25 +77,25 @@ updates:
         patterns: ["*"]
 
   - package-ecosystem: "gomod"
-    directory: "/"
+    directory: "/services/findingway"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
     commit-message:
       prefix: "build"
     groups:
-      gomod:
+      gomod-findingway:
         patterns: ["*"]
 
-  - package-ecosystem: "nuget"
-    directory: "/"
+  - package-ecosystem: "gomod"
+    directory: "/services/clearingway"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
     commit-message:
       prefix: "build"
     groups:
-      nuget:
+      gomod-clearingway:
         patterns: ["*"]
 
   - package-ecosystem: "docker"

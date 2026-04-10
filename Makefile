@@ -1,4 +1,4 @@
-.PHONY: setup lint-tools lint format check validate-deps validate-deps-fix install sync build clean clean-all aspire-run aspire-watch troubleshoot kill-dev help all check-python
+.PHONY: setup lint-tools lint format check install sync build clean clean-all aspire-run aspire-watch troubleshoot kill-dev help all check-python
 # VERBOSITY CONTROL
 Q := @
 ifdef VERBOSE
@@ -14,7 +14,6 @@ SCRIPTS_DIR := scripts/makefile
 PWSH 		:= pwsh -NoProfile -ExecutionPolicy Bypass -File
 WIN_PWSH    := powershell -NoProfile -ExecutionPolicy Bypass -File
 PYTHON      := uv run python
-DEP_SYNC    := uv run --with pyyaml --with ruamel-yaml python scripts/check-dependency-sync.py
 
 # DEFAULT TARGET
 .DEFAULT_GOAL := help
@@ -49,18 +48,8 @@ endif
 check-python:
 	$(Q)$(PYTHON) --version >$(NULL_DEVICE) 2>&1 || (echo "Python required." && exit 1)
 
-validate-deps: check-python
-	$(Q)echo Validating that dependencies.yml matches manifests...
-	$(Q)$(DEP_SYNC)
-
-validate-deps-fix: check-python
-	$(Q)echo Updating dependencies.yml to match manifests...
-	$(Q)$(DEP_SYNC) --fix
-
-
 install: check lint-tools
 	$(Q)$(PWSH) $(SCRIPTS_DIR)/install.ps1
-	$(Q)$(MAKE) validate-deps
 
 sync:
 	$(Q)$(PWSH) $(SCRIPTS_DIR)/sync-python.ps1
