@@ -19,6 +19,9 @@ elif [ "$EVENT_NAME" = "pull_request_review" ] && [ "$REVIEW_STATE" = "approved"
 elif [ "$EVENT_NAME" = "pull_request_review" ] && [ "$REVIEW_STATE" = "changes_requested" ]; then
   target="Change requested"
   reason="Changes requested"
+elif [ "$EVENT_NAME" = "pull_request_review" ] && [ "$REVIEW_STATE" = "commented" ]; then
+  echo "Skipping: review comment does not change board status" >&2
+  exit 0
 elif [ "$IS_DRAFT" = "true" ]; then
   target="In progress"
   reason="draft PR"
