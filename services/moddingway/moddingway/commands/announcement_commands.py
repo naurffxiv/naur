@@ -1,9 +1,11 @@
 import logging
 import math
+import math
 
 import discord
 from discord.ext.commands import Bot
 
+from moddingway.constants import MAX_CHAR_LIMIT, MESSAGE_LINK_PREFIX, TRUNCATE_OFFSET
 from moddingway.constants import MAX_CHAR_LIMIT, MESSAGE_LINK_PREFIX, TRUNCATE_OFFSET
 from moddingway.database import announcements_database
 from moddingway.services import announcement_service
@@ -157,6 +159,128 @@ class AnnouncementPaginator(discord.ui.View):
         await interaction.response.edit_message(embed=self.create_embed(), view=self)
 
 
+class AnnouncementEditModal(discord.ui.Modal, title="Edit Announcement"):
+    announcement_content = discord.ui.TextInput(
+        label="Announcement Text",
+        style=discord.TextStyle.long,
+        placeholder="Edit your announcement here...",
+        max_length=4000,
+    )
+
+    def __init__(
+        self, announcement_id: int, current_content: str, bot: Bot, *args, **kwargs
+    ):
+        super().__init__(*args, **kwargs)
+        self.announcement_id = announcement_id
+        self.bot = bot
+        self.announcement_content.default = current_content
+
+    async def on_submit(self, interaction: discord.Interaction):
+        new_content = self.announcement_content.value
+
+        announcements_database.add_revision(
+            announcement_id=self.announcement_id,
+            author_id=interaction.user.id,
+            content=new_content,
+        )
+
+        await interaction.response.send_message(
+            f"Successfully updated announcement (ID: {self.announcement_id}).",
+            ephemeral=True,
+        )
+
+
+class AnnouncementShowView(discord.ui.View):
+    def __init__(self, announcement_json, author, bot):
+        super().__init__(timeout=180)
+        self.announcement_json = announcement_json
+        self.revisions = announcement_json.get("revisions", [])
+        self.current_rev_index = len(self.revisions) - 1
+        self.author = author
+        self.bot = bot
+        self.update_button_states()
+
+    def create_embed(self):
+        rev = self.revisions[self.current_rev_index]
+        messageLink = (
+            MESSAGE_LINK_PREFIX
+            + str(settings.guild_id)
+            + "/"
+            + str(self.announcement_json["discord_msg_link"])
+        )
+        status = (
+            f"Sent: {messageLink}" if self.announcement_json["sent_flag"] else "Unsent"
+        )
+
+        embed = discord.Embed(
+            title=f"Announcement Draft (Rev {self.current_rev_index + 1}/{len(self.revisions)})",
+            description=rev["content"],
+        )
+        embed.add_field(
+            name="Revision Author",
+            value=f"<@{rev['author_id']}>",
+            inline=True,
+        )
+        embed.add_field(name="Status", value=status, inline=True)
+        embed.set_footer(
+            text=f"Announcement ID {self.announcement_json['announcement_id']}"
+        )
+        return embed
+
+    def update_button_states(self):
+        self.left_button.disabled = self.current_rev_index <= 0
+        self.right_button.disabled = self.current_rev_index >= len(self.revisions) - 1
+
+    @discord.ui.button(label="◀", style=discord.ButtonStyle.gray)
+    async def left_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
+        if interaction.user != self.author:
+            return await interaction.response.send_message(
+                "This isn't your menu!", ephemeral=True
+            )
+
+        if self.current_rev_index > 0:
+            self.current_rev_index -= 1
+            self.update_button_states()
+            await interaction.response.edit_message(
+                embed=self.create_embed(), view=self
+            )
+
+    @discord.ui.button(label="Edit", style=discord.ButtonStyle.primary)
+    async def edit_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
+        if interaction.user != self.author:
+            return await interaction.response.send_message(
+                "This isn't your menu!", ephemeral=True
+            )
+
+        current_content = self.revisions[self.current_rev_index]["content"]
+        modal = AnnouncementEditModal(
+            announcement_id=self.announcement_json["announcement_id"],
+            current_content=current_content,
+            bot=self.bot,
+        )
+        await interaction.response.send_modal(modal)
+
+    @discord.ui.button(label="▶", style=discord.ButtonStyle.gray)
+    async def right_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
+        if interaction.user != self.author:
+            return await interaction.response.send_message(
+                "This isn't your menu!", ephemeral=True
+            )
+
+        if self.current_rev_index < len(self.revisions) - 1:
+            self.current_rev_index += 1
+            self.update_button_states()
+            await interaction.response.edit_message(
+                embed=self.create_embed(), view=self
+            )
+
+
 def create_announcement_commands(bot: Bot) -> None:
 
     @bot.tree.command()
@@ -168,6 +292,7 @@ def create_announcement_commands(bot: Bot) -> None:
             str, 1, 4000
         ],  # Client side char check
     ):
+        """Draft an announcement [4000 character limit]"""
         """Draft an announcement [4000 character limit]"""
         async with create_response_context(interaction) as response_message:
             async with create_logging_embed(
@@ -252,37 +377,18 @@ def create_announcement_commands(bot: Bot) -> None:
         announcement_id: int,
     ):
         """Show announcement"""
-
         announcement_json = announcements_database.get_announcement(
             announcement_id=announcement_id
         )
+
         if announcement_json is None:
             await interaction.response.send_message(
                 "Announcement not found.", ephemeral=True
             )
         else:
-            messageLink = (
-                MESSAGE_LINK_PREFIX
-                + str(settings.guild_id)
-                + "/"
-                + str(announcement_json["discord_msg_link"])
+            view = AnnouncementShowView(
+                announcement_json=announcement_json, author=interaction.user, bot=bot
             )
-            status = (
-                f"Sent: {messageLink}" if announcement_json["sent_flag"] else "Unsent"
+            await interaction.response.send_message(
+                embed=view.create_embed(), view=view
             )
-            announcement_embed = discord.Embed(
-                title="Announcement Draft",
-                description=announcement_json["revisions"][-1]["content"],
-            )
-            announcement_embed.add_field(
-                name="Latest Revision",
-                value=f"<@{announcement_json['revisions'][-1]['author_id']}>",
-                inline=True,
-            )
-            announcement_embed.add_field(name="Status", value=status, inline=True)
-
-            announcement_embed.set_footer(
-                text=f"Announcement ID {announcement_json['announcement_id']}"
-            )
-
-            await interaction.response.send_message(embed=announcement_embed)
