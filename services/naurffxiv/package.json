@@ -29,6 +29,7 @@
     "@mui/x-data-grid": "^7.28.2",
     "@next/mdx": "15.5.12",
     "@stefanprobst/rehype-extract-toc": "^3.0.0",
+    "clsx": "^2.1.1",
     "highlight.js": "^11.11.1",
     "next": "15.5.12",
     "next-auth": "^4.24.11",
