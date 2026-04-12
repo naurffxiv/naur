@@ -1,19 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import Image from "next/image";
 import ReleaseCard from "@/components/Changelog/ReleaseCard";
 import { compareVersions } from "@/utils/compareVersions";
-import { fetchGithubReleases } from "@/utils/fetchGithubReleases";
+import {
+  fetchGithubReleases,
+  type GitHubRelease,
+} from "@/utils/fetchGithubReleases";
 
-export default function ChangelogContent() {
-  const [releases, setReleases] = useState([]);
-  const [expanded, setExpanded] = useState(null);
-  const [loading, setLoading] = useState(true);
+export default function ChangelogContent(): React.JSX.Element | null {
+  const [releases, setReleases] = useState<GitHubRelease[]>([]);
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const load = async () => {
+    const load = async (): Promise<void> => {
       try {
         const fetched = await fetchGithubReleases();
         fetched.sort(compareVersions);
@@ -30,11 +33,11 @@ export default function ChangelogContent() {
       }
     };
 
-    load();
+    void load();
     window.scrollTo(0, 0);
   }, []);
 
-  const toggleRelease = (version) => {
+  const toggleRelease = (version: string): void => {
     setExpanded((prev) => (prev === version ? null : version));
   };
 
@@ -72,11 +75,11 @@ export default function ChangelogContent() {
       <div className="space-y-8">
         {releases.map((release, idx) => (
           <ReleaseCard
-            key={release.id}
+            key={release["id"] as string}
             release={{
               version: release.tag_name,
-              date: release.published_at,
-              body: release.body,
+              date: release["published_at"] as string | null | undefined,
+              body: release["body"] as string | null | undefined,
             }}
             isExpanded={expanded === release.tag_name}
             toggleRelease={toggleRelease}
