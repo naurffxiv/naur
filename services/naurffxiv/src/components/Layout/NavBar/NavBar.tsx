@@ -1,6 +1,14 @@
 "use client";
 
-import { AppBar, Box, IconButton, Toolbar, Typography } from "@mui/material";
+import {
+  AppBar,
+  Box,
+  IconButton,
+  Toolbar,
+  type SxProps,
+  type Theme,
+} from "@mui/material";
+import { type ReactElement } from "react";
 
 import { DesktopMenu } from "./DesktopMenu";
 import Image from "next/image";
@@ -8,12 +16,12 @@ import Link from "next/link";
 import { MobileMenu } from "./MobileMenu";
 import { icons } from "@/lib/assets";
 
-export default function NavBar() {
+export default function NavBar(): ReactElement {
   return (
     <>
       <AppBar position="sticky" sx={sx.appBar} elevation={0}>
         <Toolbar sx={sx.toolbar} disableGutters>
-          <Typography sx={sx.naurIconContainer}>
+          <Box sx={sx.naurIconContainer}>
             <IconButton size="small">
               <Link href="/">
                 <Image
@@ -24,7 +32,7 @@ export default function NavBar() {
                 />
               </Link>
             </IconButton>
-          </Typography>
+          </Box>
 
           {/* Desktop menu */}
           <Box sx={{ display: { xs: "none", md: "flex" } }}>
@@ -75,4 +83,4 @@ const sx = {
   discordIconContainer: {
     px: 1,
   },
-};
+} satisfies Record<string, SxProps<Theme>>;
