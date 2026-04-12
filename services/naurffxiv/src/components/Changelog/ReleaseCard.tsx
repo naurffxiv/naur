@@ -1,5 +1,7 @@
 "use client";
 
+import React, { type ComponentPropsWithoutRef, useState } from "react";
+
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import { GH_REPO } from "@/utils/fetchGithubReleases";
 import ReactMarkdown from "react-markdown";
@@ -7,15 +9,27 @@ import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeHighlight from "rehype-highlight";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
-import { useState } from "react";
+
+interface ReleaseData {
+  version: string;
+  date: string | null | undefined;
+  body: string | null | undefined;
+}
+
+interface ReleaseCardProps {
+  release: ReleaseData;
+  isExpanded: boolean;
+  toggleRelease: (version: string) => void;
+  isLatest: boolean;
+}
 
 export default function ReleaseCard({
   release,
   isExpanded,
   toggleRelease,
   isLatest,
-}) {
-  const [hovering, setHovering] = useState(false);
+}: ReleaseCardProps): React.JSX.Element | null {
+  const [hovering, setHovering] = useState<boolean>(false);
 
   if (!release?.version) return null;
 
@@ -39,7 +53,7 @@ export default function ReleaseCard({
       })
     : "";
 
-  const handleToggle = () => {
+  const handleToggle = (): void => {
     if (!isLatest) toggleRelease(release.version);
   };
 
@@ -63,7 +77,9 @@ export default function ReleaseCard({
               target="_blank"
               rel="noreferrer"
               className="text-4xl font-bold text-white hover:underline"
-              onClick={(e) => e.stopPropagation()} // Prevent expanding when clicking link
+              onClick={(e: React.MouseEvent<HTMLAnchorElement>) =>
+                e.stopPropagation()
+              } // Prevent expanding when clicking link
             >
               {release.version}
             </a>
@@ -119,16 +135,16 @@ export default function ReleaseCard({
                   rehypeHighlight,
                 ]}
                 components={{
-                  ul: (props) => (
+                  ul: (props: ComponentPropsWithoutRef<"ul">) => (
                     <ul {...props} className="space-y-2 text-gray-300" />
                   ),
-                  li: (props) => (
+                  li: (props: ComponentPropsWithoutRef<"li">) => (
                     <li {...props} className="flex gap-2 text-gray-300">
                       <span className="select-none">–</span>
                       <span>{props.children}</span>
                     </li>
                   ),
-                  h2: (props) => (
+                  h2: (props: ComponentPropsWithoutRef<"h2">) => (
                     <h2
                       {...props}
                       className="mt-8 mb-4 text-xl font-semibold text-white"
