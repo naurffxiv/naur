@@ -2,6 +2,7 @@ import json
 import logging
 from typing import Any
 
+from moddingway.constants import ANNOUNCEMENT_REV_LIMIT
 from moddingway.settings import get_settings
 
 from . import DatabaseConnection
@@ -136,8 +137,20 @@ def add_revision(announcement_id: int, author_id: int, content: str) -> bool:
         if isinstance(revisions_data, str):
             revisions_data = json.loads(revisions_data)
 
-        # Append the new revision data as a dictionary
-        revisions_data.append({"author_id": author_id, "content": content})
+        ### Calculate next ver
+        if revisions_data and "version" in revisions_data[-1]:
+            next_version = revisions_data[-1]["version"] + 1
+        else:
+            ### fallback for old data or empty lists
+            next_version = len(revisions_data) + 1
+
+        revisions_data.append(
+            {"version": next_version, "author_id": author_id, "content": content}
+        )
+
+        ### Keep it three revs
+        if len(revisions_data) > ANNOUNCEMENT_REV_LIMIT:
+            revisions_data = revisions_data[-ANNOUNCEMENT_REV_LIMIT:]
 
         update_query = """
             UPDATE announcements

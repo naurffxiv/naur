@@ -1,11 +1,9 @@
 import logging
 import math
-import math
 
 import discord
 from discord.ext.commands import Bot
 
-from moddingway.constants import MAX_CHAR_LIMIT, MESSAGE_LINK_PREFIX, TRUNCATE_OFFSET
 from moddingway.constants import MAX_CHAR_LIMIT, MESSAGE_LINK_PREFIX, TRUNCATE_OFFSET
 from moddingway.database import announcements_database
 from moddingway.services import announcement_service
@@ -89,6 +87,8 @@ class AnnouncementPaginator(discord.ui.View):
                 shortened_rev = (
                     revisions[-1]["content"][: MAX_CHAR_LIMIT - TRUNCATE_OFFSET] + "..."
                 )
+            else:
+                shortened_rev = revisions[-1]["content"]
             messageLink = (
                 MESSAGE_LINK_PREFIX
                 + str(settings.guild_id)
@@ -183,11 +183,24 @@ class AnnouncementEditModal(discord.ui.Modal, title="Edit Announcement"):
             author_id=interaction.user.id,
             content=new_content,
         )
+        updated_json = announcements_database.get_announcement(self.announcement_id)
 
-        await interaction.response.send_message(
+        new_view = AnnouncementShowView(
+            announcement_json=updated_json, author=interaction.user, bot=self.bot
+        )
+
+        await interaction.response.edit_message(
+            embed=new_view.create_embed(), view=new_view
+        )
+
+        await interaction.followup.send(
             f"Successfully updated announcement (ID: {self.announcement_id}).",
             ephemeral=True,
         )
+        # await interaction.response.send_message(
+        #     f"Successfully updated announcement (ID: {self.announcement_id}).",
+        #     ephemeral=True,
+        # )
 
 
 class AnnouncementShowView(discord.ui.View):
@@ -200,6 +213,7 @@ class AnnouncementShowView(discord.ui.View):
         self.bot = bot
         self.update_button_states()
 
+    ###TODO: fade out these buttons once they time out
     def create_embed(self):
         rev = self.revisions[self.current_rev_index]
         messageLink = (
@@ -230,6 +244,7 @@ class AnnouncementShowView(discord.ui.View):
     def update_button_states(self):
         self.left_button.disabled = self.current_rev_index <= 0
         self.right_button.disabled = self.current_rev_index >= len(self.revisions) - 1
+        self.edit_button.disabled = bool(self.announcement_json.get("sent_flag"))
 
     @discord.ui.button(label="◀", style=discord.ButtonStyle.gray)
     async def left_button(
@@ -251,11 +266,11 @@ class AnnouncementShowView(discord.ui.View):
     async def edit_button(
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
-        if interaction.user != self.author:
+        if self.announcement_json.get("sent_flag"):
             return await interaction.response.send_message(
-                "This isn't your menu!", ephemeral=True
+                "This announcement has already been sent and cannot be edited.",
+                ephemeral=True,
             )
-
         current_content = self.revisions[self.current_rev_index]["content"]
         modal = AnnouncementEditModal(
             announcement_id=self.announcement_json["announcement_id"],
@@ -293,21 +308,39 @@ def create_announcement_commands(bot: Bot) -> None:
         ],  # Client side char check
     ):
         """Draft an announcement [4000 character limit]"""
-        """Draft an announcement [4000 character limit]"""
         async with create_response_context(interaction) as response_message:
             async with create_logging_embed(
                 interaction, announcement_text
             ) as logging_embed:
-                draft_id = await announcement_service.add_announcement(
+                announcement_json = await announcement_service.add_announcement(
                     logging_embed,
                     author=interaction.user,
                     announcement_text=announcement_text,
                     bot=bot,
                 )
+                if announcement_json:
+                    test_channel_id = settings.announcement_draft_channel
+                    channel = bot.get_channel(test_channel_id)
 
-                response_message.set_string(
-                    f"Successfully added announcement. (ID: {draft_id})"
-                )
+                    if channel is None:
+                        raise ValueError(
+                            f"Could not find announcement channel with ID {test_channel_id}"
+                        )
+                    if not isinstance(channel, discord.TextChannel):
+                        raise TypeError(
+                            f"Channel {test_channel_id} is not a TextChannel."
+                        )
+
+                    else:
+                        view = AnnouncementShowView(
+                            announcement_json=announcement_json,
+                            author=interaction.user,
+                            bot=bot,
+                        )
+                        await channel.send(embed=view.create_embed(), view=view)
+                        response_message.set_string(
+                            f"Successfully added announcement. (ID: {announcement_json['announcement_id']})"
+                        )
 
     @bot.tree.command()
     @discord.app_commands.check(is_user_admin)

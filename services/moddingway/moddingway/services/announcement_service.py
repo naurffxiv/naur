@@ -16,7 +16,7 @@ async def add_announcement(
     author: discord.User | discord.Member,
     announcement_text: str,
     bot: discord.Client,
-) -> int:
+) -> dict | None:
 
     announcement_rev = AnnouncementRevision(
         version=0, content=announcement_text, author_id=author.id
@@ -25,27 +25,30 @@ async def add_announcement(
     new_id = announcements_database.insert_announcement(
         announcement_rev=announcement_rev
     )
-    logging_embed.set_footer(text=f"Announcement ID: {new_id}")
 
-    test_channel_id = settings.announcement_draft_channel
-    channel = bot.get_channel(test_channel_id)
+    announcement_json = announcements_database.get_announcement(announcement_id=new_id)
 
-    if channel is None:
-        raise ValueError(
-            f"Could not find announcement channel with ID {test_channel_id}"
-        )
+    # logging_embed.set_footer(text=f"Announcement ID: {new_id}")
 
-    announcement_embed = discord.Embed(
-        title="Announcement Draft",
-        description=announcement_text,
-    )
-    announcement_embed.add_field(name="Edited By", value=f"<@{author.id}>", inline=True)
-    announcement_embed.add_field(name="Status", value="Unsent", inline=True)
+    # test_channel_id = settings.announcement_draft_channel
+    # channel = bot.get_channel(test_channel_id)
 
-    announcement_embed.set_footer(text=f"Announcement ID {new_id}")
-    if isinstance(channel, discord.abc.Messageable):
-        sent_message = await channel.send(embed=announcement_embed)
-    if sent_message:
+    # if channel is None:
+    #     raise ValueError(
+    #         f"Could not find announcement channel with ID {test_channel_id}"
+    #     )
+
+    # announcement_embed = discord.Embed(
+    #     title="Announcement Draft",
+    #     description=announcement_text,
+    # )
+    # announcement_embed.add_field(name="Edited By", value=f"<@{author.id}>", inline=True)
+    # announcement_embed.add_field(name="Status", value="Unsent", inline=True)
+
+    # announcement_embed.set_footer(text=f"Announcement ID {new_id}")
+    # if isinstance(channel, discord.abc.Messageable): ### TODO:send this with buttons, use the same logic in the show command
+    #     sent_message = await channel.send(embed=announcement_embed)
+    if announcement_json:
         log_info_and_add_field(
             logging_embed,
             logger,
@@ -53,7 +56,7 @@ async def add_announcement(
             "Announcement draft created.",
         )
 
-    return new_id
+    return announcement_json
 
 
 async def publish_announcement(logging_embed, channel, announcement_id):
