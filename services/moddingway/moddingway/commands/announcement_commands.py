@@ -4,11 +4,16 @@ import math
 import discord
 from discord.ext.commands import Bot
 
-from moddingway.constants import MAX_CHAR_LIMIT, MESSAGE_LINK_PREFIX, TRUNCATE_OFFSET
+from moddingway.constants import (
+    MAX_CHAR_LIMIT,
+    MESSAGE_LINK_PREFIX,
+    TRUNCATE_OFFSET,
+    Role,
+)
 from moddingway.database import announcements_database
 from moddingway.services import announcement_service
 from moddingway.settings import get_settings
-from moddingway.util import is_user_admin
+from moddingway.util import is_user_admin, user_has_role
 
 from .helper import create_logging_embed, create_response_context
 
@@ -197,10 +202,6 @@ class AnnouncementEditModal(discord.ui.Modal, title="Edit Announcement"):
             f"Successfully updated announcement (ID: {self.announcement_id}).",
             ephemeral=True,
         )
-        # await interaction.response.send_message(
-        #     f"Successfully updated announcement (ID: {self.announcement_id}).",
-        #     ephemeral=True,
-        # )
 
 
 class AnnouncementShowView(discord.ui.View):
@@ -213,7 +214,6 @@ class AnnouncementShowView(discord.ui.View):
         self.bot = bot
         self.update_button_states()
 
-    ###TODO: fade out these buttons once they time out
     def create_embed(self):
         rev = self.revisions[self.current_rev_index]
         messageLink = (
@@ -266,6 +266,13 @@ class AnnouncementShowView(discord.ui.View):
     async def edit_button(
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
+        if not isinstance(interaction.user, discord.Member) or not user_has_role(
+            interaction.user, Role.ADMIN
+        ):
+            return await interaction.response.send_message(
+                "Only admins are allowed to edit announcements.",
+                ephemeral=True,
+            )
         if self.announcement_json.get("sent_flag"):
             return await interaction.response.send_message(
                 "This announcement has already been sent and cannot be edited.",
