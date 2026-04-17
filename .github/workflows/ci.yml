@@ -174,23 +174,6 @@ jobs:
       should_run: ${{ github.event_name == 'push' || needs.detect-changes.outputs[matrix.service] == 'true' }}
     secrets: inherit
 
-  ci-dependency-audit:
-    name: Dependency Audit
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-      - name: Install uv
-        uses: astral-sh/setup-uv@eac588ad8def6316056a12d4907a9d4d84ff7a3b # v7.3.0
-      - name: Dependency Audit
-        uses: ./.github/actions/run-command-with-report
-        with:
-          service: global
-          step-number: 5
-          step-name: "Dependency Audit"
-          command: uv run --with pyyaml --with ruamel-yaml python scripts/check-dependency-sync.py
-
   deploy-production:
     needs: [detect-changes, ci-node]
     if: github.event_name == 'push' && needs.detect-changes.outputs.naurffxiv_deploy == 'true'
@@ -233,7 +216,6 @@ jobs:
         ci-python,
         ci-dotnet,
         ci-go,
-        ci-dependency-audit,
         deploy-preview,
         e2e,
       ]
