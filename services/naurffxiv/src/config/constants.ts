@@ -1,4 +1,5 @@
 import { images } from "../lib/assets";
+import type { FightGuideEntry } from "@/components/Homepage/Widgets/FightGuideComponent";
 
 export const markdownFolders = ["ultimate", "savage", "criterion", "extreme"];
 
@@ -19,7 +20,7 @@ export const pages = [
   */
 ];
 
-export const ultimateList = [
+export const ultimateList: FightGuideEntry[] = [
   {
     title: "Futures Rewritten",
     url: "/ultimate/fru",
@@ -48,7 +49,7 @@ export const ultimateList = [
   },
 ];
 
-export const savageList = [
+export const savageList: FightGuideEntry[] = [
   {
     title: "M9S - Vamp Fatale",
     url: "/savage/m9s",
@@ -75,7 +76,7 @@ export const savageList = [
   },
 ];
 
-export const criterionList = [
+export const criterionList: FightGuideEntry[] = [
   {
     title: "Another Merchant's Tale",
     url: "/criterion/merchants-tale",
@@ -84,7 +85,7 @@ export const criterionList = [
   },
 ];
 
-export const extremeList = [
+export const extremeList: FightGuideEntry[] = [
   {
     title: "Hell on Rails",
     url: "/extreme/hell-on-rails",

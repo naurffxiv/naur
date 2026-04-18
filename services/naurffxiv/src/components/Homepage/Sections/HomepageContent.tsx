@@ -1,7 +1,8 @@
+import { JSX } from "react";
 import FightGuideList from "../Widgets/FightGuideList";
 import Offerings from "../Widgets/OfferingCards";
 
-export default function HomepageContent() {
+export default function HomepageContent(): JSX.Element {
   return (
     <div className="grid p-10 mx-auto max-w-screen-2xl gap-y-10">
       <FightGuideList />
