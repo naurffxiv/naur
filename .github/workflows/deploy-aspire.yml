@@ -1,0 +1,85 @@
+name: Deploy Aspire
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "GitHub environment to deploy"
+        required: true
+        type: choice
+        options: [production, development]
+        default: production
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/deploy-aspire.yml"
+      - "Directory.Packages.props"
+      - "NuGet.config"
+      - "global.json"
+      - "services/apphost/**"
+      - "services/authingway/**"
+
+concurrency:
+  group: aspire-deploy-${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'production' }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment:
+      name: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'production' }}
+      url: https://${{ vars.DEPLOY_DOMAIN }}
+    permissions:
+      contents: read
+      packages: write
+
+    defaults:
+      run:
+        working-directory: services/apphost
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - uses: zyactions/dotnet-setup@8f4b644ff5ff19bba913663df285b7b7278bb724 # v1.0.1
+        with:
+          global-json-file: global.json
+
+      - name: Install Aspire CLI
+        run: |
+          curl -sSL https://aspire.dev/install.sh | bash
+          echo "$HOME/.aspire/bin" >> "$GITHUB_PATH"
+        working-directory: .
+
+      - name: Configure SSH key
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+
+      - name: Add known host
+        env:
+          TARGET_HOST: ${{ secrets.TARGET_HOST }}
+        run: ssh-keyscan -H "$TARGET_HOST" >> ~/.ssh/known_hosts
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Deploy
+        env:
+          EnableHttps: "true"
+          Parameters__PostgresPassword: ${{ secrets.POSTGRES_PASSWORD }}
+          Parameters__domain: ${{ vars.DEPLOY_DOMAIN }}
+          Parameters__letsencrypt_email: ${{ vars.LETSENCRYPT_EMAIL }}
+          DockerSSH__TargetHost: ${{ secrets.TARGET_HOST }}
+          DockerSSH__SshUsername: ${{ secrets.SSH_USERNAME }}
+          DockerSSH__SshKeyPath: ~/.ssh/id_ed25519
+          DockerSSH__SshPassword: ${{ secrets.SSH_KEY_PASSPHRASE }}
+          DockerRegistry__RegistryUrl: ghcr.io
+          DockerRegistry__RepositoryPrefix: ${{ github.repository }}
+          DockerRegistry__RegistryUsername: ${{ github.actor }}
+          DockerRegistry__RegistryPassword: ${{ secrets.GITHUB_TOKEN }}
+        run: aspire deploy -e ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'production' }}
