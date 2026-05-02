@@ -2,7 +2,7 @@
   "name": "e2e-tests",
   "version": "1.0.0",
   "engines": {
-    "node": ">=22.12.0",
+    "node": ">=22.13.0",
     "pnpm": ">=10.29.2"
   },
   "description": "End-to-end tests for NAUR Monorepo",
