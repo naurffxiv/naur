@@ -6,7 +6,7 @@ export type AuthErrorResult = {
   status: string;
 };
 
-// TODO(#348): Centralize Authentication Error Constants and Types #348
+// TODO(#88): Centralize Authentication Error Constants and Types #88
 export const AuthErrorType = {
   AccessDenied: "AccessDenied",
   SessionExpired: "SessionExpired",

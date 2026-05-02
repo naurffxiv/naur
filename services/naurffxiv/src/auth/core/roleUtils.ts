@@ -1,6 +1,6 @@
 // TODO(#347): Put in its own const folder
 
-import type { DiscordRole, UserWithRoles } from "@/types/discord";
+import type { DiscordRole, UserWithRoles } from "@naur/shared/types";
 
 import { RolesArray } from "@auth/core/roleConstants";
 
