@@ -7,19 +7,19 @@
     "tests/e2e"
   ],
   "engines": {
-    "node": ">=22.12.0",
+    "node": ">=22.13.0",
     "pnpm": ">=10.29.2"
   },
   "packageManager": "pnpm@10.29.2",
   "license": "MIT",
   "type": "commonjs",
   "devDependencies": {
-    "@j178/prek": "^0.3.0",
+    "@j178/prek": "^0.3.11",
     "@typescript-eslint/eslint-plugin": "^8.53.0",
     "@typescript-eslint/parser": "^8.53.0",
     "eslint": "^8.57.1",
     "prettier": "^3.8.3",
-    "turbo": "^2.7.6",
+    "turbo": "^2.9.7",
     "typescript": "^5.9.3"
   },
   "scripts": {
@@ -39,6 +39,12 @@
     "overrides": {
       "@types/react": "19.2.14",
       "@types/react-dom": "19.2.3"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "esbuild",
+      "sharp",
+      "unrs-resolver"
+    ]
   }
 }
