@@ -4,7 +4,10 @@ COPY . /src
 RUN make build
 
 FROM alpine:3.19.1
+RUN adduser -D appuser
 WORKDIR /findingway
 COPY --from=builder /src/findingway .
 COPY --from=builder /src/config.yaml .
-ENTRYPOINT /findingway/findingway
+RUN chown -R appuser:appuser /findingway
+USER appuser
+ENTRYPOINT ["/findingway/findingway"]
