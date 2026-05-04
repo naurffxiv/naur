@@ -2,6 +2,7 @@ import json
 import logging
 from typing import Any
 
+from moddingway.constants import ANNOUNCEMENT_REV_LIMIT
 from moddingway.settings import get_settings
 
 from . import DatabaseConnection
@@ -114,3 +115,53 @@ def select_announcements_bulk(status: bool | None = None):
         res = cursor.fetchall()
 
         return res
+
+
+def add_revision(announcement_id: int, author_id: int, content: str) -> bool:
+    conn = DatabaseConnection()
+
+    with conn.get_cursor() as cursor:
+        fetch_query = """
+            SELECT announcementRevisions
+            FROM announcements
+            WHERE announcementID = %s
+        """
+        cursor.execute(fetch_query, (announcement_id,))
+        res = cursor.fetchone()
+
+        if res is None:
+            raise ValueError(f"Announcement ID {announcement_id} not found.")
+
+        revisions_data = res[0]
+
+        if isinstance(revisions_data, str):
+            revisions_data = json.loads(revisions_data)
+
+        ### Calculate next ver
+        if revisions_data and "version" in revisions_data[-1]:
+            next_version = revisions_data[-1]["version"] + 1
+        else:
+            ### fallback for old data or empty lists
+            next_version = len(revisions_data) + 1
+
+        revisions_data.append(
+            {"version": next_version, "author_id": author_id, "content": content}
+        )
+
+        ### Keep it three revs
+        if len(revisions_data) > ANNOUNCEMENT_REV_LIMIT:
+            revisions_data = revisions_data[-ANNOUNCEMENT_REV_LIMIT:]
+
+        update_query = """
+            UPDATE announcements
+            SET announcementRevisions = %s
+            WHERE announcementID = %s
+        """
+        cursor.execute(update_query, (json.dumps(revisions_data), announcement_id))
+
+        if cursor.rowcount == 0:
+            raise ValueError(
+                f"Failed to update revisions for Announcement ID {announcement_id}."
+            )
+
+        return True
