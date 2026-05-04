@@ -1,4 +1,4 @@
-package commands
+package clearingway
 
 import (
 	"github.com/bwmarrin/discordgo"
