@@ -217,19 +217,21 @@ def calculate_time_delta(delta_string: str | None) -> timedelta | None:
 
 
 async def is_user_moderator(interaction: discord.Interaction):
-    if isinstance(interaction.user, discord.Member):
-        if user_has_role(interaction.user, Role.MOD):
-            return True
-        else:
-            raise discord.app_commands.MissingRole(Role.MOD)
+    if not isinstance(interaction.user, discord.Member):
+        return False
+    if user_has_role(interaction.user, Role.MOD) or user_has_role(
+        interaction.user, Role.ADMIN
+    ):
+        return True
+    raise discord.app_commands.MissingAnyRole([Role.MOD, Role.ADMIN])
 
 
 async def is_user_admin(interaction: discord.Interaction):
-    if isinstance(interaction.user, discord.Member):
-        if user_has_role(interaction.user, Role.ADMIN):
-            return True
-        else:
-            raise discord.app_commands.MissingRole(Role.ADMIN)
+    if not isinstance(interaction.user, discord.Member):
+        return False
+    if user_has_role(interaction.user, Role.ADMIN):
+        return True
+    raise discord.app_commands.MissingRole(Role.ADMIN)
 
 
 def timestamp_to_epoch(timestamp: datetime | None) -> int | None:
