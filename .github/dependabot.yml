@@ -19,6 +19,28 @@ updates:
     commit-message:
       prefix: "build"
     groups:
+      linting:
+        patterns:
+          - "eslint"
+          - "eslint-*"
+          - "prettier"
+          - "@typescript-eslint/*"
+      npm-other:
+        patterns: ["*"]
+        exclude-patterns:
+          - "eslint"
+          - "eslint-*"
+          - "prettier"
+          - "@typescript-eslint/*"
+
+  - package-ecosystem: "npm"
+    directory: "/services/naurffxiv"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "build"
+    groups:
       next-and-react:
         patterns:
           - "next"
@@ -44,6 +66,17 @@ updates:
           - "eslint-*"
           - "prettier"
           - "@typescript-eslint/*"
+
+  - package-ecosystem: "npm"
+    directory: "/tests/e2e"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "build"
+    groups:
+      npm-all:
+        patterns: ["*"]
 
   - package-ecosystem: "nuget"
     directory: "/"
