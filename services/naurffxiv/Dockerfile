@@ -15,7 +15,7 @@ FROM base AS installer
 WORKDIR /app
 # Only install build tools if you have native dependencies
 RUN apt-get update && \
-    apt-get install -y build-essential python3 && \
+    apt-get install -y --no-install-recommends build-essential python3 && \
     rm -rf /var/lib/apt/lists/*
 COPY .gitignore .gitignore
 COPY --from=prune /app/out/json/ .
@@ -50,7 +50,7 @@ WORKDIR /app
 
 # Install curl for healthchecks and clean up in same layer
 RUN apt-get update && \
-    apt-get install -y curl && \
+    apt-get install -y --no-install-recommends curl && \
     rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production
