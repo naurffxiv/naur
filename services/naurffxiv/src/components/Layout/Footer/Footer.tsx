@@ -1,3 +1,4 @@
+import { type ReactElement } from "react";
 import {
   extremeList,
   otherList,
@@ -8,7 +9,7 @@ import {
 
 import FooterLinks from "./FooterLinks";
 
-export default function Footer() {
+export default function Footer(): ReactElement {
   return (
     <footer>
       <div className="bg-gradient-to-b from-[#28506E] to-[#061A33] pt-10 pb-10 px-20 md:px-40">

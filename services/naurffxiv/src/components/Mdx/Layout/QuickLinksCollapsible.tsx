@@ -1,8 +1,18 @@
 import { Collapse } from "@mui/material";
-import { useState } from "react";
+import { useState, ReactNode, ReactElement } from "react";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 
-function QuickLinksCollapsible({ defaultState = false, children, title }) {
+interface QuickLinksCollapsibleProps {
+  defaultState?: boolean;
+  children: ReactNode;
+  title: string;
+}
+
+function QuickLinksCollapsible({
+  defaultState = false,
+  children,
+  title,
+}: QuickLinksCollapsibleProps): ReactElement {
   const [open, setOpen] = useState(defaultState);
   return (
     <>

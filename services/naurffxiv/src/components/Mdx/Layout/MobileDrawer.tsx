@@ -1,13 +1,19 @@
 import { Drawer, IconButton, Box } from "@mui/material";
 import { MenuOpen } from "@mui/icons-material";
-import React from "react";
+import { useState, ReactNode, ReactElement } from "react";
 import ExitButton from "@/components/Common/ExitButton";
 
-function MobileDrawer({ children }) {
-  const [mobileOpen, setOpen] = React.useState(false);
-  const toggleDrawer = (newOpen) => () => {
-    setOpen(newOpen);
-  };
+interface MobileDrawerProps {
+  children: ReactNode;
+}
+
+function MobileDrawer({ children }: MobileDrawerProps): ReactElement {
+  const [mobileOpen, setOpen] = useState(false);
+  const toggleDrawer =
+    (newOpen: boolean): (() => void) =>
+    () => {
+      setOpen(newOpen);
+    };
 
   return (
     <div className="sticky bottom-0 z-10 flex items-center justify-end max-w-full mr-2 max-h-0 lg:hidden">

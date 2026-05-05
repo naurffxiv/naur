@@ -1,5 +1,6 @@
 "use client";
 
+import { type ReactElement } from "react";
 import { MenuItem, Typography, Box } from "@mui/material";
 import { ContentDropdown } from "./ContentDropdown";
 import { MobileContentAccordion } from "./MobileContentAccordion";
@@ -10,8 +11,33 @@ import {
   extremeList,
 } from "@/config/constants";
 
-export default function SharedNavLinks({ isMobile, onClick }) {
-  const navItems = [
+interface NavItemBase {
+  label: string;
+}
+
+interface NavLink extends NavItemBase {
+  type: "link";
+  href: string;
+  external?: boolean;
+}
+
+interface NavDropdown extends NavItemBase {
+  type: "dropdown";
+  data: Array<{ title: string; url: string }>;
+}
+
+type NavItem = NavLink | NavDropdown;
+
+interface SharedNavLinksProps {
+  isMobile: boolean;
+  onClick?: () => void;
+}
+
+export default function SharedNavLinks({
+  isMobile,
+  onClick,
+}: SharedNavLinksProps): ReactElement {
+  const navItems: NavItem[] = [
     { type: "link", label: "Home", href: "/" },
     {
       type: "link",
@@ -52,13 +78,13 @@ export default function SharedNavLinks({ isMobile, onClick }) {
         }
 
         if (item.type === "dropdown") {
-          const DropdownComponent = isMobile
-            ? MobileContentAccordion
-            : ContentDropdown;
-
           return (
             <Box key={idx} sx={{ width: "100%" }}>
-              <DropdownComponent name={item.label} data={item.data} />
+              {isMobile ? (
+                <MobileContentAccordion name={item.label} data={item.data} />
+              ) : (
+                <ContentDropdown name={item.label} data={item.data} />
+              )}
             </Box>
           );
         }
