@@ -31,7 +31,7 @@ WORKDIR /app
 COPY --from=installer /app/ .
 COPY package.json turbo.json pnpm-workspace.yaml ./
 COPY services/naurffxiv services/naurffxiv
-CMD ["sh", "-c", "pnpm install --ignore-scripts && pnpm --filter naurffxiv dev"]
+CMD ["sh", "-c", "pnpm install --ignore-scripts && cd services/naurffxiv && pnpm dev"]
 
 # Builder stage: Build the application
 FROM base AS builder
