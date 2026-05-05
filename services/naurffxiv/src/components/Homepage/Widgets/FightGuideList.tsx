@@ -1,3 +1,4 @@
+import { JSX } from "react";
 import {
   extremeList,
   savageList,
@@ -7,7 +8,7 @@ import {
 
 import FightGuideComponent from "./FightGuideComponent";
 
-export default function EncounterEntry() {
+export default function EncounterEntry(): JSX.Element {
   const ultimateEntries = ultimateList.slice(0, 1);
   const savageEntries = savageList.slice(0, 4);
   const criterionEntries = criterionList.slice(0, 1);
