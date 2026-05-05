@@ -12,7 +12,7 @@ If you see this on naurffxiv that means I messed up!
 
 ## external/internal links
 
-[internal link](/testing/page)  
+[internal link](/testing/page)
 [external link](https://github.com/naurffxiv/naurffxiv)
 
 ## example usage of video components
@@ -35,10 +35,51 @@ https://streamable.com/2h30
 
 <Streamable videoId="2h30" />
 
+### Role component
+
+Displays a role icon and highlights text according to the role's colour.
+
+The basic usage is `<Role>tank</Role>`, which adds the icon and highlights the text: <Role>tank</Role>
+
+The text auto-parses common abbreviations, such as <Role>physrange</Role> but if it cannot figure out what you're referring to, or gets it wrong, you can specify explicitly with the `role` attribute: <Role role="healer">green DPS</Role>
+
+You can use it without content as in `<Role role="melee" />` to just display the <Role role="melee" /> icon with no accompanying text.
+
+And finally, you can suppress the icon: `<Role icon="false">magic dps</Role>` will highlight the text without the icon: <Role icon="false">magic dps</Role>
+
+Supported icons:
+
+- <Role>Tank</Role>
+- <Role role="t1">T1/MT</Role>
+- <Role role="t2">T2/OT/ST</Role>
+- <Role>Healer</Role>
+- <Role role="ph">Pure Healer/Regen Healer/PH/RH</Role>
+- <Role role="bh">Barrier Healer/Shield Healer/BH/SH</Role>
+- <Role>H1</Role>
+- <Role>H2</Role>
+- <Role>Support</Role>
+- <Role>DPS</Role>
+- <Role>D1</Role>
+- <Role>D2</Role>
+- <Role>D3</Role>
+- <Role>D4</Role>
+- <Role>Melee DPS</Role>
+- <Role>M1</Role>
+- <Role>M2</Role>
+- <Role>Ranged DPS</Role>
+- <Role>R1</Role>
+- <Role>R2</Role>
+- <Role>Physical Ranged DPS</Role>
+- <Role>Magical Ranged DPS</Role>
+
+**Note:** When using the icon-only mode, the `role` attribute will be used for copy-paste and screen readers, so make sure it reads well.
+
+**Note:** The MT/ST/OT abbreviations will probably be updated to refer the main and side tank icons expected in Evercold.
+
 ### Buff components
 
 Lorem markdownum quaque mater sed quicquam adest <Buff b="neurolink"/> flammas agitur, ruit regi
-Charybdis _et_ flebat **versantes fumantia <Buff b="phoenix-blessing"/> dolores** Dianae.  
+Charybdis _et_ flebat **versantes fumantia <Buff b="phoenix-blessing"/> dolores** Dianae.
 json test: <Buff b="phoenix-blessing" type="json" />
 
 ### Callout components

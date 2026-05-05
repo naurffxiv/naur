@@ -12,6 +12,7 @@ import TwitchVoD from "../Elements/Video/TwitchVoD";
 import UnderConstruction from "../Elements/UnderConstruction.js";
 import YouTube from "../Elements/Video/YouTube";
 import OpenInNew from "@mui/icons-material/OpenInNew";
+import Role from "../Elements/Role";
 
 export default function MDXComponents(mdxDir, lastUpdated) {
   // NB: We track the first H1 to ensure <LastUpdated /> only renders once,
@@ -51,6 +52,7 @@ export default function MDXComponents(mdxDir, lastUpdated) {
     Streamable,
     Buff: (props) => <Buff mdxDir={mdxDir} {...props} />,
     BuffAppendix: (props) => <BuffAppendix mdxDir={mdxDir} {...props} />,
+    Role,
     UnderConstruction,
     Callout,
     Details,
