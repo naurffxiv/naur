@@ -34,11 +34,11 @@ What’s actually in chaos is everyone’s debuff bars, as everyone receives thr
 From left to right on the debuff bar, they are as follows:
 
 1.  Every player receives a 10-, 20-, or 30-second <Buff b="siw-dark-fire" short /> or <Buff b="siw-dark-blizzard" short />:
-    1. Two <mark className="hl-support">supports</mark> and one <mark className="hl-dps">DPS</mark> each receive <Buff b="siw-dark-fire" dur="30" />.
-    2. One <mark className="hl-support">support</mark> and one <mark className="hl-dps">DPS</mark> each receive <Buff b="siw-dark-fire" dur="20" />.
-    3. Two <mark className="hl-dps">DPS</mark> and one <mark className="hl-support">support</mark> each receive <Buff b="siw-dark-fire" dur="10" />.
+    1. Two <Role>supports</Role> and one <Role>DPS</Role> each receive <Buff b="siw-dark-fire" dur="30" />.
+    2. One <Role>support</Role> and one <Role>DPS</Role> each receive <Buff b="siw-dark-fire" dur="20" />.
+    3. Two <Role>DPS</Role> and one <Role>support</Role> each receive <Buff b="siw-dark-fire" dur="10" />.
     4. I lied a little bit.
-       Either the <mark className="hl-support">support</mark> with <Buff b="siw-dark-fire" dur="10" short /> or the <mark className="hl-dps">DPS</mark> with <Buff b="siw-dark-fire" dur="30" short /> _actually_ receives <Buff b="siw-dark-blizzard" dur="20" /> instead.
+       Either the <Role>support</Role> with <Buff b="siw-dark-fire" dur="10" short /> or the <Role>DPS</Role> with <Buff b="siw-dark-fire" dur="30" short /> _actually_ receives <Buff b="siw-dark-blizzard" dur="20" /> instead.
        However, for the rest of the debuff breakdown, I’m going to pretend the <Buff b="siw-dark-blizzard" short /> doesn’t exist, and all players receive <Buff b="siw-dark-fire" short />.
        It simplifies the explanations.
 
@@ -51,7 +51,7 @@ From left to right on the debuff bar, they are as follows:
 
 4.  Every player receives a 43-second <Buff b="siw-shadoweye" short />, <Buff b="siw-dark-water" short />, or <Buff b="siw-dark-eruption" short />:
     1. The three players with <Buff b="siw-dark-fire" dur="30" /> receive <Buff b="siw-shadoweye" dur="43" />.
-    2. The <mark className="hl-dps">DPS</mark> with <Buff b="siw-dark-fire" dur="20" /> receives <Buff b="siw-dark-water" dur="43" />.
+    2. The <Role>DPS</Role> with <Buff b="siw-dark-fire" dur="20" /> receives <Buff b="siw-dark-water" dur="43" />.
     3. The remaining four players all receive <Buff b="siw-dark-eruption" dur="43" />.
 
 It perhaps comes as a bit of a surprise how tightly role-based the assignments are, given that this is an ultimate.
@@ -69,7 +69,7 @@ Thankfully, though, it means that everything apart from the three <Buff b="siw-u
   <tbody>
     <tr>
       <td>
-        <mark className="hl-support">Support</mark>
+        <Role>Support</Role>
       </td>
       <td>
         <Buff b="siw-dark-fire" dur="30" short />
@@ -93,7 +93,7 @@ Thankfully, though, it means that everything apart from the three <Buff b="siw-u
     </tr>
     <tr>
       <td>
-        <mark className="hl-dps">DPS</mark>
+        <Role>DPS</Role>
       </td>
       <td>
         <Buff b="siw-dark-fire" dur="10" short />
