@@ -5,6 +5,7 @@ import {
   getProcessedMdxFromParams,
   processMdx,
   readAndDeserializeJson,
+  type MetaEntry,
 } from "./helpers";
 import { markdownFolders, reservedSlugs } from "@/config/constants";
 
@@ -16,13 +17,7 @@ import { notFound } from "next/navigation";
 import path from "path";
 import { readdirSync } from "fs";
 
-type QuickLinksEntry = {
-  groups?: string[];
-  metadata?: { [key: string]: any };
-  slug: string;
-  order?: number;
-  title?: string;
-};
+import type { SiblingPage } from "@/components/Mdx/Layout/QuickLinks";
 
 // --- Page Rendering ---
 // Called when a page is accessed (only once on build with static site generation)
@@ -62,41 +57,36 @@ export default async function MdxPage(props: {
   );
 }
 
-type PageInfo = {
-  groups?: string[];
-  filepath: string;
-  slug: string[];
-  order?: number;
-  title?: string;
-};
-
 // --- Quick Links Data ---
 // get info for the page's Quick Links component
-async function getPages(params: Params): Promise<QuickLinksEntry[]> {
+async function getPages(params: Params): Promise<SiblingPage[]> {
   const mdxDir = getMdxDir([params.difficulty]);
   const mdxFiles = await findSiblingMdxFilepath(params);
 
   const siblingPages = (await Promise.all(
-    mdxFiles.map(async (file: PageInfo) => {
+    mdxFiles.map(async (file) => {
       const { frontmatter } = await processMdx(
-        path.join(mdxDir, file.filepath),
+        path.join(mdxDir, file.filepath!),
       );
       const slugArr = file.slug
         ? [params.difficulty, ...file.slug]
         : [params.difficulty];
       return {
         groups: file.groups,
-        metadata: frontmatter,
+        metadata: {
+          title: frontmatter?.["title"] as string | undefined,
+          order: frontmatter?.["order"] as number | undefined,
+        },
         slug: "/" + slugArr.join("/"),
         order: file.order,
         title: file.title,
-      } as QuickLinksEntry;
+      } as SiblingPage;
     }),
-  )) as QuickLinksEntry[];
+  )) as SiblingPage[];
 
   const manualQuickLinks = (await findManuallyAddedQuickLinks(
     params,
-  )) as QuickLinksEntry[];
+  )) as SiblingPage[];
   return [...siblingPages, ...manualQuickLinks];
 }
 
@@ -115,7 +105,7 @@ export async function generateMetadata(props: {
 
   if (error) return notFound();
 
-  const effectiveTitle = title || frontmatter.title;
+  const effectiveTitle = title || frontmatter?.["title"];
   return {
     title: effectiveTitle ? `${effectiveTitle} | NAUR` : "NAUR",
   };
@@ -153,9 +143,8 @@ export async function generateStaticParams(): Promise<Params[]> {
   );
 
   // recursively get slugs from each tree
-  // refactoring to the "any" type to a more specific type will have to be its own PR
   function getSlugsFromTree(
-    tree: any,
+    tree: MetaEntry | undefined,
     subfolder: string,
     isFirst = false,
   ): string[][] {
@@ -165,11 +154,18 @@ export async function generateStaticParams(): Promise<Params[]> {
       .filter((key) => !reservedSlugs.includes(key))
       .flatMap((key) => {
         const value = tree[key];
-        const current = value.index ? [key] : null;
-        const children = getSlugsFromTree(value, subfolder).map((child) => [
-          key,
-          ...child,
-        ]);
+        if (
+          typeof value !== "object" ||
+          value === null ||
+          Array.isArray(value)
+        ) {
+          return [];
+        }
+        const entryValue = value as MetaEntry;
+        const current = entryValue.index ? [key] : null;
+        const children = getSlugsFromTree(entryValue, subfolder).map(
+          (child) => [key, ...child],
+        );
         return current ? [current, ...children] : children;
       });
 
