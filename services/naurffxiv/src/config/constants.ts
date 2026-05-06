@@ -79,12 +79,18 @@ export const criterionList = [
   {
     title: "Another Merchant's Tale",
     url: "/criterion/merchants-tale",
-    img: "/images/thumbnails/Hidden.avif",
+    img: "/images/thumbnails/criterion/amt.avif",
     alt: "Another Merchant's Tale",
   },
 ];
 
 export const extremeList = [
+  {
+    title: "The Unmaking",
+    url: "/extreme/the-unmaking",
+    img: "/images/thumbnails/Hidden.avif",
+    alt: "The Unmaking",
+  },
   {
     title: "Hell on Rails",
     url: "/extreme/hell-on-rails",
