@@ -29,5 +29,9 @@
   "hell-on-rails": {
     "index": "hell-on-rails.mdx",
     "groups": ["extreme", "Dawntrail Extremes"]
+  },
+  "the-unmaking": {
+    "index": "the-unmaking.mdx",
+    "groups": ["extreme", "Dawntrail Extremes"]
   }
 }

@@ -86,6 +86,12 @@ export const criterionList = [
 
 export const extremeList = [
   {
+    title: "The Unmaking",
+    url: "/extreme/the-unmaking",
+    img: "/images/thumbnails/Hidden.avif",
+    alt: "The Unmaking",
+  },
+  {
     title: "Hell on Rails",
     url: "/extreme/hell-on-rails",
     img: "/images/thumbnails/extreme/dt-ex7.avif",
