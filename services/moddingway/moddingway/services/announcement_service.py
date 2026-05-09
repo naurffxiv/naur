@@ -75,6 +75,11 @@ async def publish_announcement(logging_embed, channel, announcement_id):
                 discord_msg_link=str(channel.id) + "/" + str(sent_message.id),
             )
 
-            log_info_and_add_field(
-                logging_embed, logger, "Result", "Published announcement"
-            )
+        log_info_and_add_field(
+            logging_embed, logger, "Result", "Published announcement"
+        )
+
+
+async def list_announcements_service(status: bool | None = None):
+    announcement_list = announcements_database.select_announcements_bulk(status)
+    return announcement_list

@@ -73,10 +73,19 @@ function getGitLastUpdated(filepath) {
   }
   return null;
 }
+function getGitRepoRoot() {
+  const result = spawnSync("git", ["rev-parse", "--show-toplevel"], {
+    encoding: "utf-8",
+  });
+  if (result.status === 0) {
+    return result.stdout.trim();
+  }
+  return process.cwd();
+}
 
 // Gets file path relative to repo root for GitHub API
 function getRelativeFilePath(filepath) {
-  const repoRoot = process.cwd();
+  const repoRoot = getGitRepoRoot();
   const relativePath = path.relative(repoRoot, filepath);
   // Convert Windows paths to Unix-style for GitHub API
   return relativePath.replace(/\\/g, "/");
@@ -91,7 +100,7 @@ async function getGitHubLastUpdated(filepath) {
 
   try {
     const relativePath = getRelativeFilePath(filepath);
-    const repo = "naurffxiv/naurffxiv";
+    const repo = "naurffxiv/naur";
     const apiUrl = `https://api.github.com/repos/${repo}/commits?path=${encodeURIComponent(relativePath)}&per_page=1`;
 
     const response = await fetch(apiUrl, {

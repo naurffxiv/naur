@@ -175,9 +175,3 @@ details[open] :last-child {
 .small-table .buff + .buff {
   padding-left: 5px;
 }
-
-/* contain margins to prevent "dead zones" between sections for the scrollspy */
-section {
-  padding-top: 0.1px;
-  padding-bottom: 0.1px;
-}

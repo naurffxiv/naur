@@ -7,12 +7,12 @@
 }
 
 /* Meta */
-@include hl-variant("cast");
+@include hl-variant("cast", #f0d9b7);
 
 /* Role */
 @include hl-variant("tank", #5462bd);
 @include hl-variant("healer", #70b04f);
-@include hl-variant("support", #628986);
+@include hl-variant("support", #5ab2ab);
 @include hl-variant("dps", #b64f4b);
 
 /* Elemental */
