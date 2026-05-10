@@ -12,6 +12,7 @@ class NoteDisplay:
     content: str
     created_by: int
     last_editor: int
+    last_edited_timestamp: datetime
 
 
 def convert_row_to_note_display(row: tuple) -> NoteDisplay:
@@ -22,6 +23,7 @@ def convert_row_to_note_display(row: tuple) -> NoteDisplay:
             content=row[2],
             created_by=row[3],
             last_editor=row[4],
+            last_edited_timestamp=row[5],
         )
     except IndexError as e:
         raise ValueError(
@@ -65,7 +67,7 @@ def list_notes(user_id: int) -> list[NoteDisplay]:
 
     with conn.get_cursor() as cursor:
         query = """
-        select n.noteid, n.isWarning, n.note, n.createdby, n.lastEditedBy
+        select n.noteid, n.isWarning, n.note, n.createdby, n.lastEditedBy, n.lastEditedTimestamp
         from notes n
         join users u on u.userID = n.userID
         where u.userId = %s
@@ -85,7 +87,7 @@ def get_note(note_id: int) -> NoteDisplay:
 
     with conn.get_cursor() as cursor:
         query = """
-        select n.noteid, n.isWarning, n.note, n.createdby , n.lastEditedBy
+        select n.noteid, n.isWarning, n.note, n.createdby, n.lastEditedBy, n.lastEditedTimestamp
         from notes n
         join users u on u.userID = n.userID
         where n.noteid = %s
@@ -142,7 +144,7 @@ def list_warnings(user_id: int) -> list[NoteDisplay]:
 
     with conn.get_cursor() as cursor:
         query = """
-        select n.noteid, n.isWarning, n.note, n.createdby, n.lastEditedBy
+        select n.noteid, n.isWarning, n.note, n.createdby, n.lastEditedBy, n.lastEditedTimestamp
         from notes n
         join users u on u.userID = n.userID
         where u.userId = %s and n.isWarning = true

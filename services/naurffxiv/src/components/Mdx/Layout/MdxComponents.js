@@ -11,6 +11,7 @@ import TwitchClip from "../Elements/Video/TwitchClip";
 import TwitchVoD from "../Elements/Video/TwitchVoD";
 import UnderConstruction from "../Elements/UnderConstruction.js";
 import YouTube from "../Elements/Video/YouTube";
+import OpenInNew from "@mui/icons-material/OpenInNew";
 
 export default function MDXComponents(mdxDir, lastUpdated) {
   // NB: We track the first H1 to ensure <LastUpdated /> only renders once,
@@ -53,5 +54,6 @@ export default function MDXComponents(mdxDir, lastUpdated) {
     UnderConstruction,
     Callout,
     Details,
+    OpenInNew,
   };
 }
