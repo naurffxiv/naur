@@ -182,7 +182,11 @@ class AnnouncementEditModal(discord.ui.Modal, title="Edit Announcement"):
 
     async def on_submit(self, interaction: discord.Interaction):
         new_content = self.announcement_content.value
-
+        if not new_content.strip():
+            await interaction.response.send_message(
+                "Announcement content cannot be empty.", ephemeral=True
+            )
+            return
         announcements_database.add_revision(
             announcement_id=self.announcement_id,
             author_id=interaction.user.id,
@@ -326,16 +330,16 @@ def create_announcement_commands(bot: Bot) -> None:
                     bot=bot,
                 )
                 if announcement_json:
-                    test_channel_id = settings.announcement_draft_channel
-                    channel = bot.get_channel(test_channel_id)
+                    announcement_draft_channel_id = settings.announcement_draft_channel
+                    channel = bot.get_channel(announcement_draft_channel_id)
 
                     if channel is None:
                         raise ValueError(
-                            f"Could not find announcement channel with ID {test_channel_id}"
+                            f"Could not find announcement channel with ID {announcement_draft_channel_id}"
                         )
                     if not isinstance(channel, discord.TextChannel):
                         raise TypeError(
-                            f"Channel {test_channel_id} is not a TextChannel."
+                            f"Channel {announcement_draft_channel_id} is not a TextChannel."
                         )
 
                     else:
