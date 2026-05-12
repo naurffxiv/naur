@@ -1,0 +1,3 @@
+# Prettier is broken on Markdown and especially MDX files
+*.md
+*.mdx
