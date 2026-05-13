@@ -70,4 +70,4 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 
 [tool.uv]
-required-version = "==0.10.4"
+required-version = "==0.11.14"
