@@ -1,5 +1,0 @@
-# flyctl launch added from .gitignore
-**/coverage.out
-**/clearingway
-!**/clearingway
-fly.toml
