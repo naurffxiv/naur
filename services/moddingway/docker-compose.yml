@@ -44,3 +44,5 @@ services:
     build:
       context: ../..
       dockerfile: services/moddingway/Dockerfile.tests
+    volumes:
+      - ../../tests/moddingway:/opt/app/tests/moddingway

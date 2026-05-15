@@ -120,7 +120,8 @@ jobs:
           service: ${{ inputs.service }}
           step-number: 30
           step-name: "Unit Tests"
-          command: uv run pytest ../../tests/${{ inputs.service }} --cov=${{ inputs.service }} --cov-report=xml:../../tests/${{ inputs.service }}/coverage.xml
+          command: >-
+            ${{ inputs.service == 'moddingway' && 'docker compose run --rm --build python-test' || format('uv run pytest ../../tests/{0} --cov={0} --cov-report=xml:../../tests/{0}/coverage.xml', inputs.service) }}
           output-file: pytest.txt
           working-directory: services/${{ inputs.service }}
           fail-on-error: true
