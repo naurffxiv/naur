@@ -121,7 +121,7 @@ jobs:
           step-number: 30
           step-name: "Unit Tests"
           command: >-
-            ${{ inputs.service == 'moddingway' && 'docker compose run --rm --build python-test' || format('uv run pytest ../../tests/{0} --cov={0} --cov-report=xml:../../tests/{0}/coverage.xml', inputs.service) }}
+            ${{ inputs.service == 'moddingway' && 'make test-ci' || format('uv run pytest ../../tests/{0} --cov={0} --cov-report=xml:../../tests/{0}/coverage.xml', inputs.service) }}
           output-file: pytest.txt
           working-directory: services/${{ inputs.service }}
           fail-on-error: true
@@ -133,4 +133,4 @@ jobs:
           name: coverage-${{ inputs.service }}
           path: tests/${{ inputs.service }}/coverage.xml
           if-no-files-found: ignore
-          retention-days: 1
+          retention-days: 7
