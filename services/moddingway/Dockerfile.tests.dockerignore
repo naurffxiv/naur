@@ -1,0 +1,24 @@
+# Used by BuildKit when building Dockerfile.tests with context=../..
+# Sends only the service source and its tests to the daemon.
+
+**
+
+!services/moddingway/
+!services/moddingway/**
+
+!tests/
+!tests/moddingway/
+!tests/moddingway/**
+
+services/moddingway/.venv/
+services/moddingway/venv/
+services/moddingway/.env
+services/moddingway/.env_example
+services/moddingway/.coverage
+services/moddingway/coverage.xml
+services/moddingway/htmlcov/
+services/moddingway/.pytest_cache/
+services/moddingway/.ruff_cache/
+services/moddingway/**/__pycache__/
+services/moddingway/**/*.pyc
+services/moddingway/build.log

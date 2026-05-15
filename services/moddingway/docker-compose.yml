@@ -38,3 +38,9 @@ services:
     depends_on:
       postgres_local:
         condition: service_healthy
+
+  python-test:
+    container_name: moddingwayTest
+    build:
+      context: ../..
+      dockerfile: services/moddingway/Dockerfile.tests

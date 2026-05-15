@@ -62,8 +62,8 @@ api: sync
 api-reload: sync
 	@uv run uvicorn moddingway_api.main:app --port 8000 --reload
 
-test: sync
-	@uv run pytest ../../tests/moddingway/unit
+test:
+	docker compose run --rm --build python-test
 
 ty: sync
 	@uv run ty check . ../../tests/moddingway
