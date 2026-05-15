@@ -73,44 +73,30 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - uses: zyactions/dotnet-setup@8f4b644ff5ff19bba913663df285b7b7278bb724 # v1.0.1
+      - name: Setup .NET
+        uses: zyactions/dotnet-setup@8f4b644ff5ff19bba913663df285b7b7278bb724 # v1.0.1
         with:
           global-json-file: global.json
 
       - name: Install Aspire CLI
-        run: |
-          curl -sSL https://aspire.dev/install.sh | bash
-          echo "$HOME/.aspire/bin" >> "$GITHUB_PATH"
-        working-directory: .
+        run: curl -sSL https://aspire.dev/install.sh | bash
 
-      - name: Configure SSH key
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        run: |
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-
-      - name: Add known host
-        env:
-          TARGET_HOST: ${{ secrets.TARGET_HOST }}
-        run: ssh-keyscan -H "$TARGET_HOST" >> ~/.ssh/known_hosts
-
-      - uses: zyactions/dotnet-restore@bffc71e1a5275122a2795bf2912804f0185db27c # v1.1.0
+      - name: Setup SSH agent
+        uses: webfactory/ssh-agent@e83874834305fe9a4a2997156cb26c5de65a8555 # v0.10.0
         with:
-          working-directory: services/apphost
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add known hosts
+        run: ssh-keyscan -H ${{ secrets.TARGET_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy
         env:
           EnableHttps: "true"
           Parameters__PostgresPassword: ${{ secrets.POSTGRES_PASSWORD }}
-          Parameters__domain: ${{ vars.DEPLOY_DOMAIN }}
-          Parameters__letsencrypt_email: ${{ vars.LETSENCRYPT_EMAIL }}
+          Parameters__Domain: ${{ vars.DEPLOY_DOMAIN }}
+          Parameters__LetsEncryptEmail: ${{ vars.LETSENCRYPT_EMAIL }}
           DockerSSH__TargetHost: ${{ secrets.TARGET_HOST }}
           DockerSSH__SshUsername: ${{ secrets.SSH_USERNAME }}
-          DockerSSH__SshKeyPath: ~/.ssh/id_ed25519
-          DockerSSH__SshPassword: ${{ secrets.SSH_KEY_PASSPHRASE }}
           DockerRegistry__RegistryUrl: ghcr.io
           DockerRegistry__RepositoryPrefix: ${{ github.repository }}
           DockerRegistry__RegistryUsername: ${{ github.actor }}

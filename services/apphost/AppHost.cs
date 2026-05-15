@@ -51,8 +51,8 @@ if (builder.ExecutionContext.IsPublishMode)
     }
     else
     {
-        var domain = builder.AddParameter("domain");
-        var letsEncryptEmail = builder.AddParameter("letsencrypt-email");
+        var domain = builder.AddParameter("Domain");
+        var letsEncryptEmail = builder.AddParameter("LetsEncryptEmail");
         var letsEncryptVolume = "letsencrypt";
 
         var certbot = builder.AddContainer("certbot", "certbot/certbot")
