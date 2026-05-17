@@ -14,6 +14,10 @@ on:
         required: false
         type: boolean
         default: true
+      has_docker_smoke_test:
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   lint:
@@ -132,4 +136,43 @@ jobs:
           name: coverage-${{ inputs.service }}
           path: tests/${{ inputs.service }}/coverage.xml
           if-no-files-found: ignore
-          retention-days: 1
+          retention-days: 7
+
+  docker-smoke-test:
+    needs: [test]
+    if: inputs.should_run && inputs.has_docker_smoke_test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/${{ inputs.service }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Build API Image
+        run: docker compose build python-api
+
+      - name: Smoke Test API
+        env:
+          POSTGRES_USER: moddingwayLocalDB
+          POSTGRES_PASSWORD: moddingwayLocalDBPassword
+          POSTGRES_DB: moddingway
+          MODDINGWAY_ENVIRONMENT: local
+        run: |
+          docker compose up -d python-api-local
+
+          for i in {1..60}; do
+            if curl -sf http://localhost:8000/health; then
+              echo "API is healthy"
+              docker compose logs python-api-local
+              docker compose down
+              exit 0
+            fi
+            echo "Waiting for API to be healthy..."
+            sleep 2
+          done
+
+          echo "API failed health check within timeout"
+          docker compose logs python-api-local
+          docker compose logs postgres_local
+          docker compose down
+          exit 1

@@ -1,6 +1,7 @@
 import logging
 from contextlib import asynccontextmanager
 
+import anyio
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from fastapi_pagination import add_pagination
@@ -17,14 +18,18 @@ from moddingway_api.routes import (
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     configure_logging()
-    create_db_connection()
-    yield
-    # TODO spin down db connection
-
-
-def create_db_connection():
     database_connection = DatabaseConnection()
-    database_connection.connect()
+    await anyio.to_thread.run_sync(database_connection.connect)  # ty: ignore[unresolved-attribute]
+    await anyio.to_thread.run_sync(database_connection.create_tables)  # ty: ignore[unresolved-attribute]
+    app.state.db = database_connection
+
+    try:
+        yield
+    finally:
+        try:
+            app.state.db.disconnect()
+        except Exception:
+            logging.getLogger(__name__).exception("Error during DB disconnect")
 
 
 def configure_logging():

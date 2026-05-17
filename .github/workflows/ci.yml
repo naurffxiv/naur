@@ -132,6 +132,7 @@ jobs:
       service: moddingway
       python-version: "3.14"
       should_run: ${{ github.event_name == 'push' || needs.detect-changes.outputs.moddingway == 'true' }}
+      has_docker_smoke_test: true
     secrets: inherit
 
   ci-dotnet:
