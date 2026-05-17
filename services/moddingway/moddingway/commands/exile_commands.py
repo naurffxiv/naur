@@ -1,4 +1,5 @@
 import logging
+import time
 from random import choice
 
 import discord
@@ -28,15 +29,37 @@ settings = get_settings()
 logger = logging.getLogger(__name__)
 
 
+ROULETTE_CONFIRM_COOLDOWN_SECONDS = 86400
+ROULETTE_SPAM_COOLDOWN_SECONDS = 10
+
+
 class RouletteDeleteView(discord.ui.View):
-    def __init__(self, interaction: discord.Interaction, *args, **kwargs):
+    def __init__(
+        self,
+        interaction: discord.Interaction,
+        roulette_command: discord.app_commands.Command,
+        *args,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
         self.original_interaction = interaction
+        self.roulette_command = roulette_command
+        self.confirmed = False
+
+    def _apply_confirm_cooldown(self, interaction: discord.Interaction):
+        buckets = getattr(self.roulette_command, "_buckets", None)
+        if buckets and getattr(buckets, "_cooldown", None):
+            bucket = buckets.get_bucket(interaction)
+            if bucket is not None:
+                bucket._tokens = 0
+                bucket._window = time.time()
 
     @discord.ui.button(label="Confirm", style=discord.ButtonStyle.success)
     async def confirm_button_callback(
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
+        self.confirmed = True
+        self.stop()
         self.clear_items()
         await self.original_interaction.edit_original_response(view=self)
 
@@ -45,6 +68,8 @@ class RouletteDeleteView(discord.ui.View):
                 "This command must be run in a server.", ephemeral=False
             )
             return
+
+        self._apply_confirm_cooldown(interaction)
 
         safety_options = [True, True, True, True, True, False]
         exile_duration_options = [1, 6, 12, 18, 24]
@@ -99,10 +124,27 @@ class RouletteDeleteView(discord.ui.View):
     async def cancel_button_callback(
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
+        self.stop()
         self.clear_items()
         await self.original_interaction.edit_original_response(view=self)
+        buckets = getattr(self.roulette_command, "_buckets", None)
+        if buckets:
+            buckets.reset_cooldown(interaction)
         async with create_response_context(interaction) as response_message:
             response_message.set_string("Roulette cancelled")
+
+    async def on_timeout(self):
+        original = self.original_interaction
+        buckets = getattr(self.roulette_command, "_buckets", None)
+        if buckets:
+            buckets.reset_cooldown(original)
+        self.clear_items()
+        try:
+            await original.edit_original_response(
+                content="Roulette prompt timed out.", view=self
+            )
+        except Exception:
+            logger.warning("Could not edit roulette prompt after timeout.")
 
 
 def create_exile_commands(bot: Bot) -> None:
@@ -170,13 +212,22 @@ def create_exile_commands(bot: Bot) -> None:
 
     @bot.tree.command()
     @discord.app_commands.checks.cooldown(
-        1, 86400, key=lambda i: (i.guild_id, i.user.id)
+        1,
+        ROULETTE_SPAM_COOLDOWN_SECONDS,
+        key=lambda i: (i.guild_id, i.user.id),
     )
     async def roulette(interaction: discord.Interaction):
         """Test your luck, fail and be exiled..."""
+        roulette_command = interaction.command
+        if not isinstance(roulette_command, discord.app_commands.Command):
+            return
         await interaction.response.send_message(
             "Are you sure you want to do this? You have a 1/6 chance in being exiled for up to 24 hours.",
-            view=RouletteDeleteView(interaction=interaction, timeout=30),
+            view=RouletteDeleteView(
+                interaction=interaction,
+                roulette_command=roulette_command,
+                timeout=30,
+            ),
             ephemeral=True,
         )
 
