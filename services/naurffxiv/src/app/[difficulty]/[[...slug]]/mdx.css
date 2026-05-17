@@ -158,20 +158,47 @@ details[open] :last-child {
 /* Small, condensed, MDX table */
 .small-table {
   width: fit-content !important;
-}
+  margin-block: 1em;
+  margin-inline-start: 1.6em;
 
-.small-table th,
-.small-table td {
-  padding: 2px 10px;
-  vertical-align: middle;
-}
+  /* If wrapping a table in a <div> to apply the class, remove extra margin. */
+  > table {
+    margin: 0;
+  }
 
-.small-table thead tr,
-.small-table tbody tr:nth-child(odd) {
-  background-color: rgba(0, 0, 0, 0.33);
-}
+  th,
+  td {
+    padding: 0.35em 0.8em;
+    vertical-align: middle;
+  }
 
-/* Give extra space to buffs immediately following other buffs */
-.small-table .buff + .buff {
-  padding-left: 5px;
+  thead tr,
+  tbody tr:nth-child(odd) {
+    background-color: rgba(0, 0, 0, 0.33);
+  }
+
+  /* Give extra space to buffs immediately following other buffs */
+  .buff + .buff {
+    padding-left: 5px;
+  }
+
+  td p {
+    margin: 0.4lh 0 !important;
+
+    &:first-child {
+      margin-top: 0 !important;
+    }
+
+    &:last-child {
+      margin-bottom: 0 !important;
+    }
+  }
+  &:has(td:has(:not(:only-child, :empty))) td:is(:only-child, :empty) {
+    margin-top: 0.1lh !important;
+    margin-bottom: 0.1lh !important;
+  }
+
+  th p {
+    margin: 0 !important;
+  }
 }
