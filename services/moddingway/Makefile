@@ -13,7 +13,6 @@ lint: format ty
 stop:
 	docker compose down
 
-
 clean-venv:
 	@uv venv --clear
 
@@ -62,10 +61,26 @@ api: sync
 api-reload: sync
 	@uv run uvicorn moddingway_api.main:app --port 8000 --reload
 
-test: sync
-	@uv run pytest ../../tests/moddingway/unit
+TEST_REPORTS_DIR := ../../tests/moddingway
+
+test:
+	docker compose run --rm --build python-test
+
+test-ci:
+	@echo "Running containerized tests..."
+	docker compose build python-test
+	-docker rm -f moddingway-test-container
+	docker create --name moddingway-test-container moddingway-python-test
+	@python -c "import subprocess, sys; \
+		r = subprocess.run(['docker', 'start', '-a', 'moddingway-test-container']); \
+		exit_code = r.returncode; \
+		print('Exporting test artifacts...'); \
+		subprocess.run(['docker', 'cp', 'moddingway-test-container:/opt/app/tests/moddingway/coverage.xml', '$(TEST_REPORTS_DIR)/coverage.xml'], check=False); \
+		subprocess.run(['docker', 'cp', 'moddingway-test-container:/opt/app/tests/moddingway/htmlcov', '$(TEST_REPORTS_DIR)/htmlcov'], check=False); \
+		subprocess.run(['docker', 'rm', '-f', 'moddingway-test-container'], check=False); \
+		sys.exit(exit_code)"
 
 ty: sync
 	@uv run ty check . ../../tests/moddingway
 
-.PHONY: lock sync format lint stop clean clean-venv clean-docker build run database-run database-run-ephemeral database-clean database-clean-ephemeral api api-reload test ty python-run
+.PHONY: lock sync format lint stop clean clean-venv clean-docker build run database-run database-run-ephemeral database-clean database-clean-ephemeral api api-reload test test-ci ty python-run
