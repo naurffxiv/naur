@@ -8,6 +8,7 @@ import (
 
 	"github.com/Veraticus/findingway/internal/discord"
 	"github.com/Veraticus/findingway/internal/scraper"
+	"github.com/Veraticus/findingway/internal/tokenizer"
 
 	"gopkg.in/yaml.v2"
 )
@@ -42,6 +43,8 @@ func main() {
 	}
 
 	scraper := &scraper.Scraper{Url: "https://xivpf.com"}
+	tokenizer := &tokenizer.Tokenizer{}
+	tokenizer.Init()
 
 	fmt.Printf("Starting findingway...\n")
 	for {
@@ -74,6 +77,11 @@ func main() {
 			duration := endTime.Sub(startTime)
 			totalWait -= duration
 		}
+
+		tokenizer.TokenizeListings(listings)
+
+		tokenizer.PrintTokens()
+
 		if once != "false" {
 			os.Exit(0)
 		}
