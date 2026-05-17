@@ -37,6 +37,26 @@ body {
   }
 }
 
+@layer components {
+  /* Use this class for inline content that does not modify the line height
+   * of the surrounding box.
+   *
+   * Flex layout is used, so alignment of the contents must be done with flex
+   * alignment attributes (such as `align-self`), not inline alignment
+   * attributes (such as `vertical-align`). You can also put `align-items` on
+   * the container to affect all items, as well as other flex attributes like
+   * `gap`.
+   */
+  .preserve-line-height {
+    display: inline-flex;
+    /* The height must be set explicitly to ensure that the centerline doesn't
+     * depend on the image size. */
+    height: 1lh;
+    /* Ensure the span lines up with surrounding text. */
+    vertical-align: bottom;
+  }
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
