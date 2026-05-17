@@ -23,7 +23,6 @@ $Tasks = @(
     @{ Name = "Authingway";  Action = { param($p) dotnet restore $p --verbosity quiet }; Arg = Get-ServicePath -ServiceName "Authingway" -ProjectRoot $ProjectRoot }
     @{ Name = "Root-pnpm";   Action = { param($p, $cmd) Set-Location $p; Invoke-Expression $cmd }; Arg = @($ProjectRoot, $pmInstall) }
     @{ Name = "Findingway";  Action = { param($p) Set-Location $p; go mod download }; Arg = Get-ServicePath -ServiceName "Findingway" -ProjectRoot $ProjectRoot }
-    @{ Name = "Clearingway"; Action = { param($p) Set-Location $p; go mod download }; Arg = Get-ServicePath -ServiceName "Clearingway" -ProjectRoot $ProjectRoot }
     @{ Name = "Moddingway";  Action = {
             param($p, $root)
             Push-Location $p
