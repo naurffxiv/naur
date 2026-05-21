@@ -154,7 +154,7 @@ func (t *Tokenizer) GatherTokens(lookback int) []Token {
 func (t *Tokenizer) CreateCsv(lookback int) {
 	// This created CSV locally for debugging. We can point this to something different later
 
-	fileName := "PfDescriptions.csv"
+	fileName := fmt.Sprintf("PfDescriptions_%d.csv", NowToInt())
 	csvFile, err := os.Create(fileName)
 	if err != nil {
 		log.Fatalf("failed creating file: %s", err)

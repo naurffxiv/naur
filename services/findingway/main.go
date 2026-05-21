@@ -79,6 +79,7 @@ func main() {
 		}
 
 		tokenizer.TokenizeListings(listings)
+		tokenizer.ClearOldData()
 
 		tokenizer.PrintTokens()
 
