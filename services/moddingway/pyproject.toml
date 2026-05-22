@@ -10,6 +10,7 @@ dependencies = [
     "uvicorn==0.41.0",
     "fastapi-pagination==0.15.10",
     "python-dotenv==1.2.1",
+    "urllib3>=2.7.0",
 ]
 
 [dependency-groups]
