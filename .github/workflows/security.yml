@@ -130,7 +130,7 @@ jobs:
             --report-path gitleaks-results.sarif
 
       - name: Upload Gitleaks results to GitHub Security
-        uses: github/codeql-action/upload-sarif@9e0d7b8d25671d64c341c19c0152d693099fb5ba # v4.35.5
+        uses: github/codeql-action/upload-sarif@7211b7c8077ea37d8641b6271f6a365a22a5fbfa # v4.36.0
         if: always()
         with:
           sarif_file: gitleaks-results.sarif
@@ -175,14 +175,14 @@ jobs:
 
       - name: Initialize CodeQL
         id: init
-        uses: github/codeql-action/init@9e0d7b8d25671d64c341c19c0152d693099fb5ba # v4.35.5
+        uses: github/codeql-action/init@7211b7c8077ea37d8641b6271f6a365a22a5fbfa # v4.36.0
         with:
           languages: ${{ matrix.language }}
           queries: security-extended
 
       - name: Autobuild
         if: matrix.language != 'csharp' && steps.init.outcome == 'success'
-        uses: github/codeql-action/autobuild@9e0d7b8d25671d64c341c19c0152d693099fb5ba # v4.35.5
+        uses: github/codeql-action/autobuild@7211b7c8077ea37d8641b6271f6a365a22a5fbfa # v4.36.0
 
       - name: Build C#
         if: matrix.language == 'csharp' && steps.init.outcome == 'success'
@@ -192,7 +192,7 @@ jobs:
 
       - name: Perform CodeQL Analysis
         if: steps.init.outcome == 'success'
-        uses: github/codeql-action/analyze@9e0d7b8d25671d64c341c19c0152d693099fb5ba # v4.35.5
+        uses: github/codeql-action/analyze@7211b7c8077ea37d8641b6271f6a365a22a5fbfa # v4.36.0
         with:
           category: "/language:${{matrix.language}}"
 
@@ -237,7 +237,7 @@ jobs:
           exit-code: "1"
 
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@9e0d7b8d25671d64c341c19c0152d693099fb5ba # v4.35.5
+        uses: github/codeql-action/upload-sarif@7211b7c8077ea37d8641b6271f6a365a22a5fbfa # v4.36.0
         if: always()
         with:
           sarif_file: "trivy-results-${{ strategy.job-index }}.sarif"
