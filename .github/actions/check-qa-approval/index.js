@@ -50,25 +50,25 @@ module.exports = async ({ github, context, core }) => {
       .filter(([, state]) => state === "APPROVED")
       .map(([login]) => login);
 
-    const qaTeamSlug = shared.QA_TEAM_SLUG;
-    let qaMembers;
-    try {
-      qaMembers = await github.paginate(github.rest.teams.listMembersInOrg, {
-        org: context.repo.owner,
-        team_slug: qaTeamSlug,
-      });
-    } catch (error) {
-      throw new Error(
-        `Failed to fetch QA team members for '${qaTeamSlug}'. ${error.message}`,
-      );
-    }
-    const qaMemberLogins = new Set(qaMembers.map((m) => m.login));
+    const qaMemberLogins = await shared.getTeamMemberLogins(
+      github,
+      context,
+      shared.QA_TEAM_SLUG,
+      true,
+    );
+
+    const cmMemberLogins = await shared.getTeamMemberLogins(
+      github,
+      context,
+      shared.CM_TEAM_SLUG,
+      false,
+    );
 
     const hasQAApproval = approvers.some((login) => qaMemberLogins.has(login));
-    // "Dev approval" means any approver outside the QA team.
+    // "Dev approval" means any approver outside the QA and CM teams.
     // Two QA members approving does NOT satisfy the gate
     const hasDevApproval = approvers.some(
-      (login) => !qaMemberLogins.has(login),
+      (login) => !qaMemberLogins.has(login) && !cmMemberLogins.has(login),
     );
 
     console.log(
