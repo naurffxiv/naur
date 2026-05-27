@@ -138,7 +138,7 @@ func (t *Tokenizer) TokenizeListings(listings *ffxiv.Listings) {
 	}
 
 	if todayExists == 0 {
-		t.rdb.Expire(ctx, todayKey, 24*32*time.Hour)
+		t.rdb.Expire(ctx, descriptionKey, 24*32*time.Hour)
 	}
 }
 
