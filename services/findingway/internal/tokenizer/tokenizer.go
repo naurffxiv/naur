@@ -1,6 +1,7 @@
 package tokenizer
 
 import (
+	"context"
 	"encoding/csv"
 	"fmt"
 	"log"
@@ -8,16 +9,17 @@ import (
 	"regexp"
 	"slices"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Veraticus/findingway/internal/ffxiv"
+	"github.com/redis/go-redis/v9"
 )
 
 type Tokenizer struct {
-	Tokens          map[int]map[string]int
-	PfListingRecord map[int][]string
 	PrevParsedPfIds []string
+	rdb             *redis.Client
 }
 
 type Token struct {
@@ -65,33 +67,22 @@ func splitListingIntoTokens(listing string) ([]string, error) {
 }
 
 func (t *Tokenizer) Init() {
-	// Key: days since jan 1 1900
-	// Value: Map of token string to count of that token's appearances on that day
-	t.Tokens = make(map[int]map[string]int)
-
-	// Key: days since jan 1 1900
-	// Value: List of PF listings on that day
-	t.PfListingRecord = make(map[int][]string)
-
 	t.PrevParsedPfIds = []string{}
+
+	// TODO what is the right way to make sure this is closed?
+	t.rdb = redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password TODO: pull from settings
+		DB:       0,  // use default DB TODO: pull from settings
+		Protocol: 2,
+	})
 }
 
 func (t *Tokenizer) TokenizeListings(listings *ffxiv.Listings) {
-	fmt.Println("hello world")
-
 	currentDayNumber := NowToInt()
 
-	todayTokenMap, found := t.Tokens[currentDayNumber]
-	if !found {
-		todayTokenMap = make(map[string]int)
-		t.Tokens[currentDayNumber] = todayTokenMap
-	}
-
-	todayPfDescriptionList, found := t.PfListingRecord[currentDayNumber]
-	if !found {
-		todayPfDescriptionList = []string{}
-		t.PfListingRecord[currentDayNumber] = todayPfDescriptionList
-	}
+	tokenMap := make(map[string]int)
+	pfDescriptions := []string{}
 
 	parsedListingIds := []string{}
 
@@ -102,17 +93,53 @@ func (t *Tokenizer) TokenizeListings(listings *ffxiv.Listings) {
 			continue
 		}
 
-		todayPfDescriptionList = append(todayPfDescriptionList, item.Description)
+		pfDescriptions = append(pfDescriptions, item.Description)
 
 		tokenList, _ := splitListingIntoTokens(item.Description)
 
 		for _, token := range tokenList {
-			todayTokenMap[token] += 1
+			tokenMap[token] += 1
 		}
 	}
 
-	t.PfListingRecord[currentDayNumber] = todayPfDescriptionList
 	t.PrevParsedPfIds = parsedListingIds
+
+	ctx := context.Background()
+
+	// store tokens into redis
+	todayKey := fmt.Sprintf("tokens:%d", currentDayNumber)
+	todayExists, err := t.rdb.Exists(ctx, todayKey).Result()
+	if err != nil {
+		panic(err)
+	}
+	for token, count := range tokenMap {
+		err := t.rdb.HIncrBy(ctx, todayKey, token, int64(count)).Err()
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	if todayExists == 0 {
+		t.rdb.Expire(ctx, todayKey, 24*32*time.Hour)
+	}
+
+	// Store description list into redis
+	descriptionKey := fmt.Sprintf("descriptions:%d", currentDayNumber)
+	todayExists, err = t.rdb.Exists(ctx, descriptionKey).Result()
+	if err != nil {
+		panic(err)
+	}
+
+	for _, description := range pfDescriptions {
+		err = t.rdb.RPush(ctx, descriptionKey, description).Err()
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	if todayExists == 0 {
+		t.rdb.Expire(ctx, todayKey, 24*32*time.Hour)
+	}
 }
 
 func (t *Tokenizer) PrintTokens() {
@@ -124,16 +151,27 @@ func (t *Tokenizer) PrintTokens() {
 }
 
 func (t *Tokenizer) GatherTokens(lookback int) []Token {
-	fmt.Println("toke it")
+
 	tokenSum := make(map[string]int)
+	ctx := context.Background()
 
-	lookbackDayNumber := NowToInt() - lookback
+	todayDayNumber := NowToInt()
 
-	for day, dayTokenMap := range t.Tokens {
-		if day >= lookbackDayNumber {
-			for token, count := range dayTokenMap {
-				tokenSum[token] += count
+	for i := range lookback {
+		prevDayNumber := todayDayNumber - i
+
+		getAllResult, err := t.rdb.HGetAll(ctx, fmt.Sprintf("tokens:%d", prevDayNumber)).Result()
+
+		if err != nil {
+			panic(err)
+		}
+
+		for key, count := range getAllResult {
+			intCount, err := strconv.Atoi(count)
+			if err != nil {
+				panic(err)
 			}
+			tokenSum[key] += intCount
 		}
 	}
 
@@ -153,8 +191,9 @@ func (t *Tokenizer) GatherTokens(lookback int) []Token {
 
 func (t *Tokenizer) CreateCsv(lookback int) {
 	// This created CSV locally for debugging. We can point this to something different later
+	todayDayNumber := NowToInt()
 
-	fileName := fmt.Sprintf("PfDescriptions_%d.csv", NowToInt())
+	fileName := fmt.Sprintf("PfDescriptions_%d.csv", todayDayNumber)
 	csvFile, err := os.Create(fileName)
 	if err != nil {
 		log.Fatalf("failed creating file: %s", err)
@@ -163,47 +202,24 @@ func (t *Tokenizer) CreateCsv(lookback int) {
 	csvwriter := csv.NewWriter(csvFile)
 
 	csvwriter.Write([]string{"Date", "Description"})
+	ctx := context.Background()
 
-	for dateNumber, descriptionList := range t.PfListingRecord {
-		dateString := time.Date(1900, 0, 0, 0, 0, 0, 0, time.UTC).AddDate(0, 0, dateNumber).Format(time.DateOnly)
-		for _, description := range descriptionList {
-			// need to remove newline characters that somehow made their way in to descriptions
+	for i := range lookback {
+		prevDayNumber := todayDayNumber - i
+
+		getResult, err := t.rdb.LRange(ctx, fmt.Sprintf("descriptions:%d", prevDayNumber), 0, -1).Result()
+
+		if err != nil {
+			panic(err)
+		}
+
+		for _, description := range getResult {
+			fmt.Println(description)
+			dateString := time.Date(1900, 0, 0, 0, 0, 0, 0, time.UTC).AddDate(0, 0, prevDayNumber).Format(time.DateOnly)
 			csvwriter.Write([]string{dateString, strings.ReplaceAll(description, "\n", "")})
 		}
 	}
 
 	csvwriter.Flush()
 	csvFile.Close()
-}
-
-func (t *Tokenizer) ClearOldData() {
-	// remove all data older than 30 days
-
-	lastKeptDate := NowToInt() - 30
-
-	// Clear out old Tokens
-	oldTokenKeys := []int{}
-
-	for day := range t.Tokens {
-		if day < lastKeptDate {
-			oldTokenKeys = append(oldTokenKeys, day)
-		}
-	}
-
-	for key := range oldTokenKeys {
-		delete(t.Tokens, key)
-	}
-
-	// Clear out old PF listings
-	oldPfListKeys := []int{}
-
-	for day := range t.PfListingRecord {
-		if day < lastKeptDate {
-			oldPfListKeys = append(oldPfListKeys, day)
-		}
-	}
-
-	for key := range oldPfListKeys {
-		delete(t.PfListingRecord, key)
-	}
 }

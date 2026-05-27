@@ -79,9 +79,6 @@ func main() {
 		}
 
 		tokenizer.TokenizeListings(listings)
-		tokenizer.ClearOldData()
-
-		tokenizer.PrintTokens()
 
 		if once != "false" {
 			os.Exit(0)
