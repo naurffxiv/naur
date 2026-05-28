@@ -23,7 +23,6 @@ jobs:
       moddingway: ${{ steps.filter.outputs.moddingway }}
       authingway: ${{ steps.filter.outputs.authingway }}
       findingway: ${{ steps.filter.outputs.findingway }}
-      clearingway: ${{ steps.filter.outputs.clearingway }}
       apphost: ${{ steps.filter.outputs.apphost }}
       run_e2e: ${{ steps.e2e-check.outputs.run_e2e }}
     steps:
@@ -52,10 +51,6 @@ jobs:
             findingway:
               - *ci
               - 'services/findingway/**'
-              - '.github/workflows/pipeline-go.yml'
-            clearingway:
-              - *ci
-              - 'services/clearingway/**'
               - '.github/workflows/pipeline-go.yml'
             authingway:
               - *ci
@@ -157,15 +152,14 @@ jobs:
     needs: [detect-changes]
     if: |
       github.event_name == 'push' ||
-      needs.detect-changes.outputs.findingway == 'true' ||
-      needs.detect-changes.outputs.clearingway == 'true'
+      needs.detect-changes.outputs.findingway == 'true'
     permissions:
       contents: read
       actions: read
       pull-requests: write
     strategy:
       matrix:
-        service: [findingway, clearingway]
+        service: [findingway]
       fail-fast: false
     uses: ./.github/workflows/pipeline-go.yml
     with:
