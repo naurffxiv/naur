@@ -162,7 +162,7 @@ func (d *Discord) sendMessage(channelId string, fields []*discordgo.MessageEmbed
 func (d *Discord) PostTokens(channelId string, tokens []tokenizer.Token) error {
 
 	tokenString := fmt.Sprintf("**Last 7 days of Tokens as of %s\n**", time.Now().Format(time.DateTime))
-	for _, token := range tokens[:50] {
+	for _, token := range tokens[:75] {
 		tokenString = tokenString + fmt.Sprintf("`%s` %d\n", token.String, token.Count)
 	}
 
