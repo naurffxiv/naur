@@ -13,8 +13,8 @@
     "lint": "pnpm exec next lint",
     "test": "echo \"Error: no test specified\" && exit 0",
     "typecheck": "tsc --noEmit",
-    "prettier:check": "prettier --check .",
-    "prettier:write": "prettier --write .",
+    "prettier:check": "prettier --ignore-path ../../.prettierignore --check .",
+    "prettier:write": "prettier --ignore-path ../../.prettierignore --write .",
     "check:routes": "tsx scripts/middleware/validateRoutes.ts",
     "compress": "node scripts/compress-images.js"
   },
