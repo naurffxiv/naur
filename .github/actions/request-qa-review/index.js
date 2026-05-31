@@ -41,15 +41,11 @@ module.exports = async ({ github, context, core }) => {
     }
 
     // Fetch members of the QA team to cross-reference with reviewers
-    const teamMembers = await github.paginate(
-      github.rest.teams.listMembersInOrg,
-      {
-        org: context.repo.owner,
-        team_slug: shared.QA_TEAM_SLUG,
-      },
+    const qaLogins = await shared.getTeamMemberLogins(
+      github,
+      context,
+      shared.QA_TEAM_SLUG,
     );
-
-    const qaLogins = new Set(teamMembers.map((m) => m.login));
 
     // Process reviews to see if any QA member has already approved
     const reviews = await github.paginate(github.rest.pulls.listReviews, {

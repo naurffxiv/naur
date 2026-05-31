@@ -21,10 +21,6 @@
       "path": "services/findingway"
     },
     {
-      "name": "Clearingway (Go)",
-      "path": "services/clearingway"
-    },
-    {
       "name": "Testingway",
       "path": "tests"
     },
