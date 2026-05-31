@@ -1,11 +1,13 @@
 package discord
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/Veraticus/findingway/internal/ffxiv"
+	"github.com/Veraticus/findingway/internal/tokenizer"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -149,6 +151,46 @@ func (d *Discord) sendMessage(channelId string, fields []*discordgo.MessageEmbed
 	messageSend := &discordgo.MessageSend{
 		Embeds: []*discordgo.MessageEmbed{embed},
 	}
+	_, err := d.Session.ChannelMessageSendComplex(channelId, messageSend)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (d *Discord) PostTokens(channelId string, tokens []tokenizer.Token) error {
+
+	tokenString := fmt.Sprintf("**Last 7 days of Tokens as of %s\n**", time.Now().Format(time.DateTime))
+	for _, token := range tokens[:50] {
+		tokenString = tokenString + fmt.Sprintf("`%s` %d\n", token.String, token.Count)
+	}
+
+	messageSend := &discordgo.MessageSend{
+		Content: tokenString,
+	}
+	_, err := d.Session.ChannelMessageSendComplex(channelId, messageSend)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (d *Discord) PostDescriptionCsv(channelId string, buf *bytes.Buffer) error {
+
+	reader := bytes.NewReader(buf.Bytes())
+	file := discordgo.File{
+		Name:        fmt.Sprintf("pf_descriptions_%s.csv", time.Now().Format(time.DateTime)),
+		ContentType: "csv",
+		Reader:      reader,
+	}
+
+	messageSend := &discordgo.MessageSend{
+		Content: fmt.Sprintf("**Description List %s**", time.Now().Format(time.DateTime)),
+		File:    &file,
+	}
+
 	_, err := d.Session.ChannelMessageSendComplex(channelId, messageSend)
 	if err != nil {
 		return err

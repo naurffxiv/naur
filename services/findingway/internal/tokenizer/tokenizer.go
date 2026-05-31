@@ -1,11 +1,10 @@
 package tokenizer
 
 import (
+	"bytes"
 	"context"
 	"encoding/csv"
 	"fmt"
-	"log"
-	"os"
 	"regexp"
 	"slices"
 	"sort"
@@ -142,14 +141,6 @@ func (t *Tokenizer) TokenizeListings(listings *ffxiv.Listings) {
 	}
 }
 
-func (t *Tokenizer) PrintTokens() {
-	// Printing to console for debugging. This can be redirected later
-	tokenList := t.GatherTokens(7)
-	for _, kv := range tokenList {
-		fmt.Printf("%s: %d\n", kv.String, kv.Count)
-	}
-}
-
 func (t *Tokenizer) GatherTokens(lookback int) []Token {
 
 	tokenSum := make(map[string]int)
@@ -181,25 +172,17 @@ func (t *Tokenizer) GatherTokens(lookback int) []Token {
 		res = append(res, Token{k, v})
 	}
 
-	// reverse sort, for ease of debugging
 	sort.Slice(res, func(i, j int) bool {
-		return res[i].Count < res[j].Count
+		return res[i].Count > res[j].Count
 	})
 
 	return res
 }
 
-func (t *Tokenizer) CreateCsv(lookback int) {
-	// This created CSV locally for debugging. We can point this to something different later
+func (t *Tokenizer) CreateCsv(lookback int, buf *bytes.Buffer) {
+
 	todayDayNumber := NowToInt()
-
-	fileName := fmt.Sprintf("PfDescriptions_%d.csv", todayDayNumber)
-	csvFile, err := os.Create(fileName)
-	if err != nil {
-		log.Fatalf("failed creating file: %s", err)
-	}
-
-	csvwriter := csv.NewWriter(csvFile)
+	csvwriter := csv.NewWriter(buf)
 
 	csvwriter.Write([]string{"Date", "Description"})
 	ctx := context.Background()
@@ -214,12 +197,10 @@ func (t *Tokenizer) CreateCsv(lookback int) {
 		}
 
 		for _, description := range getResult {
-			fmt.Println(description)
 			dateString := time.Date(1900, 0, 0, 0, 0, 0, 0, time.UTC).AddDate(0, 0, prevDayNumber).Format(time.DateOnly)
 			csvwriter.Write([]string{dateString, strings.ReplaceAll(description, "\n", "")})
 		}
 	}
 
 	csvwriter.Flush()
-	csvFile.Close()
 }

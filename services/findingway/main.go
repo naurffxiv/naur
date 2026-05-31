@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"strings"
@@ -47,6 +48,7 @@ func main() {
 	tokenizer.Init()
 
 	fmt.Printf("Starting findingway...\n")
+	loopCount := 0
 	for {
 		totalWait := 3 * time.Minute
 		fmt.Printf("Scraping source...\n")
@@ -80,10 +82,30 @@ func main() {
 
 		tokenizer.TokenizeListings(listings)
 
+		// Output values every 3 hours
+		if loopCount%60 == 0 {
+			fmt.Println("Sending tokens to discord")
+
+			tokens := tokenizer.GatherTokens(7)
+			err = d.PostTokens("TODO", tokens)
+			if err != nil {
+				fmt.Printf("Error posting tokens: %s\n", err)
+			}
+
+			// csv
+			var buf bytes.Buffer
+			tokenizer.CreateCsv(7, &buf)
+			err = d.PostDescriptionCsv("TODO", &buf)
+			if err != nil {
+				fmt.Printf("Error posting csv: %s\n", err)
+			}
+		}
+
 		if once != "false" {
 			os.Exit(0)
 		}
 		fmt.Printf("Sleeping for %v...\n", totalWait)
+		loopCount += 1
 		time.Sleep(totalWait)
 	}
 
