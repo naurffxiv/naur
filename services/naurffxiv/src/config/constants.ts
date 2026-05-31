@@ -21,6 +21,12 @@ export const pages = [
 
 export const ultimateList = [
   {
+    title: "Dancing Mad",
+    url: "/ultimate/dmu",
+    img: "/images/thumbnails/Hidden.avif",
+    alt: "Dancing Mad",
+  },
+  {
     title: "Futures Rewritten",
     url: "/ultimate/fru",
     img: images.Pandora,

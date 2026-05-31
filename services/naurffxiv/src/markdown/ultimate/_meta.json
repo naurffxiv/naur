@@ -1,4 +1,7 @@
 {
+  "dmu": {
+    "index": "dmu.mdx"
+  },
   "fru": {
     "index": "fru.mdx",
     "guide": {
