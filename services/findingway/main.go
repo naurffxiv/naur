@@ -87,7 +87,7 @@ func main() {
 			fmt.Println("Sending tokens to discord")
 
 			tokens := tokenizer.GatherTokens(7)
-			err = d.PostTokens("TODO", tokens)
+			err = d.PostTokens("1510722864851189981", tokens)
 			if err != nil {
 				fmt.Printf("Error posting tokens: %s\n", err)
 			}
@@ -95,7 +95,7 @@ func main() {
 			// csv
 			var buf bytes.Buffer
 			tokenizer.CreateCsv(7, &buf)
-			err = d.PostDescriptionCsv("TODO", &buf)
+			err = d.PostDescriptionCsv("1510722864851189981", &buf)
 			if err != nil {
 				fmt.Printf("Error posting csv: %s\n", err)
 			}

@@ -85,8 +85,9 @@ func (t *Tokenizer) TokenizeListings(listings *ffxiv.Listings) {
 
 	parsedListingIds := []string{}
 
-	for _, item := range listings.Listings {
-		// Currently, parse all PFs for stress testing. In the future, filter to relevant fight
+	scopedListings := listings.ForDutyAndDataCentres("Dancing Mad (Ultimate)", []string{"Aether", "Crystal", "Dynamis", "Primal"})
+
+	for _, item := range scopedListings.Listings {
 		parsedListingIds = append(parsedListingIds, item.Id)
 		if slices.Contains(t.PrevParsedPfIds, item.Id) {
 			continue
