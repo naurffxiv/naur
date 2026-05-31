@@ -185,7 +185,10 @@ func (t *Tokenizer) CreateCsv(lookback int, buf *bytes.Buffer) {
 	todayDayNumber := NowToInt()
 	csvwriter := csv.NewWriter(buf)
 
-	csvwriter.Write([]string{"Date", "Description"})
+	err := csvwriter.Write([]string{"Date", "Description"})
+	if err != nil {
+		panic(err)
+	}
 	ctx := context.Background()
 
 	for i := range lookback {
@@ -199,7 +202,10 @@ func (t *Tokenizer) CreateCsv(lookback int, buf *bytes.Buffer) {
 
 		for _, description := range getResult {
 			dateString := time.Date(1900, 0, 0, 0, 0, 0, 0, time.UTC).AddDate(0, 0, prevDayNumber).Format(time.DateOnly)
-			csvwriter.Write([]string{dateString, strings.ReplaceAll(description, "\n", "")})
+			err = csvwriter.Write([]string{dateString, strings.ReplaceAll(description, "\n", "")})
+			if err != nil {
+				panic(err)
+			}
 		}
 	}
 
