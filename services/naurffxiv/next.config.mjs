@@ -68,6 +68,26 @@ const nextConfig = {
         destination: "/ultimate/:slug",
         permanent: true,
       },
+      {
+        source: "/ultimate/dmu",
+        destination: "/ultimate/kefka",
+        permanent: true,
+      },
+      {
+        source: "/ultimate/dmu/:slug*",
+        destination: "/ultimate/kefka/:slug*",
+        permanent: true,
+      },
+      {
+        source: "/ultimate/umad",
+        destination: "/ultimate/kefka",
+        permanent: true,
+      },
+      {
+        source: "/ultimate/umad/:slug*",
+        destination: "/ultimate/kefka/:slug*",
+        permanent: true,
+      },
     ];
   },
 };
