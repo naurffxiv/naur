@@ -22,7 +22,7 @@ export const pages = [
 export const ultimateList = [
   {
     title: "Dancing Mad",
-    url: "/ultimate/dmu",
+    url: "/ultimate/kefka",
     img: "/images/thumbnails/Hidden.avif",
     alt: "Dancing Mad",
   },
