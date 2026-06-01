@@ -28,12 +28,7 @@ interface SidebarEntry {
 }
 
 export type MetaValue =
-  | string
-  | number
-  | string[]
-  | SidebarEntry[]
-  | MetaEntry
-  | undefined;
+  string | number | string[] | SidebarEntry[] | MetaEntry | undefined;
 
 export interface MetaEntry {
   index?: string;
@@ -125,13 +120,6 @@ export const processMdx = cache(
       ],
     });
 
-    /*
-        {
-            toc,
-            frontmatter,
-            default
-        }
-    */
     return processedMdx as unknown as ProcessedMdx;
   },
 );
@@ -342,8 +330,7 @@ const findMdxEntry = cache(
       slug?: string[];
     };
     return (await findMdxShared(parsed, findMdxEntryHelper)) as
-      | MetaEntry
-      | undefined;
+      MetaEntry | undefined;
   },
 );
 
@@ -392,8 +379,7 @@ function findSiblingHelper(
     .filter((key) => {
       // true if both original slug and sibling slug share groups
       const siblingGroups = getNestedValue(parent, [key, "groups"]) as
-        | string[]
-        | undefined;
+        string[] | undefined;
       if (
         groups &&
         siblingGroups &&
@@ -407,14 +393,11 @@ function findSiblingHelper(
     })
     .map((key) => {
       const siblingGroups = getNestedValue(parent, [key, "groups"]) as
-        | string[]
-        | undefined;
+        string[] | undefined;
       const title = getNestedValue(parent, [key, "title"]) as
-        | string
-        | undefined;
+        string | undefined;
       const order = getNestedValue(parent, [key, "order"]) as
-        | number
-        | undefined;
+        number | undefined;
       return {
         filepath: (parent[key] as MetaEntry)["index"]
           ? ((parent[key] as MetaEntry)["index"] as string)
