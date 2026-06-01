@@ -125,13 +125,6 @@ export const processMdx = cache(
       ],
     });
 
-    /*
-        {
-            toc,
-            frontmatter,
-            default
-        }
-    */
     return processedMdx as unknown as ProcessedMdx;
   },
 );
