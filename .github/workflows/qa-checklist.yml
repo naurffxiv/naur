@@ -70,16 +70,27 @@ jobs:
           qa-team-slug: ${{ vars.QA_TEAM_SLUG || 'qa' }}
 
   check-qa-approval:
-    name: QA Approval Gate
+    name: QA Gate Status Manager
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false && !contains(github.event.pull_request.labels.*.name, 'skip-qa-ci')
     permissions:
       pull-requests: read
       contents: read
+      issues: write
+      statuses: write
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Generate GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
       - name: Check QA Approval Gate
         uses: ./.github/actions/check-qa-approval
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ steps.app-token.outputs.token }}
+          qa-team-slug: ${{ vars.QA_TEAM_SLUG || 'qa' }}
+          cm-team-slug: ${{ vars.CM_TEAM_SLUG || 'content-management' }}

@@ -1,4 +1,7 @@
 {
+  "kefka": {
+    "index": "kefka.mdx"
+  },
   "fru": {
     "index": "fru.mdx",
     "guide": {
