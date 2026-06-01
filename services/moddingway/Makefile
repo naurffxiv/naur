@@ -25,9 +25,16 @@ clean: clean-docker clean-venv
 build:
 	docker compose build python-app
 
+api-build:
+	docker compose build python-api
+
 run:
 	docker compose down --remove-orphans
 	docker compose up python-app-local --build
+
+api-run:
+	docker compose down --remove-orphans
+	docker compose up python-api-local --build
 
 python-run: sync
 	@uv run python main.py
@@ -68,4 +75,4 @@ test: sync
 ty: sync
 	@uv run ty check . ../../tests/moddingway
 
-.PHONY: lock sync format lint stop clean clean-venv clean-docker build run database-run database-run-ephemeral database-clean database-clean-ephemeral api api-reload test ty python-run
+.PHONY: lock sync format lint stop clean clean-venv clean-docker build run api-build api-run database-run database-run-ephemeral database-clean database-clean-ephemeral api api-reload test ty python-run

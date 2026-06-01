@@ -567,6 +567,7 @@ name = "moddingway"
 version = "0.0.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "anyio" },
     { name = "discord" },
     { name = "fastapi", extra = ["standard"] },
     { name = "fastapi-pagination" },
@@ -588,6 +589,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "anyio", specifier = "==4.12.1" },
     { name = "discord", specifier = "==2.3.2" },
     { name = "fastapi", extras = ["standard"], specifier = "==0.129.0" },
     { name = "fastapi-pagination", specifier = "==0.15.10" },
