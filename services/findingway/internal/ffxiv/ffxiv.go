@@ -55,11 +55,11 @@ func (ls *Listings) ForDutyAndDataCentre(duty string, dataCentre string) *Listin
 	return listings
 }
 
-func (ls *Listings) ForDutyAndDataCentres(duty string, dataCentres []string) *Listings {
+func (ls *Listings) ForDutiesAndDataCentres(duties []string, dataCentres []string) *Listings {
 	listings := &Listings{Listings: []*Listing{}}
 
 	for _, l := range ls.Listings {
-		if l.Duty == duty {
+		if slices.Contains(duties, l.Duty) {
 			if slices.Contains(dataCentres, l.DataCentre) {
 				listings.Listings = append(listings.Listings, l)
 			}
