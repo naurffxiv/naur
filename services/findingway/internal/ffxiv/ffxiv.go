@@ -3,6 +3,7 @@ package ffxiv
 import (
 	"fmt"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -46,6 +47,20 @@ func (ls *Listings) ForDutyAndDataCentre(duty string, dataCentre string) *Listin
 	for _, l := range ls.Listings {
 		if l.Duty == duty {
 			if l.DataCentre == dataCentre {
+				listings.Listings = append(listings.Listings, l)
+			}
+		}
+	}
+
+	return listings
+}
+
+func (ls *Listings) ForDutyAndDataCentres(duty string, dataCentres []string) *Listings {
+	listings := &Listings{Listings: []*Listing{}}
+
+	for _, l := range ls.Listings {
+		if l.Duty == duty {
+			if slices.Contains(dataCentres, l.DataCentre) {
 				listings.Listings = append(listings.Listings, l)
 			}
 		}
