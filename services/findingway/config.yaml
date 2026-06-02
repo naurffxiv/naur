@@ -39,3 +39,7 @@ channels:
     name: "naur m12s"
     duty: "AAC Heavyweight M4 (Savage)"
     dataCentres: [Aether, Crystal, Dynamis, Primal]
+  - id: "1511412259895771237"
+    name: "naur dancing mad check"
+    duty: "HighEndDuty"
+    dataCentres: [Aether, Crystal, Dynamis, Primal]
