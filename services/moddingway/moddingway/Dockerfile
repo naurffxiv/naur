@@ -1,6 +1,6 @@
 FROM python:3.14-slim
 
-COPY --from=ghcr.io/astral-sh/uv:0.10.4 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.11.14 /uv /uvx /bin/
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \

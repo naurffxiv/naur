@@ -87,17 +87,6 @@ updates:
       gomod-findingway:
         patterns: ["*"]
 
-  - package-ecosystem: "gomod"
-    directory: "/services/clearingway"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
-    commit-message:
-      prefix: "build"
-    groups:
-      gomod-clearingway:
-        patterns: ["*"]
-
   - package-ecosystem: "docker"
     directory: "/"
     schedule:

@@ -26,6 +26,7 @@ module.exports = {
   STATUS_MARKER: "<!-- QA_VALIDATION_STATUS -->",
   ARCHIVE_PREFIX,
   QA_TEAM_SLUG: process.env.QA_TEAM_SLUG || "qa",
+  CM_TEAM_SLUG: process.env.CM_TEAM_SLUG || "content-management",
 
   /**
    * Check if the PR body has the "Needs QA" checkbox checked.
@@ -79,4 +80,23 @@ module.exports = {
     owner: context.repo.owner,
     repo: context.repo.repo,
   }),
+
+  /**
+   * Fetch member logins for a given team slug.
+   */
+  getTeamMemberLogins: async (github, context, teamSlug, required = false) => {
+    try {
+      const members = await github.paginate(github.rest.teams.listMembersInOrg, {
+        org: context.repo.owner,
+        team_slug: teamSlug,
+      });
+      return new Set(members.map((m) => m.login));
+    } catch (error) {
+      if (required) {
+        throw new Error(`Failed to fetch team members for '${teamSlug}'. ${error.message}`);
+      }
+      console.warn(`Failed to fetch team members for '${teamSlug}'. ${error.message}`);
+      return new Set();
+    }
+  },
 };

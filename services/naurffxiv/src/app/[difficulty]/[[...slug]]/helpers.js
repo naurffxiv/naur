@@ -143,9 +143,13 @@ async function getGitHubLastUpdated(filepath) {
 }
 
 export async function getFileLastUpdated(filepath) {
-  // Try git command first (works in local dev)
-  const gitTimestamp = getGitLastUpdated(filepath);
-  if (gitTimestamp) return gitTimestamp;
+  const isCI = process.env.NETLIFY || process.env.CI;
+
+  if (!isCI) {
+    // Try git command first (works in local dev)
+    const gitTimestamp = getGitLastUpdated(filepath);
+    if (gitTimestamp) return gitTimestamp;
+  }
 
   // Try GitHub API (works in Netlify/CI environments)
   const githubTimestamp = await getGitHubLastUpdated(filepath);
