@@ -3,8 +3,10 @@ package tokenizer
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/csv"
 	"fmt"
+	"os"
 	"regexp"
 	"slices"
 	"sort"
@@ -68,13 +70,30 @@ func splitListingIntoTokens(listing string) ([]string, error) {
 func (t *Tokenizer) Init() {
 	t.PrevParsedPfIds = []string{}
 
-	// TODO what is the right way to make sure this is closed?
+	redisPw, ok := os.LookupEnv("REDIS_PASSWORD")
+	if !ok {
+		panic("You must supply a REDIS_PASSWORD to start!")
+	}
+
+	cert, err := tls.LoadX509KeyPair("naur.crt", "naur.key")
+	if err != nil {
+		panic(fmt.Errorf("Error loading certificates %s", err))
+	}
+
 	t.rdb = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password TODO: pull from settings
-		DB:       0,  // use default DB TODO: pull from settings
-		Protocol: 2,
+		Addr:     "redis.hyddwn.net:6380",
+		Username: "naur",
+		Password: redisPw,
+		TLSConfig: &tls.Config{
+			Certificates: []tls.Certificate{cert},
+		},
 	})
+
+	ctx := context.Background()
+	_, err = t.rdb.Ping(ctx).Result()
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (t *Tokenizer) TokenizeListings(listings *ffxiv.Listings) {
