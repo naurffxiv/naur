@@ -77,7 +77,7 @@ func (t *Tokenizer) Init() {
 
 	cert, err := tls.LoadX509KeyPair("naur.crt", "naur.key")
 	if err != nil {
-		panic(fmt.Errorf("Error loading certificates %s", err))
+		panic(fmt.Errorf("error loading certificates %s", err))
 	}
 
 	t.rdb = redis.NewClient(&redis.Options{
