@@ -105,7 +105,7 @@ func (t *Tokenizer) TokenizeListings(listings *ffxiv.Listings) {
 	parsedListingIds := []string{}
 
 	scopedListings := listings.ForDutiesAndDataCentres(
-		[]string{"HighEndDuty", "Dancing Mad (Ultimate)"},
+		[]string{"Dancing Mad (Ultimate)"},
 		[]string{"Aether", "Crystal", "Dynamis", "Primal"})
 
 	for _, item := range scopedListings.Listings {
