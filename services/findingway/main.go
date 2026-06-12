@@ -15,6 +15,21 @@ import (
 )
 
 func main() {
+	const lookback = 2
+
+	tok := &tokenizer.Tokenizer{}
+	tok.Init()
+
+	if _, ok := os.LookupEnv("TOKENS_ONLY"); ok {
+		tokens := tok.GatherTokens(lookback)
+		count := tok.GatherListingCount(2)
+		fmt.Printf("%d listings scanned over last %d days\n\n", count, lookback)
+		for _, t := range tokens {
+			fmt.Printf("%-30s %d\n", t.String, t.Count)
+		}
+		return
+	}
+
 	discordToken, ok := os.LookupEnv("DISCORD_TOKEN")
 	if !ok {
 		panic("You must supply a DISCORD_TOKEN to start!")
@@ -44,8 +59,7 @@ func main() {
 	}
 
 	scraper := &scraper.Scraper{Url: "https://xivpf.com"}
-	tokenizer := &tokenizer.Tokenizer{}
-	tokenizer.Init()
+	tokenizer := tok
 
 	fmt.Printf("Starting findingway...\n")
 	loopCount := 0
@@ -82,19 +96,25 @@ func main() {
 
 		tokenizer.TokenizeListings(listings)
 
-		// Output values every 3 hours
-		if loopCount%60 == 0 {
+		// Output values every 1 hours
+		if loopCount%20 == 0 {
 			fmt.Println("Sending tokens to discord")
 
-			tokens := tokenizer.GatherTokens(7)
-			err = d.PostTokens("1510722864851189981", tokens)
+			err = d.CleanChannel("1510722864851189981")
+			if err != nil {
+				fmt.Printf("Error cleaning token channel: %s\n", err)
+			}
+
+			tokens := tokenizer.GatherTokens(lookback)
+			listingCount := tokenizer.GatherListingCount(lookback)
+			err = d.PostTokens("1510722864851189981", tokens, listingCount)
 			if err != nil {
 				fmt.Printf("Error posting tokens: %s\n", err)
 			}
 
 			// csv
 			var buf bytes.Buffer
-			tokenizer.CreateCsv(7, &buf)
+			tokenizer.CreateCsv(lookback, &buf)
 			err = d.PostDescriptionCsv("1510722864851189981", &buf)
 			if err != nil {
 				fmt.Printf("Error posting csv: %s\n", err)

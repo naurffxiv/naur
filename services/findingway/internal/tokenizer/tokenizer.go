@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/csv"
 	"fmt"
 	"os"
 	"regexp"
-	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -19,13 +19,94 @@ import (
 )
 
 type Tokenizer struct {
-	PrevParsedPfIds []string
-	rdb             *redis.Client
+	rdb *redis.Client
 }
 
 type Token struct {
 	String string
 	Count  int
+}
+
+var (
+	raidplanRe = regexp.MustCompile(`(?:https?://)?raidplan\.io/plan/([^#\s]+)(?:#\S+)?`)
+	httpUrlRe  = regexp.MustCompile(`https?://\S+`)
+	bareUrlRe  = regexp.MustCompile(`\b\w[\w.-]+\.[a-z]{2,}/\S*`)
+)
+
+// urlToToken extracts the most meaningful token from a URL:
+// - a path segment if present (e.g. pastebin.com/7fs57PyQ → 7fs57PyQ)
+// - the hostname with dots stripped if there is no meaningful path (e.g. kefkab.in/ → kefkabin)
+func urlToToken(url string) string {
+	url = strings.TrimPrefix(url, "https://")
+	url = strings.TrimPrefix(url, "http://")
+	url = strings.TrimRight(url, ".,!?;:)>")
+
+	slashIdx := strings.IndexByte(url, '/')
+	if slashIdx < 0 {
+		return strings.ReplaceAll(url, ".", "")
+	}
+
+	hostname := url[:slashIdx]
+	path := url[slashIdx+1:]
+
+	// Strip fragment
+	if i := strings.IndexByte(path, '#'); i >= 0 {
+		path = path[:i]
+	}
+	// Take first path segment only
+	if i := strings.IndexByte(path, '/'); i >= 0 {
+		path = path[:i]
+	}
+
+	if len(path) >= 2 {
+		return path
+	}
+	return strings.ReplaceAll(hostname, ".", "")
+}
+
+var stopWords = map[string]bool{
+	"and": true, "the": true, "if": true, "do": true, "on": true,
+	"to": true, "in": true, "of": true, "a": true, "is": true,
+	"it": true, "no": true, "at": true, "we": true, "for": true,
+	"th": true, "or": true, "be": true, "as": true, "by": true,
+	// pure english filler
+	"not": true, "with": true, "this": true, "have": true, "lets": true,
+	"let's": true, "please": true, "but": true, "can": true, "some": true,
+	"get": true, "out": true, "come": true, "time": true,
+	// vague action words
+	"doing": true, "trying": true, "tell": true, "retell": true,
+	"need": true, "solve": true,
+}
+
+// normalizeToken lowercases, trims punctuation, and returns an empty string
+// if the token should be discarded (too short, a stop word, or URL debris).
+func normalizeToken(raw string) string {
+	// Drop URL debris from old Redis data (https:, raidplan.io, pastebin.com, etc.)
+	if httpUrlRe.MatchString(raw) || bareUrlRe.MatchString(raw) {
+		return ""
+	}
+	token := strings.ToLower(raw)
+	token = strings.Trim(token, " .,!?;:()[]{}'\"`#")
+	if len(token) < 2 || stopWords[token] {
+		return ""
+	}
+	return token
+}
+
+// parseEntry splits a stored Redis entry into its timestamp and description.
+// New entries are stored as "<unix_ts>\t<description>"; old entries are bare descriptions.
+// Returns a zero Time for old entries so callers can filter them out.
+func parseEntry(entry string, fallbackDayNumber int) (ts time.Time, timestamp string, description string) {
+	if idx := strings.IndexByte(entry, '\t'); idx >= 0 {
+		unix, err := strconv.ParseInt(entry[:idx], 10, 64)
+		if err == nil {
+			t := time.Unix(unix, 0).UTC()
+			return t, t.Format(time.DateTime), entry[idx+1:]
+		}
+	}
+	// Fallback for old data without a timestamp
+	day := time.Date(1900, 0, 0, 0, 0, 0, 0, time.UTC).AddDate(0, 0, fallbackDayNumber)
+	return time.Time{}, day.Format(time.DateOnly), entry
 }
 
 func NowToInt() int {
@@ -35,6 +116,16 @@ func NowToInt() int {
 }
 
 func splitListingIntoTokens(listing string) ([]string, error) {
+	// Extract raidplan code as a bare token, drop the rest of the URL.
+	// Scheme is optional to catch bare raidplan.io/plan/CODE links.
+	listing = raidplanRe.ReplaceAllStringFunc(listing, func(m string) string {
+		return raidplanRe.FindStringSubmatch(m)[1]
+	})
+	// For https:// URLs, extract path code or hostname (pastebin, tinyurl, kefkab.in, etc.)
+	listing = httpUrlRe.ReplaceAllStringFunc(listing, urlToToken)
+	// Same for bare domain links without a scheme
+	listing = bareUrlRe.ReplaceAllStringFunc(listing, urlToToken)
+
 	var splitRegex = []string{
 		`\|`,   // |
 		`\|\|`, // ||
@@ -44,23 +135,19 @@ func splitListingIntoTokens(listing string) ([]string, error) {
 		`for `, // for
 		` `,    // space
 		`to `,  // to
-		`-`,    // -
 		`&`,    // &
 		`\+`,   // +
 		"\n",   // newline
 	}
 
 	fullRegex := strings.Join(splitRegex, `|`)
-
 	re := regexp.MustCompile(fullRegex)
-
 	result := re.Split(listing, -1)
 
 	var resTokens []string
-
-	for _, token := range result {
-		if token != "" {
-			resTokens = append(resTokens, strings.ToLower(token))
+	for _, raw := range result {
+		if token := normalizeToken(raw); token != "" {
+			resTokens = append(resTokens, token)
 		}
 	}
 
@@ -68,9 +155,12 @@ func splitListingIntoTokens(listing string) ([]string, error) {
 }
 
 func (t *Tokenizer) Init() {
-	t.PrevParsedPfIds = []string{}
-
 	redisPw, ok := os.LookupEnv("REDIS_PASSWORD")
+	redisUser, userOk := os.LookupEnv("REDIS_USER")
+
+	if !userOk {
+		panic("You must supply a REDIS_USER to start!")
+	}
 	if !ok {
 		panic("You must supply a REDIS_PASSWORD to start!")
 	}
@@ -80,12 +170,22 @@ func (t *Tokenizer) Init() {
 		panic(fmt.Errorf("Error loading certificates %s", err))
 	}
 
+	caCert, err := os.ReadFile("hyddwn-ca.crt")
+	if err != nil {
+		panic(fmt.Errorf("Error loading CA certificate %s", err))
+	}
+	caPool := x509.NewCertPool()
+	if !caPool.AppendCertsFromPEM(caCert) {
+		panic("Failed to append CA certificate")
+	}
+
 	t.rdb = redis.NewClient(&redis.Options{
 		Addr:     "redis.hyddwn.net:6380",
-		Username: "naur",
+		Username: redisUser,
 		Password: redisPw,
 		TLSConfig: &tls.Config{
 			Certificates: []tls.Certificate{cert},
+			RootCAs:      caPool,
 		},
 	})
 
@@ -98,61 +198,47 @@ func (t *Tokenizer) Init() {
 
 func (t *Tokenizer) TokenizeListings(listings *ffxiv.Listings) {
 	currentDayNumber := NowToInt()
+	ctx := context.Background()
 
-	tokenMap := make(map[string]int)
 	pfDescriptions := []string{}
-
-	parsedListingIds := []string{}
 
 	scopedListings := listings.ForDutiesAndDataCentres(
 		[]string{"HighEndDuty", "Dancing Mad (Ultimate)"},
 		[]string{"Aether", "Crystal", "Dynamis", "Primal"})
 
-	for _, item := range scopedListings.Listings {
-		parsedListingIds = append(parsedListingIds, item.Id)
-		if slices.Contains(t.PrevParsedPfIds, item.Id) {
-			continue
-		}
-
-		pfDescriptions = append(pfDescriptions, item.Description)
-
-		tokenList, _ := splitListingIntoTokens(item.Description)
-
-		for _, token := range tokenList {
-			tokenMap[token] += 1
-		}
-	}
-
-	t.PrevParsedPfIds = parsedListingIds
-
-	ctx := context.Background()
-
-	// store tokens into redis
-	todayKey := fmt.Sprintf("tokens:%d", currentDayNumber)
-	todayExists, err := t.rdb.Exists(ctx, todayKey).Result()
+	seenKey := fmt.Sprintf("seen:%d", currentDayNumber)
+	seenExists, err := t.rdb.Exists(ctx, seenKey).Result()
 	if err != nil {
 		panic(err)
 	}
-	for token, count := range tokenMap {
-		err := t.rdb.HIncrBy(ctx, todayKey, token, int64(count)).Err()
+
+	var added int64
+	for _, item := range scopedListings.Listings {
+		added, err = t.rdb.SAdd(ctx, seenKey, item.Id).Result()
 		if err != nil {
 			panic(err)
 		}
+		if added == 0 {
+			continue // already counted today
+		}
+
+		pfDescriptions = append(pfDescriptions, item.Description)
 	}
 
-	if todayExists == 0 {
-		t.rdb.Expire(ctx, todayKey, 24*32*time.Hour)
+	if seenExists == 0 {
+		t.rdb.Expire(ctx, seenKey, 24*32*time.Hour)
 	}
 
 	// Store description list into redis
 	descriptionKey := fmt.Sprintf("descriptions:%d", currentDayNumber)
-	todayExists, err = t.rdb.Exists(ctx, descriptionKey).Result()
+	todayExists, err := t.rdb.Exists(ctx, descriptionKey).Result()
 	if err != nil {
 		panic(err)
 	}
 
 	for _, description := range pfDescriptions {
-		err = t.rdb.RPush(ctx, descriptionKey, description).Err()
+		entry := fmt.Sprintf("%d\t%s", time.Now().Unix(), description)
+		err = t.rdb.RPush(ctx, descriptionKey, entry).Err()
 		if err != nil {
 			panic(err)
 		}
@@ -173,18 +259,17 @@ func (t *Tokenizer) GatherTokens(lookback int) []Token {
 	for i := range lookback {
 		prevDayNumber := todayDayNumber - i
 
-		getAllResult, err := t.rdb.HGetAll(ctx, fmt.Sprintf("tokens:%d", prevDayNumber)).Result()
-
+		descriptions, err := t.rdb.LRange(ctx, fmt.Sprintf("descriptions:%d", prevDayNumber), 0, -1).Result()
 		if err != nil {
 			panic(err)
 		}
 
-		for key, count := range getAllResult {
-			intCount, err := strconv.Atoi(count)
-			if err != nil {
-				panic(err)
+		for _, entry := range descriptions {
+			_, _, description := parseEntry(entry, prevDayNumber)
+			tokens, _ := splitListingIntoTokens(description)
+			for _, token := range tokens {
+				tokenSum[token] += 1
 			}
-			tokenSum[key] += intCount
 		}
 	}
 
@@ -201,12 +286,26 @@ func (t *Tokenizer) GatherTokens(lookback int) []Token {
 	return res
 }
 
+func (t *Tokenizer) GatherListingCount(lookback int) int64 {
+	ctx := context.Background()
+	todayDayNumber := NowToInt()
+	var total int64
+	for i := range lookback {
+		count, err := t.rdb.SCard(ctx, fmt.Sprintf("seen:%d", todayDayNumber-i)).Result()
+		if err != nil {
+			panic(err)
+		}
+		total += count
+	}
+	return total
+}
+
 func (t *Tokenizer) CreateCsv(lookback int, buf *bytes.Buffer) {
 
 	todayDayNumber := NowToInt()
 	csvwriter := csv.NewWriter(buf)
 
-	err := csvwriter.Write([]string{"Date", "Description"})
+	err := csvwriter.Write([]string{"Timestamp", "Description"})
 	if err != nil {
 		panic(err)
 	}
@@ -221,9 +320,9 @@ func (t *Tokenizer) CreateCsv(lookback int, buf *bytes.Buffer) {
 			panic(err)
 		}
 
-		for _, description := range getResult {
-			dateString := time.Date(1900, 0, 0, 0, 0, 0, 0, time.UTC).AddDate(0, 0, prevDayNumber).Format(time.DateOnly)
-			err = csvwriter.Write([]string{dateString, strings.ReplaceAll(description, "\n", "")})
+		for _, entry := range getResult {
+			_, timestampStr, description := parseEntry(entry, prevDayNumber)
+			err = csvwriter.Write([]string{timestampStr, strings.ReplaceAll(description, "\n", "")})
 			if err != nil {
 				panic(err)
 			}
