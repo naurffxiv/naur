@@ -180,14 +180,17 @@ jobs:
 
   deploy-preview:
     needs: [detect-changes, ci-node]
-    if: github.event_name == 'pull_request' && needs.detect-changes.outputs.naurffxiv == 'true'
+    if: >
+      github.event_name == 'pull_request' &&
+      needs.detect-changes.outputs.naurffxiv == 'true' &&
+      github.actor != 'dependabot[bot]' &&
+      github.event.pull_request.head.repo.fork == false
     permissions:
       contents: read
       pull-requests: write
     uses: ./.github/workflows/deploy-pr-netlify.yml
     with:
       pr_number: "${{ github.event.pull_request.number }}"
-      should_run: ${{ github.event_name == 'pull_request' && needs.detect-changes.outputs.naurffxiv == 'true' }}
     secrets: inherit
 
   e2e:
