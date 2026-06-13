@@ -25,3 +25,7 @@ artifacts/
 # Git & System
 .git/
 .DS_Store
+
+# Prettier is broken on Markdown and especially MDX files
+*.md
+*.mdx
