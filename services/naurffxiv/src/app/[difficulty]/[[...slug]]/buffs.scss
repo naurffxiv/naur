@@ -4,6 +4,11 @@
   vertical-align: baseline;
   padding: 0 0.05em;
 
+  /* Give extra space to buffs immediately following other buffs */
+  + .buff {
+    padding-left: 5px;
+  }
+
   img {
     display: inline-block;
     height: 1lh;

@@ -7,13 +7,14 @@ import rehypeImgSize from "rehype-img-size";
 import rehypeSlug from "rehype-slug";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkToc from "remark-toc";
+import remarkGfm from "remark-gfm";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const withMDX = createMDX({
   extension: /\.mdx?$/,
   options: {
-    remarkPlugins: [remarkFrontmatter, remarkToc],
+    remarkPlugins: [remarkFrontmatter, remarkToc, remarkGfm],
     rehypePlugins: [
       rehypeSlug,
       [rehypeImgSize, { dir: "public" }],
