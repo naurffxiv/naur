@@ -8,7 +8,7 @@ Discord moderation bot for NAUR.
 
 1. **Create a Bot**: Create a personal version of the moddingway bot via Discord's developer portal. Follow [Discord's Getting Started](https://discord.com/developers/docs/quick-start/getting-started#step-1-creating-an-app).
 2. **Environment**: Copy `.env_example` to `.env` and configure the required environment variables (see [Environment Variables](#environment-variables) below).
-3. **Docker Desktop**: Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) to run the containerized database.
+3. **Docker Desktop**: Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) to run the containerized database and test suite.
 4. **Install uv**: Follow the [official uv installation guide](https://docs.astral.sh/uv/getting-started/installation/).
 5. **Install Dependencies**: Run `make sync`. This will:
    - Automatically ensure the correct Python version (3.14) is available.
@@ -66,7 +66,7 @@ We use a Makefile to simplify common development tasks.
 - `make format` - Runs `ruff format` and `ruff check --fix`. **Required before merging.**
 - `make lint` - Runs `format` then `ty check`. Full code quality pass.
 - `make ty` - Runs `ty check` for type safety.
-- `make test` - Runs automated unit tests with `pytest`.
+- `make test` - Runs automated unit tests inside the `python-test` Docker container.
 
 ## Dependency Management
 
@@ -123,6 +123,10 @@ Visit `localhost:8000/docs` to view the API documentation.
 This application uses `pytest` for automated unit testing.
 
 - Run `make test` to execute the full suite.
+
+  Tests run inside a Docker container, but coverage reports are exported back to the host workspace for easy viewing:
+  - **Coverage XML**: `tests/moddingway/coverage.xml`
+  - **HTML Report**: `tests/moddingway/htmlcov/index.html`
 
 ### Ruff & Ty
 
