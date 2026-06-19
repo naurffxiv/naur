@@ -10,10 +10,12 @@ from moddingway.database.models import User
 from moddingway.services import exile_service
 from moddingway.util import timestamp_to_epoch
 
-DEFAULT_DATETIME_NOW = datetime(2016, 05, 28, 8, 0, 0, tzinfo=UTC)
+DEFAULT_DATETIME_NOW = datetime(2016, 5, 28, 8, 0, 0, tzinfo=UTC)
 
 
-def _mock_verified_exile_setup(mocker: MockerFixture, create_member, *, allows_dms=True):
+def _mock_verified_exile_setup(
+    mocker: MockerFixture, create_member, *, allows_dms=True
+):
     mock_database_user = User(
         user_id=1,
         discord_user_id="12345",
