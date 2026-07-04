@@ -36,7 +36,7 @@
     "react": "19.2.6",
     "react-dom": "19.2.6",
     "react-markdown": "^10.1.0",
-    "react-scrollspy-navigation": "^2.0.6",
+    "react-scrollspy-navigation": "^2.1.1",
     "react-slick": "^0.31.0",
     "rehype-autolink-headings": "^7.1.0",
     "rehype-highlight": "^7.0.2",
@@ -47,16 +47,16 @@
     "remark-mdx-frontmatter": "^5.0.0",
     "remark-sectionize": "^2.1.0",
     "remark-toc": "^9.0.0",
-    "sass": "^1.100.0",
-    "sharp": "^0.34.5",
-    "smol-toml": "^1.6.1",
+    "sass": "^1.101.0",
+    "sharp": "^0.35.3",
+    "smol-toml": "^1.7.0",
     "unist-util-visit": "^5.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.24.0",
-    "@netlify/plugin-nextjs": "^5.15.11",
-    "@tailwindcss/typography": "^0.5.16",
-    "@types/node": "^25.9.1",
+    "@netlify/plugin-nextjs": "^5.15.12",
+    "@tailwindcss/typography": "^0.5.20",
+    "@types/node": "^26.1.0",
     "@types/react": "19.2.15",
     "@types/react-dom": "19.2.3",
     "@typescript-eslint/eslint-plugin": "^8.30.1",
@@ -70,15 +70,15 @@
     "eslint-plugin-promise": "^6.6.0",
     "eslint-plugin-react": "^7.37.5",
     "glob": "^13.0.6",
-    "globals": "^17.6.0",
-    "postcss": "^8.5.15",
+    "globals": "^17.7.0",
+    "postcss": "^8.5.16",
     "prettier": "^3.8.3",
     "tailwindcss": "^3.4.17",
-    "tsx": "^4.22.3",
+    "tsx": "^4.23.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.59.4"
+    "typescript-eslint": "^8.62.1"
   },
   "optionalDependencies": {
-    "@img/sharp-linux-x64": "^0.34.5"
+    "@img/sharp-linux-x64": "^0.35.3"
   }
 }
