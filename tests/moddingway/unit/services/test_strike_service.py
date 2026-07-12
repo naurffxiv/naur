@@ -6,6 +6,7 @@ from pytest_mock.plugin import MockerFixture
 
 from moddingway import constants
 from moddingway.constants import PERMANENT_BAN_STRIKE_THRESHOLD
+from moddingway.database.strikes_database import StrikeDisplay
 from moddingway.services import strike_service
 
 
@@ -201,3 +202,188 @@ async def test_add_strike(
     mocked__apply_punishment.assert_called_with(
         mocked_logging_embed, mocked_user, mocked_db_user, 0
     )
+
+
+@pytest.mark.asyncio
+async def test_edit_strike__not_found(create_embed, mocker: MockerFixture):
+    mocked_logging_embed = create_embed()
+    mocker.patch("moddingway.database.strikes_database.get_strike", return_value=None)
+
+    result = await strike_service.edit_strike(
+        mocked_logging_embed,
+        mocker.Mock(id=99),
+        mocker.Mock(),
+        1,
+        "updated reason",
+        None,
+    )
+
+    assert result == "Strike not found in database"
+
+
+@pytest.mark.asyncio
+async def test_edit_strike__no_updates(create_embed, mocker: MockerFixture):
+    mocked_logging_embed = create_embed()
+    mocker.patch(
+        "moddingway.database.strikes_database.get_strike",
+        return_value=StrikeDisplay(
+            strike_id=1,
+            user_id=10,
+            discord_user_id="123",
+            severity=constants.StrikeSeverity.MINOR,
+            reason="original",
+            created_by="1",
+            created_timestamp=datetime(2025, 9, 1, tzinfo=UTC),
+            last_edited_by="1",
+            last_edited_timestamp=datetime(2025, 9, 1, tzinfo=UTC),
+        ),
+    )
+
+    result = await strike_service.edit_strike(
+        mocked_logging_embed,
+        mocker.Mock(id=99),
+        mocker.Mock(),
+        1,
+        None,
+        None,
+    )
+
+    assert result == "No updates provided. Please specify a reason and/or severity."
+
+
+@pytest.mark.asyncio
+async def test_edit_strike__reason_too_long(create_embed, mocker: MockerFixture):
+    mocked_logging_embed = create_embed()
+    mocker.patch(
+        "moddingway.database.strikes_database.get_strike",
+        return_value=StrikeDisplay(
+            strike_id=1,
+            user_id=10,
+            discord_user_id="123",
+            severity=constants.StrikeSeverity.MINOR,
+            reason="original",
+            created_by="1",
+            created_timestamp=datetime(2025, 9, 1, tzinfo=UTC),
+            last_edited_by="1",
+            last_edited_timestamp=datetime(2025, 9, 1, tzinfo=UTC),
+        ),
+    )
+
+    result = await strike_service.edit_strike(
+        mocked_logging_embed,
+        mocker.Mock(id=99),
+        mocker.Mock(),
+        1,
+        "x" * 301,
+        None,
+    )
+
+    assert "Reason is too long" in result
+
+
+@pytest.mark.asyncio
+async def test_edit_strike__updates_reason_and_dms_user(
+    create_embed, mocker: MockerFixture
+):
+    mocked_logging_embed = create_embed()
+    mocked_logging_embed.add_field = mocker.Mock()
+    mocked_logging_embed.set_footer = mocker.Mock()
+
+    mocker.patch(
+        "moddingway.database.strikes_database.get_strike",
+        return_value=StrikeDisplay(
+            strike_id=1,
+            user_id=10,
+            discord_user_id="123",
+            severity=constants.StrikeSeverity.MINOR,
+            reason="original",
+            created_by="1",
+            created_timestamp=datetime(2025, 9, 1, tzinfo=UTC),
+            last_edited_by="1",
+            last_edited_timestamp=datetime(2025, 9, 1, tzinfo=UTC),
+        ),
+    )
+    mocked_update_strike = mocker.patch(
+        "moddingway.database.strikes_database.update_strike", return_value=True
+    )
+    mocked_fetch_user = mocker.AsyncMock()
+    mocked_client = mocker.Mock(fetch_user=mocked_fetch_user)
+    mocked_send_dm = mocker.patch("moddingway.services.strike_service.send_dm")
+
+    editor = mocker.Mock(id=99)
+
+    result = await strike_service.edit_strike(
+        mocked_logging_embed,
+        editor,
+        mocked_client,
+        1,
+        "updated reason",
+        None,
+    )
+
+    assert result == "Strike successfully updated"
+    mocked_update_strike.assert_called_once_with(
+        strike_id=1,
+        reason="updated reason",
+        severity=constants.StrikeSeverity.MINOR,
+        editor_id="99",
+        update_timestamp=mocker.ANY,
+    )
+    mocked_fetch_user.assert_called_once_with(123)
+    mocked_send_dm.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_edit_strike__updates_severity_and_points(
+    create_embed, create_db_user, mocker: MockerFixture
+):
+    mocked_logging_embed = create_embed()
+    mocked_logging_embed.add_field = mocker.Mock()
+    mocked_logging_embed.set_footer = mocker.Mock()
+
+    mocker.patch(
+        "moddingway.database.strikes_database.get_strike",
+        return_value=StrikeDisplay(
+            strike_id=1,
+            user_id=10,
+            discord_user_id="123",
+            severity=constants.StrikeSeverity.MINOR,
+            reason="original",
+            created_by="1",
+            created_timestamp=datetime(2025, 9, 1, tzinfo=UTC),
+            last_edited_by="1",
+            last_edited_timestamp=datetime(2025, 9, 1, tzinfo=UTC),
+        ),
+    )
+    db_user = create_db_user(
+        user_id=10, temporary_points=2, permanent_points=0, get_strike_points=5
+    )
+    mocker.patch(
+        "moddingway.database.users_database.get_user_by_internal_id",
+        return_value=db_user,
+    )
+    mocked_decrement = mocker.patch(
+        "moddingway.database.users_database.decrement_user_strike_points"
+    )
+    mocked_update_points = mocker.patch(
+        "moddingway.database.users_database.update_user_strike_points"
+    )
+    mocker.patch(
+        "moddingway.database.strikes_database.update_strike", return_value=True
+    )
+    mocked_client = mocker.Mock(fetch_user=mocker.AsyncMock())
+    mocker.patch("moddingway.services.strike_service.send_dm")
+
+    result = await strike_service.edit_strike(
+        mocked_logging_embed,
+        mocker.Mock(id=99),
+        mocked_client,
+        1,
+        None,
+        constants.StrikeSeverity.MODERATE,
+    )
+
+    assert result == "Strike successfully updated"
+    mocked_decrement.assert_called_once_with(10, 1, 0)
+    mocked_update_points.assert_called_once_with(db_user)
+    assert db_user.temporary_points == 5
