@@ -165,16 +165,15 @@ async def edit_strike(
             "Please shorten the strike reason."
         )
 
-    # first condition won't happen, but unresolved-attribute still complains
-    if strike is None or len(errors) > 0:
+    if len(errors) > 0:
         return "\n".join(errors)
 
-    new_reason = reason if reason is not None else strike.reason
-    old_severity = strike.severity
+    new_reason = reason if reason is not None else strike.reason  # ty: ignore[unresolved-attribute]
+    old_severity = strike.severity  # ty: ignore[unresolved-attribute]
     new_severity = severity if severity is not None else old_severity
 
     if new_severity != old_severity:
-        db_user = users_database.get_user_by_internal_id(strike.user_id)
+        db_user = users_database.get_user_by_internal_id(strike.user_id)  # ty: ignore[unresolved-attribute]
         if db_user is None:
             return "User not found in database"
 
@@ -187,11 +186,13 @@ async def edit_strike(
             temporary_points_to_remove = _get_severity_points(old_severity)
 
         users_database.decrement_user_strike_points(
-            strike.user_id, temporary_points_to_remove, permanent_points_to_remove
+            strike.user_id,  # ty: ignore[unresolved-attribute]
+            temporary_points_to_remove,
+            permanent_points_to_remove,
         )
 
         # refetch after update
-        db_user = users_database.get_user_by_internal_id(strike.user_id)
+        db_user = users_database.get_user_by_internal_id(strike.user_id)  # ty: ignore[unresolved-attribute]
         if db_user is None:
             return "User not found in database"
 
@@ -202,7 +203,7 @@ async def edit_strike(
             logging_embed,
             logger,
             "Strike Point Adjustment",
-            f"<@{strike.discord_user_id}> strike severity changed from {old_severity.name} to {new_severity.name}, bringing them to {db_user.get_strike_points()} points",
+            f"<@{strike.discord_user_id}> strike severity changed from {old_severity.name} to {new_severity.name}, bringing them to {db_user.get_strike_points()} points",  # ty: ignore[unresolved-attribute]
         )
 
     updated = strikes_database.update_strike(
@@ -218,7 +219,7 @@ async def edit_strike(
 
     logging_embed.set_footer(text=f"Strike ID: {strike_id}")
     if reason is not None:
-        logging_embed.add_field(name="Old reason", value=strike.reason)
+        logging_embed.add_field(name="Old reason", value=strike.reason)  # ty: ignore[unresolved-attribute]
     if severity is not None:
         logging_embed.add_field(name="Old severity", value=old_severity.name)
 
@@ -229,7 +230,7 @@ async def edit_strike(
         "Strike updated",
     )
 
-    strike_user = await client.fetch_user(int(strike.discord_user_id))
+    strike_user = await client.fetch_user(int(strike.discord_user_id))  # ty: ignore[unresolved-attribute]
     await send_dm(
         logging_embed,
         strike_user,
