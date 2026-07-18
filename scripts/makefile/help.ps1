@@ -22,8 +22,6 @@ $commands       = @(
     @{ Group    = "Aspire";               Target = "aspire-run";        Desc = "Launch the full stack with .NET Aspire" }
     @{ Group    = "Aspire";               Target = "aspire-watch";      Desc = "Launch the full stack with .NET Aspire (Hot-Reload)" }
 
-    @{ Group    = "Dependencies";         Target = "validate-deps";     Desc = "Verify dependencies.yml matches manifest files" }
-    @{ Group    = "Dependencies";         Target = "validate-deps-fix"; Desc = "Update dependencies.yml to match manifest versions" }
     @{ Group    = "Dependencies";         Target = "sync";              Desc = "Sync Python dependencies from uv.lock" }
 
     @{ Group    = "Maintenance";          Target = "clean";             Desc = "Remove build artifacts" }

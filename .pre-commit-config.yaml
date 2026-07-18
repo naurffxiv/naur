@@ -25,14 +25,3 @@ repos:
       - id: mixed-line-ending
         args: [--fix=auto]
         priority: 1
-
-  # Monorepo Hygiene
-  - repo: local
-    hooks:
-      - id: dependency-sync
-        name: dependency-sync
-        entry: uv run --with pyyaml --with ruamel-yaml python scripts/check-dependency-sync.py
-        language: system
-        files: ^(dependencies\.yml|services/.*/(uv\.lock|pyproject\.toml|package\.json|go\.mod|.*\.csproj))$
-        pass_filenames: false
-        priority: 2

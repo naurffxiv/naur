@@ -36,6 +36,7 @@ def naur_guild(mocker: MockerFixture, create_role):
     return mocker.Mock(
         roles=[
             create_role(constants.Role.MOD),
+            create_role(constants.Role.ADMIN),
             create_role(constants.Role.VERIFIED),
             create_role(constants.Role.EXILED),
         ]
@@ -53,7 +54,7 @@ def create_member(mocker: MockerFixture, naur_guild, create_role):
             roles = [constants.Role.VERIFIED]
         role_list = [create_role(role) for role in roles]
         mocked_member = mocker.Mock(
-            spec=discord.member,
+            spec=discord.Member,
             guild=naur_guild,
             roles=role_list,
             id=id,
