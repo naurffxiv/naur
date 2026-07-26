@@ -39,11 +39,6 @@ $script:ServiceRegistry = @{
         DirPath     = "services/findingway"
         DisplayName = "Findingway"
     }
-    Clearingway = @{
-        Type        = "Go"
-        DirPath     = "services/clearingway"
-        DisplayName = "Clearingway"
-    }
     E2ETests    = @{
         Type        = "Playwright"
         DirPath     = "tests/e2e"
