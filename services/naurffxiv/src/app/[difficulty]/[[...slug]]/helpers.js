@@ -15,6 +15,7 @@ import rehypeSlug from "rehype-slug";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import remarkSectionize from "remark-sectionize";
+import remarkGfm from "remark-gfm";
 import { reservedSlugs } from "@/config/constants";
 
 // process each mdx file and cache it
@@ -25,7 +26,12 @@ export const processMdx = cache(async (filepath) => {
   const processedMdx = await evaluate(rawmdx, {
     ...runtime,
     baseUrl: import.meta.url,
-    remarkPlugins: [remarkFrontmatter, remarkMdxFrontmatter, remarkSectionize],
+    remarkPlugins: [
+      remarkFrontmatter,
+      remarkMdxFrontmatter,
+      remarkSectionize,
+      remarkGfm,
+    ],
     rehypePlugins: [
       rehypeSlug,
       [
