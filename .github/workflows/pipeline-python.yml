@@ -32,7 +32,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
-          version: "0.10.4"
+          version: "0.11.14"
           enable-cache: true
           python-version: ${{ inputs.python-version }}
           cache-dependency-glob: "services/${{ inputs.service }}/uv.lock"
@@ -75,7 +75,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
-          version: "0.10.4"
+          version: "0.11.14"
           enable-cache: true
           python-version: ${{ inputs.python-version }}
           cache-dependency-glob: "services/${{ inputs.service }}/uv.lock"
@@ -106,7 +106,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
-          version: "0.10.4"
+          version: "0.11.14"
           enable-cache: true
           python-version: ${{ inputs.python-version }}
           cache-dependency-glob: "services/${{ inputs.service }}/uv.lock"
@@ -120,7 +120,8 @@ jobs:
           service: ${{ inputs.service }}
           step-number: 30
           step-name: "Unit Tests"
-          command: uv run pytest ../../tests/${{ inputs.service }} --cov=${{ inputs.service }} --cov-report=xml:../../tests/${{ inputs.service }}/coverage.xml
+          command: >-
+            ${{ inputs.service == 'moddingway' && 'make test-ci' || format('uv run pytest ../../tests/{0} --cov={0} --cov-report=xml:../../tests/{0}/coverage.xml', inputs.service) }}
           output-file: pytest.txt
           working-directory: services/${{ inputs.service }}
           fail-on-error: true
@@ -132,4 +133,4 @@ jobs:
           name: coverage-${{ inputs.service }}
           path: tests/${{ inputs.service }}/coverage.xml
           if-no-files-found: ignore
-          retention-days: 1
+          retention-days: 7

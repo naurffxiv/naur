@@ -14,3 +14,6 @@ lint:
 
 lint-fix:
 	golangci-lint run --fix
+
+redis-docker:
+	docker run --name findingway-redis -d -p 6379:6379 redis:latest

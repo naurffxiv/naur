@@ -17,7 +17,7 @@ export default function LastUpdated({ lastUpdated }: LastUpdatedProps) {
   const lastUpdatedDate = new Date(lastUpdated);
 
   // Validate date
-  if (isNaN(lastUpdatedDate.getTime())) {
+  if (Number.isNaN(lastUpdatedDate.getTime())) {
     return null;
   }
 
@@ -67,10 +67,13 @@ export default function LastUpdated({ lastUpdated }: LastUpdatedProps) {
   return (
     <div className="mt-2 mb-4 text-sm text-gray-400">
       <span className="font-medium">Last updated:</span>{" "}
-      <time dateTime={lastUpdated} title={fullDate}>
+      <time dateTime={lastUpdated} title={fullDate} suppressHydrationWarning>
         {relativeTime}
       </time>
-      <span className="hidden sm:inline"> ({fullDate})</span>
+      <span className="hidden sm:inline" suppressHydrationWarning>
+        {" "}
+        ({fullDate})
+      </span>
     </div>
   );
 }

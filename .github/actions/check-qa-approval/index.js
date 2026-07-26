@@ -1,6 +1,7 @@
 /**
  * Check QA Approval Gate
- * Blocks merge on QA PRs until 2 unique reviewers have approved.
+ * Blocks merge on QA PRs until 2 unique reviewers have approved,
+ * with at least one approval from the QA team.
  * Non-QA PRs (Needs QA unchecked) always pass immediately.
  */
 
@@ -9,9 +10,26 @@ module.exports = async ({ github, context, core }) => {
     const shared = require("../shared.js");
     const pr = context.payload.pull_request;
     const body = pr.body || "";
+    const sha = pr.head.sha;
+
+    // Fail-safe: pending immediately so crashes don't look like gate blocks.
+    await github.rest.repos.createCommitStatus({
+      ...shared.repoParams(context),
+      sha,
+      state: "pending",
+      context: "QA Approval Gate",
+      description: "Waiting for code review...",
+    });
 
     if (!shared.needsQA(body)) {
       console.log("PR does not need QA. Gate passes.");
+      await github.rest.repos.createCommitStatus({
+        ...shared.repoParams(context),
+        sha,
+        state: "success",
+        context: "QA Approval Gate",
+        description: "QA not required for this PR.",
+      });
       return;
     }
 
@@ -20,29 +38,147 @@ module.exports = async ({ github, context, core }) => {
       pull_number: pr.number,
     });
 
-    // Group by reviewer, keeping only the latest non-comment state.
-    // COMMENTED reviews are skipped; they don't change approval status.
+    // Last non-comment state per reviewer is the one that counts.
     const latestByReviewer = new Map();
     for (const review of reviews) {
       if (review.state === "COMMENTED" || !review.user) continue;
+      if (review.user.login === pr.user.login) continue;
       latestByReviewer.set(review.user.login, review.state);
     }
 
-    const approvalCount = [...latestByReviewer.values()].filter(
-      (state) => state === "APPROVED",
-    ).length;
+    const approvers = [...latestByReviewer.entries()]
+      .filter(([, state]) => state === "APPROVED")
+      .map(([login]) => login);
 
-    console.log(`QA gate: ${approvalCount}/2 approvals`);
+    const qaMemberLogins = await shared.getTeamMemberLogins(
+      github,
+      context,
+      shared.QA_TEAM_SLUG,
+      true,
+    );
 
-    if (approvalCount >= 2) {
+    const cmMemberLogins = await shared.getTeamMemberLogins(
+      github,
+      context,
+      shared.CM_TEAM_SLUG,
+      false,
+    );
+
+    const hasQAApproval = approvers.some((login) => qaMemberLogins.has(login));
+    // "Dev approval" means any approver outside the QA and CM teams.
+    // Two QA members approving does NOT satisfy the gate
+    const hasDevApproval = approvers.some(
+      (login) => !qaMemberLogins.has(login) && !cmMemberLogins.has(login),
+    );
+
+    console.log(
+      `QA gate: QA approval=${hasQAApproval}, dev approval=${hasDevApproval}`,
+    );
+
+    const gatePass = hasQAApproval && hasDevApproval;
+
+    const stateLabels = [
+      "needs-code-review",
+      "needs-qa-approval",
+      "ready-to-merge",
+    ];
+    let targetLabel = "needs-code-review";
+    if (gatePass) {
+      targetLabel = "ready-to-merge";
+    } else if (hasDevApproval) {
+      targetLabel = "needs-qa-approval";
+    }
+
+    try {
+      const { data: existingLabels } =
+        await github.rest.issues.listLabelsOnIssue({
+          ...shared.repoParams(context),
+          issue_number: pr.number,
+        });
+
+      const existingLabelNames = existingLabels.map((l) => l.name);
+
+      for (const label of stateLabels) {
+        if (label !== targetLabel && existingLabelNames.includes(label)) {
+          await github.rest.issues.removeLabel({
+            ...shared.repoParams(context),
+            issue_number: pr.number,
+            name: label,
+          });
+        }
+      }
+
+      if (!existingLabelNames.includes(targetLabel)) {
+        await github.rest.issues.addLabels({
+          ...shared.repoParams(context),
+          issue_number: pr.number,
+          labels: [targetLabel],
+        });
+      }
+    } catch (error) {
+      console.warn("Failed to manage PR labels:", error.message);
+    }
+
+    if (gatePass) {
       console.log("✅ QA gate passed.");
+      try {
+        await github.rest.repos.createCommitStatus({
+          ...shared.repoParams(context),
+          sha,
+          state: "success",
+          context: "QA Approval Gate",
+          description: "Code reviewer + QA team approved.",
+        });
+      } catch (error) {
+        console.warn(
+          `Failed to set QA Approval Gate status to success for sha ${sha}:`,
+          error.message,
+        );
+      }
     } else {
-      core.setFailed(
-        `QA gate: ${approvalCount}/2 approvals. Waiting for code reviewer + QA team approval before merge.`,
-      );
+      let pendingDescription;
+      if (!hasDevApproval && !hasQAApproval) {
+        pendingDescription =
+          "Waiting for a code reviewer approval and a QA team approval.";
+      } else if (!hasDevApproval) {
+        pendingDescription =
+          "QA approved. Waiting for a code reviewer approval.";
+      } else {
+        pendingDescription =
+          "Code reviewer approved. Waiting for a QA team approval.";
+      }
+      console.log(`QA gate pending: ${pendingDescription}`);
+      try {
+        await github.rest.repos.createCommitStatus({
+          ...shared.repoParams(context),
+          sha,
+          state: "pending",
+          context: "QA Approval Gate",
+          description: pendingDescription.slice(0, 140),
+        });
+      } catch (error) {
+        console.warn(
+          `Failed to set QA Approval Gate status to pending for sha ${sha}:`,
+          error.message,
+        );
+      }
     }
   } catch (error) {
     console.error("QA Approval Gate Error:", error);
+    try {
+      const sha = context.payload.pull_request?.head?.sha;
+      if (sha) {
+        const shared = require("../shared.js");
+        await github.rest.repos.createCommitStatus({
+          ...shared.repoParams(context),
+          sha,
+          state: "failure",
+          context: "QA Approval Gate",
+          description:
+            `Script error: ${error.message ?? "Unknown error"}`.slice(0, 140),
+        });
+      }
+    } catch (_) {}
     core.setFailed(`QA Approval Gate Failure: ${error.message}`);
   }
 };

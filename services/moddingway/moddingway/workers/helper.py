@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import re
 from datetime import UTC, datetime, timedelta
 
 import discord
@@ -57,27 +56,12 @@ async def automod_thread(
     duration: int,
     num_removed: int,
     num_errors: int,
-    user_id: int | None = None,
 ):
     if thread.flags.pinned:
         # skip the for loop if the thread is pinned
         return num_removed, num_errors
 
-    if user_id is not None and thread.owner_id != user_id:
-        return num_removed, num_errors
-
-    # check if starter message was deleted
-    starter_message = None
-    try:
-        starter_message = await thread.fetch_message(thread.id)
-        # Adding small delay to ensure message availability/updates
-        await asyncio.sleep(1)
-    except discord.NotFound:
-        pass
-    except Exception as e:
-        logger.error(e, exc_info=e)
-
-    should_delete = _should_delete_thread(thread, starter_message, duration, user_id)
+    should_delete = _should_delete_thread(thread, duration)
 
     if not should_delete:
         return num_removed, num_errors
@@ -94,27 +78,9 @@ async def automod_thread(
 
 def _should_delete_thread(
     thread: discord.Thread,
-    starter_message: discord.Message | None,
     duration: int,
-    user_id: int | None,
 ) -> bool:
     now = datetime.now(UTC)
-
-    if starter_message is not None:
-        # Check specific user/raidhelper logic
-        if user_id is not None and thread.owner_id == user_id:
-            date_pattern = re.compile(r"<t:(\d+):F>")
-            date_match = date_pattern.search(starter_message.content)
-
-            if date_match:
-                raid_timestamp = int(date_match.group(1))
-                time_since_raid = now.timestamp() - raid_timestamp
-                # Delete if raid passed by duration
-                if time_since_raid >= (duration * 86400):
-                    return True
-            else:
-                logger.error(f"No timestamp found in thread {thread.id}")
-            return False
 
     # Standard duration check (fallback or if not specific user logic)
     if thread.last_message_id:
