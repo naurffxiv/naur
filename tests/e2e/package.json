@@ -11,8 +11,8 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@playwright/test": "^1.60.0",
-    "@types/node": "^25.9.1",
+    "@playwright/test": "^1.62.0",
+    "@types/node": "^26.1.1",
     "eslint-plugin-playwright": "^2.10.5",
     "typescript": "^5.9.3"
   }
