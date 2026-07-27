@@ -17,13 +17,12 @@ $Workloads = @(
     @{ Name = "Authingway"; Action = { param($p) dotnet build $p --verbosity quiet --nologo }; Arg = Get-ServicePath -ServiceName "Authingway" -ProjectRoot $ProjectRoot }
     @{ Name = "Naurffxiv"; Action = { param($p, $pm) Set-Location $p; Invoke-Expression $pm }; Arg = @(Get-ServicePath -ServiceName "Naurffxiv" -ProjectRoot $ProjectRoot), $pm }
     @{ Name = "Findingway"; Action = { param($p) Set-Location $p; go build ./... }; Arg = Get-ServicePath -ServiceName "Findingway" -ProjectRoot $ProjectRoot }
-    @{ Name = "Clearingway"; Action = { param($p) Set-Location $p; go build ./... }; Arg = Get-ServicePath -ServiceName "Clearingway" -ProjectRoot $ProjectRoot }
     @{ Name = "Moddingway"; Action = {
             param($p)
             Push-Location $p
             try {
-                $python = Join-Path $p "venv\Scripts\python.exe"
-                & $python -m ty check ; if ($LASTEXITCODE -ne 0) { throw "Ty Type-Check failed" }
+                uv run ty check . ../../tests/moddingway
+                if ($LASTEXITCODE -ne 0) { throw "Ty Type-Check failed" }
             }
             finally { Pop-Location }
         }; Arg = Get-ServicePath -ServiceName "Moddingway" -ProjectRoot $ProjectRoot

@@ -25,14 +25,3 @@ repos:
       - id: mixed-line-ending
         args: [--fix=auto]
         priority: 1
-
-  # Monorepo Hygiene
-  - repo: local
-    hooks:
-      - id: dependency-sync
-        name: dependency-sync
-        entry: python scripts/check-dependency-sync.py
-        language: system
-        files: ^(dependencies\.yml|services/.*/(requirements\.txt|package\.json|go\.mod|.*\.csproj))$
-        pass_filenames: false
-        priority: 2

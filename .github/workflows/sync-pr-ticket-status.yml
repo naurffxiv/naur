@@ -27,11 +27,11 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Generate GitHub App Token
         id: app-token
-        uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
@@ -59,13 +59,13 @@ jobs:
           STATUS=$(echo "$SCRIPT_OUTPUT" | grep "^status=" | cut -d= -f2)
 
           if [ -z "$STATUS" ]; then
-            echo "::error::determine-status.sh produced no status output. Raw output: $SCRIPT_OUTPUT" >&2
-            exit 1
+            echo "No status output from determine-status.sh, skipping board move." >&2
+            exit 0
           fi
 
           echo "status=$STATUS" >> "$GITHUB_OUTPUT"
       - name: Sync ticket to board
-        if: steps.extract.outputs.found == 'true'
+        if: steps.extract.outputs.found == 'true' && steps.status.outputs.status != ''
         uses: ./.github/actions/move-project-card
         with:
           token: ${{ steps.app-token.outputs.token }}

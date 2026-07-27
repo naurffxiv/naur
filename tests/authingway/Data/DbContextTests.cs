@@ -2,7 +2,6 @@
 // The NAUR Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Microsoft.EntityFrameworkCore;
 using Naur.Authingway.Data;
 using Naur.Authingway.Tests.Testing;
 

@@ -1,13 +1,12 @@
-from datetime import datetime, time, timedelta, timezone
-from typing import List
+from datetime import UTC, datetime, timedelta
 
 import discord
 import pytest
 from pytest_mock.plugin import MockerFixture
 
 from moddingway import constants
-from moddingway.database.models import Strike
-from moddingway.services import ban_service, exile_service, strike_service
+from moddingway.constants import PERMANENT_BAN_STRIKE_THRESHOLD
+from moddingway.services import strike_service
 
 
 @pytest.mark.parametrize(
@@ -26,7 +25,7 @@ from moddingway.services import ban_service, exile_service, strike_service
     ],
 )
 @pytest.mark.asyncio
-async def test_apply_punisment(
+async def test_apply_punishment(
     previous_points: int,
     total_points: int,
     expected_punishment: str,
@@ -46,7 +45,7 @@ async def test_apply_punisment(
     res = await strike_service._apply_punishment(
         mocked_embed, mocked_user, mocked_db_user, previous_points
     )
-    if total_points >= 15:
+    if total_points >= PERMANENT_BAN_STRIKE_THRESHOLD:
         mocked_ban_member.assert_called_once_with(
             mocked_embed,
             mocked_user,
@@ -81,7 +80,7 @@ async def test_apply_punisment(
                     constants.StrikeSeverity.MINOR,
                     "test",
                     "1",
-                    datetime(2025, 9, 1, tzinfo=timezone.utc),
+                    datetime(2025, 9, 1, tzinfo=UTC),
                 )
             ],
             "Strikes found for <@1>: [Temporary points: None | Permanent points: None]"
@@ -97,14 +96,14 @@ async def test_apply_punisment(
                     constants.StrikeSeverity.MINOR,
                     "test",
                     "1",
-                    datetime(2025, 9, 1, tzinfo=timezone.utc),
+                    datetime(2025, 9, 1, tzinfo=UTC),
                 ),
                 (
                     "2",
                     constants.StrikeSeverity.MODERATE,
                     "test2",
                     "3",
-                    datetime(2025, 9, 2, tzinfo=timezone.utc),
+                    datetime(2025, 9, 2, tzinfo=UTC),
                 ),
             ],
             "Strikes found for <@1>: [Temporary points: None | Permanent points: None]"
@@ -118,7 +117,7 @@ async def test_apply_punisment(
 async def test_get_user_strikes(
     user_id: str,
     total_points: str,
-    strike_params: List[tuple],
+    strike_params: list[tuple],
     expected_result: str,
     mocker: MockerFixture,
     create_db_user,

@@ -31,13 +31,13 @@ runs:
       working-directory: ${{ inputs.working-directory }}
       run: |
         set -o pipefail
-        set +e
         STATUS="success"
 
-        ${{ inputs.command }} 2>&1 | tee ${{ inputs.output-file }}
-        EXIT_CODE=${PIPESTATUS[0]}
-
-        if [[ $EXIT_CODE -ne 0 ]]; then
+        # Execute command block in a subshell with exit-on-error
+        if ! (
+          set -e
+          ${{ inputs.command }}
+        ) 2>&1 | tee ${{ inputs.output-file }}; then
           STATUS="failure"
           if [[ "${{ inputs.fail-on-error }}" != "true" ]]; then
             STATUS="warning"
@@ -55,9 +55,6 @@ runs:
       if: always()
       with:
         name: report-${{ inputs.step-name }}-${{ inputs.service }}
-        path: |
-          ${{ inputs.working-directory }}/summary-*.md
-          ${{ inputs.working-directory }}/logs-*.md
-          ${{ inputs.working-directory }}/report-*.json
+        path: ${{ inputs.working-directory }}/report-*.json
         if-no-files-found: ignore
         retention-days: 1

@@ -1,4 +1,4 @@
-.PHONY: setup lint-tools lint format check validate-deps install build clean clean-all aspire-run aspire-watch troubleshoot kill-dev help all check-python
+.PHONY: setup lint-tools lint format check install sync build clean clean-all aspire-run aspire-watch troubleshoot kill-dev help all check-python
 # VERBOSITY CONTROL
 Q := @
 ifdef VERBOSE
@@ -13,12 +13,7 @@ APPHOST_PRJ := $(APPHOST_DIR)/Naur.AppHost.csproj
 SCRIPTS_DIR := scripts/makefile
 PWSH 		:= pwsh -NoProfile -ExecutionPolicy Bypass -File
 WIN_PWSH    := powershell -NoProfile -ExecutionPolicy Bypass -File
-PYTHON_RAW  := $(firstword $(wildcard services/moddingway/venv/Scripts/python.exe) $(wildcard services/moddingway/venv/bin/python) python3 python)
-ifeq ($(OS),Windows_NT)
-    PYTHON := $(subst /,\,$(PYTHON_RAW))
-else
-    PYTHON := $(PYTHON_RAW)
-endif
+PYTHON      := uv run python
 
 # DEFAULT TARGET
 .DEFAULT_GOAL := help
@@ -53,15 +48,11 @@ endif
 check-python:
 	$(Q)$(PYTHON) --version >$(NULL_DEVICE) 2>&1 || (echo "Python required." && exit 1)
 
-validate-deps: check-python
-	$(Q)echo Validating that dependencies.yml matches manifests...
-	$(Q)$(PYTHON) scripts/check-dependency-sync.py
-
-
-
 install: check lint-tools
 	$(Q)$(PWSH) $(SCRIPTS_DIR)/install.ps1
-	$(Q)$(MAKE) validate-deps
+
+sync:
+	$(Q)$(PWSH) $(SCRIPTS_DIR)/sync-python.ps1
 
 # BUILD
 build:

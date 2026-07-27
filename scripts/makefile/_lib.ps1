@@ -10,13 +10,15 @@ $ErrorActionPreference = 'Stop'
 
 # Centralized Color Theme
 $Theme = @{
-    Ok       = 'Green'
-    Info     = 'Cyan'
-    Warn     = 'Yellow'
-    Error    = 'Red'
-    Debug    = 'DarkGray'
-    Primary  = 'White'
-    Emphasis = 'White'
+    Ok        = 'Green'
+    Info      = 'Cyan'
+    Warn      = 'Yellow'
+    Error     = 'Red'
+    Debug     = 'DarkGray'
+    Muted     = 'DarkGray'
+    Accent    = 'Cyan'
+    Primary   = 'White'
+    Emphasis  = 'White'
 }
 
 function Resolve-ProjectRoot {
@@ -129,7 +131,6 @@ function Wait-TaskJobs {
 function Enter-LocationSafe {
     param([string]$Path)
     Push-Location $Path
-    return $true
 }
 
 function Exit-LocationSafe {
@@ -166,20 +167,11 @@ function Test-ToolPresence {
     <#
     .SYNOPSIS
       Check if a tool is present on the system.
-    .DESCRIPTION
-      Accepts a tool hashtable. If it contains 'Check' and it's a scriptblock, invokes it.
-      Otherwise, uses Get-Command to check for the presence of tool.Cmd.
-      Optionally supports specialized 'Type' checks via Test-ServiceHealth.
     #>
     param(
         [Parameter(Mandatory)]
         [hashtable]$Tool
     )
-
-    if ($Tool.Type) {
-        # Check specialized types using the shared library
-        return Test-ServiceHealth -Type $Tool.Type -Path "." # Path is often a dummy or root context
-    }
 
     if ($Tool.ContainsKey('Check') -and $Tool.Check -is [scriptblock]) {
         return & $Tool.Check
@@ -208,20 +200,23 @@ function Test-ServiceHealth {
 
     switch ($Type) {
         "Node" { return Test-Path (Join-Path $Path "node_modules") }
-        "Go" { return Test-Path (Join-Path $Path "go.mod") }
+        "Go"   { return Test-Path (Join-Path $Path "go.mod") }
         "Playwright" {
             $pwPath = Join-Path $env:LOCALAPPDATA "ms-playwright"
             return (Test-Path $pwPath) -and (Get-ChildItem $pwPath -Filter "chromium-*" -ErrorAction SilentlyContinue)
         }
         "Python" {
-            $venvPython = Join-Path $Path "venv\Scripts\python.exe"
-            if (-not (Test-Path $venvPython)) { $venvPython = Join-Path $Path "venv/bin/python" }
-            if (Test-Path $venvPython) {
-                # Heuristic: Check if pip can list anything (means venv is actually working)
-                $installed = & $venvPython -m pip list --format=freeze 2>$null
-                return ($null -ne $installed) -and (@($installed).Count -gt 0)
+            $venvPython = Join-Path $Path ".venv\Scripts\python.exe"
+            if (-not (Test-Path $venvPython)) { $venvPython = Join-Path $Path ".venv/bin/python" }
+            if (-not (Test-Path $venvPython)) { return $false }
+
+            $lockFile = Join-Path $Path "uv.lock"
+            if ((Get-Command uv -ErrorAction SilentlyContinue) -and (Test-Path $lockFile)) {
+                & uv sync --check --frozen --directory $Path > $null 2>&1
+                return $LASTEXITCODE -eq 0
             }
-            return $false
+
+            return $true
         }
         "DotNet" {
             $root = if ($ProjectRoot) { $ProjectRoot } else { Resolve-ProjectRoot }
@@ -233,20 +228,34 @@ function Test-ServiceHealth {
     }
 }
 
-function Get-PythonPath {
-    <#
-    .SYNOPSIS
-      Get the Python executable path from a venv directory.
-    .PARAMETER Path
-      Path to the service or venv directory.
-    #>
-    param([Parameter(Mandatory)][string]$Path)
+function Initialize-Uv {
+    param()
 
-    $windowsPath = Join-Path $Path "venv\Scripts\python.exe"
-    if (Test-Path $windowsPath) { return $windowsPath }
+    Write-Log -Level Info -Message "Checking for uv installation..."
 
-    $unixPath = Join-Path $Path "venv/bin/python"
-    if (Test-Path $unixPath) { return $unixPath }
+    $uvCmd = Get-Command uv -ErrorAction SilentlyContinue
+    if ($uvCmd) {
+        Write-Log -Level Ok -Message "uv is already installed: $(& uv --version 2>$null)"
+        return
+    }
 
-    return $null
+    Write-Log -Level Info -Message "uv not found. Installing uv $($script:UvVersion)..."
+    try {
+        $installScript = Invoke-WebRequest -Uri "https://astral.sh/uv/$($script:UvVersion)/install.ps1" -UseBasicParsing
+        $installScript.Content | Invoke-Expression
+
+        $machinePath = [System.Environment]::GetEnvironmentVariable("Path", "Machine")
+        $userPath = [System.Environment]::GetEnvironmentVariable("Path", "User")
+        $env:Path = "$machinePath;$userPath"
+
+        Start-Sleep -Milliseconds 500
+        if ($null -eq (Get-Command uv -ErrorAction SilentlyContinue)) {
+            throw "uv command not found after install. Restart your terminal or run: refreshenv"
+        }
+
+        Write-Log -Level Ok -Message "uv installed successfully: $(& uv --version 2>$null)"
+    } catch {
+        Write-Log -Level Error -Message "Failed to install uv: $_"
+        throw
+    }
 }

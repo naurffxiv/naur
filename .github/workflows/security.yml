@@ -32,11 +32,11 @@ jobs:
       services: ${{ steps.set-matrix.outputs.services }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Filter Paths
         id: filter
-        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
         with:
           filters: |
             workflow:
@@ -47,9 +47,6 @@ jobs:
             moddingway:
               - 'services/moddingway/**'
               - 'tests/moddingway/**'
-            clearingway:
-              - 'services/clearingway/**'
-              - 'tests/clearingway/**'
             findingway:
               - 'services/findingway/**'
               - 'tests/findingway/**'
@@ -65,7 +62,6 @@ jobs:
           # Export service filter outputs for indirect expansion
           CHANGED_naurffxiv="${{ steps.filter.outputs.naurffxiv }}"
           CHANGED_moddingway="${{ steps.filter.outputs.moddingway }}"
-          CHANGED_clearingway="${{ steps.filter.outputs.clearingway }}"
           CHANGED_findingway="${{ steps.filter.outputs.findingway }}"
           CHANGED_authingway="${{ steps.filter.outputs.authingway }}"
           CHANGED_apphost="${{ steps.filter.outputs.apphost }}"
@@ -76,10 +72,10 @@ jobs:
           # Derive languages from which services changed
           [[ "${CHANGED_naurffxiv}" == "true" ]] && languages+=("javascript")
           [[ "${CHANGED_moddingway}" == "true" ]] && languages+=("python")
-          [[ "${CHANGED_clearingway}" == "true" || "${CHANGED_findingway}" == "true" ]] && languages+=("go")
+          [[ "${CHANGED_findingway}" == "true" ]] && languages+=("go")
           [[ "${CHANGED_authingway}" == "true" || "${CHANGED_apphost}" == "true" ]] && languages+=("csharp")
 
-          for svc in naurffxiv moddingway clearingway findingway authingway apphost; do
+          for svc in naurffxiv moddingway findingway authingway apphost; do
             var="CHANGED_$svc"
             [[ "${!var}" == "true" ]] && services+=("services/$svc")
           done
@@ -94,7 +90,6 @@ jobs:
             )
             services=(
               "services/naurffxiv"
-              "services/clearingway"
               "services/findingway"
               "services/moddingway"
               "services/authingway"
@@ -122,7 +117,7 @@ jobs:
       security-events: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
@@ -135,7 +130,7 @@ jobs:
             --report-path gitleaks-results.sarif
 
       - name: Upload Gitleaks results to GitHub Security
-        uses: github/codeql-action/upload-sarif@89a39a4e59826350b863aa6b6252a07ad50cf83e # v4.32.4
+        uses: github/codeql-action/upload-sarif@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
         if: always()
         with:
           sarif_file: gitleaks-results.sarif
@@ -150,10 +145,10 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Review dependencies
-        uses: actions/dependency-review-action@05fe4576374b728f0c523d6a13d64c25081e0803 # v4.8.3
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           fail-on-severity: high
           comment-summary-in-pr: on-failure
@@ -176,18 +171,18 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Initialize CodeQL
         id: init
-        uses: github/codeql-action/init@89a39a4e59826350b863aa6b6252a07ad50cf83e # v4.32.4
+        uses: github/codeql-action/init@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
         with:
           languages: ${{ matrix.language }}
           queries: security-extended
 
       - name: Autobuild
         if: matrix.language != 'csharp' && steps.init.outcome == 'success'
-        uses: github/codeql-action/autobuild@89a39a4e59826350b863aa6b6252a07ad50cf83e # v4.32.4
+        uses: github/codeql-action/autobuild@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
 
       - name: Build C#
         if: matrix.language == 'csharp' && steps.init.outcome == 'success'
@@ -197,7 +192,7 @@ jobs:
 
       - name: Perform CodeQL Analysis
         if: steps.init.outcome == 'success'
-        uses: github/codeql-action/analyze@89a39a4e59826350b863aa6b6252a07ad50cf83e # v4.32.4
+        uses: github/codeql-action/analyze@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
         with:
           category: "/language:${{matrix.language}}"
 
@@ -216,10 +211,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@c1824fd6edce30d7ab345a9989de00bbd46ef284 # 0.34.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # 0.36.0
         env:
           TRIVY_SKIP_VERSION_CHECK: "true"
         with:
@@ -231,7 +226,7 @@ jobs:
           exit-code: "0" # Don't fail the SARIF generation step, we fail later in the table step
 
       - name: Run Trivy (Table Output)
-        uses: aquasecurity/trivy-action@c1824fd6edce30d7ab345a9989de00bbd46ef284 # 0.34.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # 0.36.0
         env:
           TRIVY_SKIP_VERSION_CHECK: "true"
         with:
@@ -242,7 +237,7 @@ jobs:
           exit-code: "1"
 
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@89a39a4e59826350b863aa6b6252a07ad50cf83e # v4.32.4
+        uses: github/codeql-action/upload-sarif@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
         if: always()
         with:
           sarif_file: "trivy-results-${{ strategy.job-index }}.sarif"
