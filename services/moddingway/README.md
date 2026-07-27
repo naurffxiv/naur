@@ -42,8 +42,13 @@ We use a Makefile to simplify common development tasks.
 **Docker (Recommended):**
 
 - `make run` - Stops existing containers (if running), rebuilds, and launches the bot with Docker. This is the most common command for development.
-- `make build` - Builds the Docker image without running it.
+- `make build` - Builds the bot Docker image without running it.
 - `make stop` - Stops all running Docker containers for this project.
+
+**API Docker:**
+
+- `make api-run` - Launches the containerized API with Docker. Recommended for production-like testing.
+- `make api-build` - Builds the API Docker image without running it.
 
 **Local Python:**
 
@@ -110,10 +115,18 @@ make format           # Format before committing
 
 ### API development
 
+**Local Python (Fastest iteration):**
+
 ```bash
 make sync             # First time setup/sync
 make database-run     # Start database
 make api-reload       # Start API with hot-reload
+```
+
+**Docker (Production-like):**
+
+```bash
+make api-run          # Start containerized API (includes database via compose)
 ```
 
 Visit `localhost:8000/docs` to view the API documentation.
