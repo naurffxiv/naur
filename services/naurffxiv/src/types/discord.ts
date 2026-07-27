@@ -72,8 +72,7 @@ export type CachedDiscordMember = DiscordMember & {
  * Result of resolving a Discord member from API/cache.
  */
 export type ResolvedDiscordMember =
-  | { data: CachedDiscordMember; ttl: number }
-  | { data: null; ttl: null };
+  { data: CachedDiscordMember; ttl: number } | { data: null; ttl: null };
 
 /**
  * Simplified user object used internally for permission checks.
