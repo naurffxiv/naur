@@ -4,11 +4,22 @@ inputs:
   github-token:
     description: "GitHub Token"
     required: true
+  qa-team-slug:
+    description: "GitHub team slug for the QA team"
+    required: false
+    default: "qa"
+  cm-team-slug:
+    description: "GitHub team slug for the CM team"
+    required: false
+    default: "content-management"
 runs:
   using: "composite"
   steps:
     - name: Check QA Approval Gate
       uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+      env:
+        QA_TEAM_SLUG: ${{ inputs.qa-team-slug }}
+        CM_TEAM_SLUG: ${{ inputs.cm-team-slug }}
       with:
         github-token: ${{ inputs.github-token }}
         script: |

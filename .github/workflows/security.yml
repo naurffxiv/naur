@@ -47,9 +47,6 @@ jobs:
             moddingway:
               - 'services/moddingway/**'
               - 'tests/moddingway/**'
-            clearingway:
-              - 'services/clearingway/**'
-              - 'tests/clearingway/**'
             findingway:
               - 'services/findingway/**'
               - 'tests/findingway/**'
@@ -65,7 +62,6 @@ jobs:
           # Export service filter outputs for indirect expansion
           CHANGED_naurffxiv="${{ steps.filter.outputs.naurffxiv }}"
           CHANGED_moddingway="${{ steps.filter.outputs.moddingway }}"
-          CHANGED_clearingway="${{ steps.filter.outputs.clearingway }}"
           CHANGED_findingway="${{ steps.filter.outputs.findingway }}"
           CHANGED_authingway="${{ steps.filter.outputs.authingway }}"
           CHANGED_apphost="${{ steps.filter.outputs.apphost }}"
@@ -76,10 +72,10 @@ jobs:
           # Derive languages from which services changed
           [[ "${CHANGED_naurffxiv}" == "true" ]] && languages+=("javascript")
           [[ "${CHANGED_moddingway}" == "true" ]] && languages+=("python")
-          [[ "${CHANGED_clearingway}" == "true" || "${CHANGED_findingway}" == "true" ]] && languages+=("go")
+          [[ "${CHANGED_findingway}" == "true" ]] && languages+=("go")
           [[ "${CHANGED_authingway}" == "true" || "${CHANGED_apphost}" == "true" ]] && languages+=("csharp")
 
-          for svc in naurffxiv moddingway clearingway findingway authingway apphost; do
+          for svc in naurffxiv moddingway findingway authingway apphost; do
             var="CHANGED_$svc"
             [[ "${!var}" == "true" ]] && services+=("services/$svc")
           done
@@ -94,7 +90,6 @@ jobs:
             )
             services=(
               "services/naurffxiv"
-              "services/clearingway"
               "services/findingway"
               "services/moddingway"
               "services/authingway"
@@ -135,7 +130,7 @@ jobs:
             --report-path gitleaks-results.sarif
 
       - name: Upload Gitleaks results to GitHub Security
-        uses: github/codeql-action/upload-sarif@e46ed2cbd01164d986452f91f178727624ae40d7 # v4.35.3
+        uses: github/codeql-action/upload-sarif@7211b7c8077ea37d8641b6271f6a365a22a5fbfa # v4.36.0
         if: always()
         with:
           sarif_file: gitleaks-results.sarif
@@ -153,7 +148,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Review dependencies
-        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           fail-on-severity: high
           comment-summary-in-pr: on-failure
@@ -180,14 +175,14 @@ jobs:
 
       - name: Initialize CodeQL
         id: init
-        uses: github/codeql-action/init@e46ed2cbd01164d986452f91f178727624ae40d7 # v4.35.3
+        uses: github/codeql-action/init@7211b7c8077ea37d8641b6271f6a365a22a5fbfa # v4.36.0
         with:
           languages: ${{ matrix.language }}
           queries: security-extended
 
       - name: Autobuild
         if: matrix.language != 'csharp' && steps.init.outcome == 'success'
-        uses: github/codeql-action/autobuild@e46ed2cbd01164d986452f91f178727624ae40d7 # v4.35.3
+        uses: github/codeql-action/autobuild@7211b7c8077ea37d8641b6271f6a365a22a5fbfa # v4.36.0
 
       - name: Build C#
         if: matrix.language == 'csharp' && steps.init.outcome == 'success'
@@ -197,7 +192,7 @@ jobs:
 
       - name: Perform CodeQL Analysis
         if: steps.init.outcome == 'success'
-        uses: github/codeql-action/analyze@e46ed2cbd01164d986452f91f178727624ae40d7 # v4.35.3
+        uses: github/codeql-action/analyze@7211b7c8077ea37d8641b6271f6a365a22a5fbfa # v4.36.0
         with:
           category: "/language:${{matrix.language}}"
 
@@ -242,7 +237,7 @@ jobs:
           exit-code: "1"
 
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@e46ed2cbd01164d986452f91f178727624ae40d7 # v4.35.3
+        uses: github/codeql-action/upload-sarif@7211b7c8077ea37d8641b6271f6a365a22a5fbfa # v4.36.0
         if: always()
         with:
           sarif_file: "trivy-results-${{ strategy.job-index }}.sarif"
