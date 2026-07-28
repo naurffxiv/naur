@@ -39,22 +39,19 @@ async def autodelete_threads(self):
     for channel_id, duration in settings.automod_inactivity.items():
         num_removed = 0
         num_errors = 0
-        user_id = None
         try:
             channel = guild.get_channel(channel_id)
             if channel is None:
                 logger.error("Forum channel not found.")
                 logger.info("Ended forum automod worker task with errors.")
                 continue
-            if channel_id == settings.event_forum_id:
-                user_id = settings.event_bot_id
+
             async for thread in channel.archived_threads(limit=None):
                 num_removed, num_errors = await automod_thread(
                     thread,
                     duration,
                     num_removed,
                     num_errors,
-                    user_id,
                 )
 
             for thread in channel.threads:
@@ -63,7 +60,6 @@ async def autodelete_threads(self):
                     duration,
                     num_removed,
                     num_errors,
-                    user_id,
                 )
 
             if num_removed > 0 or num_errors > 0:
