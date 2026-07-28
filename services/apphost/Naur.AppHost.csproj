@@ -10,7 +10,6 @@
     <PackageReference Include="Aspire.Hosting.AppHost" />
     <PackageReference Include="Aspire.Hosting.Docker.SshDeploy" />
     <PackageReference Include="Aspire.Hosting.PostgreSQL" />
-    <PackageReference Include="MessagePack" />
   </ItemGroup>
 
   <ItemGroup>
