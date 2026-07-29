@@ -1,8 +1,9 @@
+import { JSX } from "react";
 import Image from "next/image";
 import { icons } from "@/lib/assets";
 
-export default function Header() {
-  function Text() {
+export default function Header(): JSX.Element {
+  function Text(): JSX.Element {
     return (
       <div className="grid max-w-prose gap-y-3 md:gap-y-6">
         <h1 className="text-4xl font-bold xl:text-6xl">NAUR</h1>
@@ -21,8 +22,8 @@ export default function Header() {
             <Image
               src={icons.Discord}
               alt="Discord"
-              width="32"
-              height="24"
+              width={32}
+              height={24}
               style={{ height: "auto" }}
             />
             Join our Discord!
