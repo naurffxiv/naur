@@ -23,8 +23,8 @@ export const ultimateList = [
   {
     title: "Dancing Mad",
     url: "/ultimate/kefka",
-    img: "/images/thumbnails/Hidden.avif",
-    alt: "Dancing Mad",
+    img: "/images/ultimates/kefka/kefka-banner-cropped.avif",
+    alt: "Dancing Mad (Ultimate)",
   },
   {
     title: "Futures Rewritten",
