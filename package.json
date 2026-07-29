@@ -4,7 +4,7 @@
   "private": true,
   "workspaces": [
     "services/naurffxiv",
-    "services/shared",
+    "packages/shared",
     "tests/e2e"
   ],
   "engines": {
