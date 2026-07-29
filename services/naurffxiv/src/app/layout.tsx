@@ -1,5 +1,8 @@
 import "./globals.css";
 
+import type { ReactElement, ReactNode } from "react";
+import type { Metadata, Viewport } from "next";
+
 import AuthSessionProvider from "@auth/components/Gates/AuthSessionProvider";
 import Footer from "@/components/Layout/Footer/Footer";
 import MUITheme from "@/components/Providers/MUITheme";
@@ -15,18 +18,22 @@ const roboto = Roboto({
   display: "swap",
 });
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "NAUR",
   description: "NA Ultimate Raiding - FFXIV",
 };
 
-export const viewport = {
+export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover", // Enables full-screen support on devices with notches
 };
 
-export default function RootLayout({ children }) {
+export default function RootLayout({
+  children,
+}: {
+  children: ReactNode;
+}): ReactElement {
   return (
     <html lang="en" className="min-h-screen">
       <body
