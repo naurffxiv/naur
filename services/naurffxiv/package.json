@@ -32,7 +32,7 @@
     "@stefanprobst/rehype-extract-toc": "^3.0.0",
     "clsx": "^2.1.1",
     "highlight.js": "^11.11.1",
-    "next": "15.5.22",
+    "next": "16.2.12",
     "next-auth": "^4.24.15",
     "next-mdx-remote": "^6.0.0",
     "node-cache": "^5.1.2",
