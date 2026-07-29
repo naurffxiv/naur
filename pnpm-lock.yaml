@@ -36,6 +36,12 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  packages/shared:
+    devDependencies:
+      '@types/react':
+        specifier: 19.2.14
+        version: 19.2.14
+
   services/naurffxiv:
     dependencies:
       '@emotion/react':
@@ -61,7 +67,7 @@ importers:
         version: 7.29.12(@emotion/react@11.14.0(@types/react@19.2.14)(react@19.2.8))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.14)(react@19.2.8))(@types/react@19.2.14)(react@19.2.8))(@mui/material@6.5.0(@emotion/react@11.14.0(@types/react@19.2.14)(react@19.2.8))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.14)(react@19.2.8))(@types/react@19.2.14)(react@19.2.8))(@types/react@19.2.14)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@mui/system@6.5.0(@emotion/react@11.14.0(@types/react@19.2.14)(react@19.2.8))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.14)(react@19.2.8))(@types/react@19.2.14)(react@19.2.8))(@types/react@19.2.14)(react@19.2.8))(@types/react@19.2.14)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@naur/shared':
         specifier: workspace:*
-        version: link:../shared
+        version: link:../../packages/shared
       '@next/mdx':
         specifier: 15.5.22
         version: 15.5.22(@mdx-js/loader@3.1.1)(@mdx-js/react@3.1.1(@types/react@19.2.14)(react@19.2.8))
@@ -220,12 +226,6 @@ importers:
       '@img/sharp-linux-x64':
         specifier: ^0.35.3
         version: 0.35.3
-
-  services/shared:
-    devDependencies:
-      '@types/react':
-        specifier: 19.2.14
-        version: 19.2.14
 
   tests/e2e:
     devDependencies:
