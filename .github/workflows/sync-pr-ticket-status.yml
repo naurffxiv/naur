@@ -16,6 +16,7 @@ on:
 jobs:
   sync-ticket-status:
     name: Move Ticket on Project Board
+    if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
 
     env:
@@ -45,6 +46,7 @@ jobs:
         env:
           IS_DRAFT: ${{ github.event.pull_request.draft }}
           EVENT_NAME: ${{ github.event_name }}
+          ACTION: ${{ github.event.action }}
           REVIEW_STATE: ${{ github.event.review.state }}
           IS_MERGED: ${{ github.event.pull_request.merged }}
           PR_BODY: ${{ github.event.pull_request.body }}
@@ -55,7 +57,7 @@ jobs:
             NEEDS_QA=false
           fi
 
-          SCRIPT_OUTPUT=$(./.github/actions/move-project-card/scripts/determine-status.sh "$EVENT_NAME" "$REVIEW_STATE" "$IS_DRAFT" "$IS_MERGED" "$NEEDS_QA")
+          SCRIPT_OUTPUT=$(./.github/actions/move-project-card/scripts/determine-status.sh "$EVENT_NAME" "$REVIEW_STATE" "$IS_DRAFT" "$IS_MERGED" "$NEEDS_QA" "$ACTION")
           STATUS=$(echo "$SCRIPT_OUTPUT" | grep "^status=" | cut -d= -f2)
 
           if [ -z "$STATUS" ]; then
