@@ -9,8 +9,9 @@
   "devDependencies": {
     "@types/hast": "^3.0.4",
     "@types/react": "19.2.14",
-    "next": "15.5.12",
+    "next": "15.5.22",
     "typescript": "^5.0.0",
-    "vitest": "^4.0.18"
+    "vite": "^7.3.2",
+    "vitest": "^4.1.0"
   }
 }

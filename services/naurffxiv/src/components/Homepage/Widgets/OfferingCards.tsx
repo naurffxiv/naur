@@ -1,5 +1,15 @@
-import Image from "next/image";
+import { JSX } from "react";
+import Image, { type StaticImageData } from "next/image";
 import { icons } from "@/lib/assets";
+
+interface OfferingCard {
+  title: string;
+  desc: string;
+  icon: StaticImageData;
+  width: number;
+  height: number;
+  alt: string;
+}
 
 const divs = [
   {
@@ -16,7 +26,7 @@ const divs = [
     title: "FFXIV Resources for NA Players",
     desc: `Our website and Discord provide tailored resources for high-end content which include up-to-date
                 raid-plans/toolboxes, written guides, and other learning tools and resources.
-                Whether you're tackling Savage or Ultimate raids, we’ve got the tools you need to progress and clear them.`,
+                Whether you&apos;re tackling Savage or Ultimate raids, we&apos;ve got the tools you need to progress and clear them.`,
     icon: icons.Lightbulb,
     width: 40,
     height: 40,
@@ -32,14 +42,14 @@ const divs = [
     height: 45,
     alt: "Calendar icon",
   },
-];
+] satisfies OfferingCard[];
 
-export default function Offerings() {
+export default function Offerings(): JSX.Element {
   return (
     <div className="flex flex-col items-center justify-center">
       <h3 className="text-2xl">What NAUR has to offer</h3>
       <div className="grid justify-center grid-cols-1 mx-auto text-center lg:grid-cols-3 gap-x-3 sm:gap-x-10 gap-y-3">
-        {divs.map((div) => {
+        {divs.map((div: OfferingCard): JSX.Element => {
           return (
             <div
               key={div.alt}
