@@ -2,7 +2,7 @@ import { type ReactElement } from "react";
 import QuickLinkEntry from "./QuickLinksEntry";
 import QuickLinksCollapsible from "./QuickLinksCollapsible";
 
-interface SiblingPage {
+export interface SiblingPage {
   slug: string;
   title?: string;
   metadata: {
