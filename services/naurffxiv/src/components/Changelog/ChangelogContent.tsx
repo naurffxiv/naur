@@ -1,0 +1,92 @@
+"use client";
+
+import React, { useEffect, useState } from "react";
+
+import Image from "next/image";
+import ReleaseCard from "@/components/Changelog/ReleaseCard";
+import { compareVersions } from "@/utils/compareVersions";
+import {
+  fetchGithubReleases,
+  type GitHubRelease,
+} from "@/utils/fetchGithubReleases";
+
+export default function ChangelogContent(): React.JSX.Element | null {
+  const [releases, setReleases] = useState<GitHubRelease[]>([]);
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const load = async (): Promise<void> => {
+      try {
+        const fetched = await fetchGithubReleases();
+        fetched.sort(compareVersions);
+        setReleases(fetched);
+
+        if (fetched.length) {
+          setExpanded(fetched[0].tag_name);
+        }
+      } catch (err) {
+        console.error("Error fetching releases:", err);
+        setReleases([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void load();
+    window.scrollTo(0, 0);
+  }, []);
+
+  const toggleRelease = (version: string): void => {
+    setExpanded((prev) => (prev === version ? null : version));
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen text-white">
+        <p className="text-lg animate-pulse">Loading changelog...</p>
+      </div>
+    );
+  }
+
+  if (!releases.length) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen text-gray-400">
+        <p className="mb-2 text-2xl">No releases yet</p>
+        <p className="text-lg">No release notes yet.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-5xl px-4 py-8 mx-auto">
+      {/* Top Banner Static Image */}
+      <div className="relative w-full aspect-[2.5/1] mb-12 overflow-hidden rounded-lg shadow-lg">
+        <Image
+          src="/images/changelog.avif"
+          alt="Changelog Banner"
+          fill
+          priority
+          className="object-cover object-center rounded-lg"
+        />
+      </div>
+
+      {/* Changelog Release List */}
+      <div className="space-y-8">
+        {releases.map((release, idx) => (
+          <ReleaseCard
+            key={release["id"] as string}
+            release={{
+              version: release.tag_name,
+              date: release["published_at"] as string | null | undefined,
+              body: release["body"] as string | null | undefined,
+            }}
+            isExpanded={expanded === release.tag_name}
+            toggleRelease={toggleRelease}
+            isLatest={idx === 0}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
