@@ -44,19 +44,17 @@ export default function LoadingSpinner({
 
   return (
     <Box
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      justifyContent="center"
+      height={fullscreen ? "100vh" : "auto"}
+      width="100%"
       role="status"
       aria-busy="true"
       aria-label="Loading content"
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        height: fullscreen ? "100vh" : "auto",
-        width: "100%",
-        textAlign: "center",
-        gap: 2,
-      }}
+      textAlign="center"
+      gap={2}
     >
       <CircularProgress size={size} color="primary" />
 

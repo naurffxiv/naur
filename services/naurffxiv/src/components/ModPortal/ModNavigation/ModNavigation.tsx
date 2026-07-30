@@ -11,13 +11,13 @@ import { PathSelectedLink } from "./PathSelectedLink";
 export function ModNavigation(): ReactNode {
   return (
     <div>
-      <Typography sx={{ fontWeight: "bold", fontSize: "18pt" }}>
+      <Typography fontWeight={"bold"} fontSize={"18pt"}>
         NAUR Mod Portal
       </Typography>
 
       <MenuList sx={sx.menuList}>
         <MenuItem disabled={true}>
-          <Typography sx={{ fontSize: "12pt" }}>Main</Typography>
+          <Typography fontSize={"12pt"}>Main</Typography>
         </MenuItem>
         <PathSelectedLink href={"/mod-portal/notes"}>
           <MenuItem>Notes</MenuItem>
@@ -33,7 +33,7 @@ export function ModNavigation(): ReactNode {
         </PathSelectedLink>
 
         <MenuItem disabled={true}>
-          <Typography sx={{ fontSize: "12pt" }}>Account</Typography>
+          <Typography fontSize={"12pt"}>Account</Typography>
         </MenuItem>
         <PathSelectedLink href={"/mod-portal/settings"}>
           <MenuItem>Settings</MenuItem>
