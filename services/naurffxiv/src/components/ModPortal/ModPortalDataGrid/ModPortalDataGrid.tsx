@@ -3,6 +3,7 @@ import {
   GridToolbar,
   GridColDef,
   GridRowsProp,
+  type GridCellParams,
 } from "@mui/x-data-grid";
 import { ReactNode } from "react";
 
@@ -21,9 +22,15 @@ export function ModPortalDataGrid({
   columns,
   rows,
 }: ModPortalDataGridProps): ReactNode {
+  const processedColumns = columns.map((col) => ({
+    ...col,
+    getApplyQuickFilterFn:
+      col.getApplyQuickFilterFn ?? getCommaAwareQuickFilterFn,
+  }));
+
   return (
     <DataGrid
-      columns={columns}
+      columns={processedColumns}
       rows={rows}
       sx={sx}
       disableRowSelectionOnClick
@@ -45,17 +52,43 @@ const slots = { toolbar: GridToolbar };
 const slotProps = {
   toolbar: {
     quickFilterProps: {
-      // Default behavior is to treat space separation as different terms
-      // override these two to allow searching space-containing values instead
+      // Default behavior is to treat space separation as different terms.
+      // Override these two to allow searching space-containing values instead.
       quickFilterParser: (searchInput: string): string[] =>
         searchInput.split(",").map((v) => v.trim()),
       quickFilterFormatter: (quickFilterValues: string[]): string =>
         quickFilterValues.join(","),
-      inputProps: { id: "mod-portal-search", name: "mod-portal-search" },
+      slotProps: {
+        root: {
+          slotProps: {
+            htmlInput: { id: "mod-portal-search", name: "mod-portal-search" },
+          },
+        },
+      },
     },
     showQuickFilter: true,
   },
 };
+
+/**
+ * Quick filter function that treats comma-separated input as multiple search
+ * terms, allowing users to search for values that contain spaces.
+ * e.g. "foo,bar" matches cells containing "foo" OR "bar"
+ */
+function getCommaAwareQuickFilterFn(
+  value: string,
+): ((params: GridCellParams) => boolean) | null {
+  if (!value) return null;
+  const terms = value
+    .split(",")
+    .map((v) => v.trim().toLowerCase())
+    .filter(Boolean);
+  if (terms.length === 0) return null;
+  return (params: GridCellParams): boolean => {
+    const cellStr = String(params.value ?? "").toLowerCase();
+    return terms.some((term) => cellStr.includes(term));
+  };
+}
 
 const sx = {
   "& .MuiDataGrid-columnHeader": {
