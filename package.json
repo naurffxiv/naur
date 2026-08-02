@@ -4,6 +4,7 @@
   "private": true,
   "workspaces": [
     "services/naurffxiv",
+    "packages/shared",
     "tests/e2e"
   ],
   "engines": {
@@ -14,12 +15,12 @@
   "license": "MIT",
   "type": "commonjs",
   "devDependencies": {
-    "@j178/prek": "^0.3.11",
+    "@j178/prek": "^0.4.11",
     "@typescript-eslint/eslint-plugin": "^8.53.0",
     "@typescript-eslint/parser": "^8.53.0",
     "eslint": "^8.57.1",
-    "prettier": "^3.8.3",
-    "turbo": "^2.9.7",
+    "prettier": "^3.9.6",
+    "turbo": "^2.10.7",
     "typescript": "^5.9.3"
   },
   "scripts": {
@@ -38,7 +39,20 @@
   "pnpm": {
     "overrides": {
       "@types/react": "19.2.14",
-      "@types/react-dom": "19.2.3"
+      "@types/react-dom": "19.2.3",
+      "rollup": ">=4.59.0",
+      "vite": "^7.3.2",
+      "js-yaml": "^4.3.0",
+      "brace-expansion": "5.0.8",
+      "next>postcss": "8.5.18",
+      "sharp@<0.35.0": "0.35.3",
+      "flatted": "3.4.2",
+      "ajv": "6.14.0",
+      "minimatch@^3.1.0": "3.1.5",
+      "minimatch@^9.0.5": "9.0.7",
+      "picomatch@^2.3.0": "2.3.2",
+      "picomatch@^4.0.0": "4.0.4",
+      "yaml@^2.8.0": "2.8.3"
     },
     "onlyBuiltDependencies": [
       "@parcel/watcher",
