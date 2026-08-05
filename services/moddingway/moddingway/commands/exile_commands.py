@@ -81,7 +81,11 @@ class RouletteDeleteView(discord.ui.View):
                     response_message.set_string("Invalid exile duration.")
                     return
                 error_message = await exile_user(
-                    logging_embed, interaction.user, exile_duration, reason
+                    logging_embed,
+                    interaction.user,
+                    exile_duration,
+                    reason,
+                    add_note=False,
                 )
 
                 if error_message:
@@ -161,7 +165,11 @@ def create_exile_commands(bot: Bot) -> None:
                     response_message.set_string("Invalid exile duration.")
                     return
                 error_message = await exile_user(
-                    logging_embed, user, exile_duration, reason
+                    logging_embed,
+                    user,
+                    exile_duration,
+                    reason,
+                    author=interaction.user,
                 )
 
                 response_message.set_string(

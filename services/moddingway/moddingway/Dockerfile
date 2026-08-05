@@ -3,7 +3,7 @@ FROM python:3.14-slim
 COPY --from=ghcr.io/astral-sh/uv:0.11.14 /uv /uvx /bin/
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
+    build-essential \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
