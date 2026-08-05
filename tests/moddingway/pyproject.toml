@@ -3,6 +3,10 @@ name = "moddingway-tests"
 version = "0.0.1"
 requires-python = ">=3.14"
 
+[tool.ruff.lint.isort]
+known-first-party = ["moddingway", "moddingway_api"]
+combine-as-imports = true
+
 [tool.pytest.ini_options]
 pythonpath = ["../../services/moddingway"]
 testpaths = ["unit"]
