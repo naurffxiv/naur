@@ -15,12 +15,12 @@
   "license": "MIT",
   "type": "commonjs",
   "devDependencies": {
-    "@j178/prek": "^0.4.11",
-    "@typescript-eslint/eslint-plugin": "^8.53.0",
-    "@typescript-eslint/parser": "^8.53.0",
+    "@j178/prek": "^0.4.12",
+    "@typescript-eslint/eslint-plugin": "^8.66.0",
+    "@typescript-eslint/parser": "^8.66.0",
     "eslint": "^8.57.1",
     "prettier": "^3.9.6",
-    "turbo": "^2.10.7",
+    "turbo": "^2.10.8",
     "typescript": "^5.9.3"
   },
   "scripts": {
@@ -38,8 +38,8 @@
   },
   "pnpm": {
     "overrides": {
-      "@types/react": "19.2.14",
-      "@types/react-dom": "19.2.3",
+      "@types/react": "19.2.18",
+      "@types/react-dom": "19.2.4",
       "rollup": ">=4.59.0",
       "vite": "^7.3.2",
       "js-yaml": "^4.3.0",
