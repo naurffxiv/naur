@@ -20,7 +20,8 @@ public static class IdentityExtensions
     /// <returns>The same instance of <see cref="IHostApplicationBuilder"/> with identity services configured.</returns>
     public static IHostApplicationBuilder ConfigureIdentity(this IHostApplicationBuilder builder)
     {
-        return builder.ConfigureAspNetCoreIdentity();
+        return builder.ConfigureAspNetCoreIdentity()
+            .ConfigureOpenIddict();
     }
 
     private static IHostApplicationBuilder ConfigureAspNetCoreIdentity(this IHostApplicationBuilder builder)
@@ -28,6 +29,39 @@ public static class IdentityExtensions
         builder.Services.AddIdentity<User, Role>(options => options.Stores.SchemaVersion = IdentitySchemaVersions.Version3)
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders();
+
+        return builder;
+    }
+
+    private static IHostApplicationBuilder ConfigureOpenIddict(this IHostApplicationBuilder builder)
+    {
+        builder.Services.AddOpenIddict()
+            .AddCore(options =>
+            {
+                options.UseEntityFrameworkCore()
+                    .UseDbContext<AppDbContext>()
+                    .ReplaceDefaultEntities<Application, Authorization, Scope, Token, Guid>();
+
+                options.UseQuartz();
+            })
+            .AddServer(options =>
+            {
+                options.SetConfigurationEndpointUris("/.well-known/openid-configuration");
+
+                options.AddDevelopmentEncryptionCertificate()
+                    .AddDevelopmentSigningCertificate();
+
+                options.UseAspNetCore()
+                    .EnableStatusCodePagesIntegration();
+
+                options.UseDataProtection();
+            })
+            .AddValidation(options =>
+            {
+                options.UseLocalServer();
+                options.UseAspNetCore();
+                options.UseDataProtection();
+            });
 
         return builder;
     }
