@@ -3,7 +3,6 @@
 import { extractRoleIds, hasAllRoles, hasAnyRole } from "@auth/core/roleUtils";
 
 import type { UserWithRoles } from "@naur/shared/types";
-import { useMemo } from "react";
 import { useSession } from "next-auth/react";
 
 /**
@@ -15,11 +14,9 @@ import { useSession } from "next-auth/react";
 export function useHasAnyRole(roleIds: string[]): boolean {
   const { data: session } = useSession();
 
-  return useMemo(() => {
-    if (!session?.user) return false;
-    const userWithRoles = { ...session.user, roles: session.user?.roles ?? [] };
-    return hasAnyRole(userWithRoles, roleIds);
-  }, [session?.user, roleIds]);
+  if (!session?.user) return false;
+  const userWithRoles = { ...session.user, roles: session.user?.roles ?? [] };
+  return hasAnyRole(userWithRoles, roleIds);
 }
 
 /**
@@ -31,11 +28,9 @@ export function useHasAnyRole(roleIds: string[]): boolean {
 export function useHasAllRoles(roleIds: string[]): boolean {
   const { data: session } = useSession();
 
-  return useMemo(() => {
-    if (!session?.user) return false;
-    const userWithRoles = { ...session.user, roles: session.user?.roles ?? [] };
-    return hasAllRoles(userWithRoles, roleIds);
-  }, [session?.user, roleIds]);
+  if (!session?.user) return false;
+  const userWithRoles = { ...session.user, roles: session.user?.roles ?? [] };
+  return hasAllRoles(userWithRoles, roleIds);
 }
 
 /**
@@ -44,13 +39,10 @@ export function useHasAllRoles(roleIds: string[]): boolean {
  * @returns An array of role IDs the user has, or an empty array if none.
  */
 export function useUserRoles(): string[] {
-  // old logic
   const { data: session } = useSession();
 
-  return useMemo(() => {
-    if (!session?.user?.roles) return [];
-    return extractRoleIds(session.user.roles);
-  }, [session?.user?.roles]);
+  if (!session?.user?.roles) return [];
+  return extractRoleIds(session.user.roles);
 }
 
 /**
@@ -65,18 +57,14 @@ export function useRoleBasedContent<T extends { roles?: string[][] }>(
 ): T[] {
   const { data: session } = useSession();
 
-  return useMemo(() => {
-    if (!session?.user) return [];
-    const userWithRoles = {
-      ...session.user,
-      roles: session.user?.roles ?? [],
-    } as UserWithRoles;
+  if (!session?.user) return [];
+  const userWithRoles = {
+    ...session.user,
+    roles: session.user?.roles ?? [],
+  } as UserWithRoles;
 
-    return items.filter((item) => {
-      if (!item.roles?.length) return true;
-      return item.roles.some((roleGroup) =>
-        hasAnyRole(userWithRoles, roleGroup),
-      );
-    });
-  }, [items, session?.user]);
+  return items.filter((item) => {
+    if (!item.roles?.length) return true;
+    return item.roles.some((roleGroup) => hasAnyRole(userWithRoles, roleGroup));
+  });
 }
