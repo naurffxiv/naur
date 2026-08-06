@@ -54,7 +54,7 @@ export function ContentDropdown({
         anchorEl={anchorEl}
         open={open}
         onClose={handleClose}
-        MenuListProps={{ "aria-labelledby": "basic-button" }}
+        slotProps={{ list: { "aria-labelledby": "basic-button" } }}
       >
         {data.map((fight, i) => (
           <li key={i}>
