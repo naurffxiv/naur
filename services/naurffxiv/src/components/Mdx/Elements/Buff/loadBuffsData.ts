@@ -25,7 +25,16 @@ export function loadBuffsData(
     }
   }
 
-  const fileAsString = String(fs.readFileSync(path.join(mdxDir, datapath)));
+  // mdxDir is always confined to src/markdown (see getMdxDir), Turbopack
+  // just can't prove that across the prop chain it's threaded through
+  const fileAsString = String(
+    fs.readFileSync(
+      /*turbopackIgnore: true*/ path.join(
+        /*turbopackIgnore: true*/ mdxDir,
+        datapath,
+      ),
+    ),
+  );
 
   return datapath.endsWith(".json")
     ? JSON.parse(fileAsString)
