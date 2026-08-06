@@ -1,66 +1,111 @@
-@config "../../tailwind.config.ts";
-@import "highlight.js/styles/github-dark.css";
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@layer theme, base, mui, components, utilities;
+@import "tailwindcss";
+@plugin '@tailwindcss/typography';
+@import "highlight.js/styles/github-dark.css" layer(base);
 
-:root {
-  --foreground-hex: #ffffff;
-  --background-hex: #00171f;
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --background-image-gradient-radial: radial-gradient(var(--tw-gradient-stops));
+  --background-image-gradient-conic: conic-gradient(
+    from 180deg at 50% 50%,
+    var(--tw-gradient-stops)
+  );
+  --background-image-header-default:
+    linear-gradient(rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.8) 100%),
+    url("/images/server-header.avif");
+  --background-image-header-wide: url("/images/server-header.avif");
+  --background-image-header-right-gradient: linear-gradient(
+    to right,
+    rgba(0, 23, 31, 100%) 0%,
+    rgba(0, 23, 31, 0%) 20%
+  );
+  --background-image-header-right-ultrawide-gradient: linear-gradient(
+    to right,
+    rgba(0, 23, 31, 100%) 0%,
+    rgba(0, 23, 31, 0%) 20%,
+    rgba(0, 23, 31, 0%) 80%,
+    rgba(0, 23, 31, 100%) 100%
+  );
+
+  --breakpoint-3xl: 150rem;
 }
 
-body {
-  color: var(--foreground-hex);
-  background-color: var(--background-hex);
-}
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
 
-@media (width >= 120rem) {
-  body {
-    background-image: linear-gradient(
-      to right,
-      #000d12,
-      var(--background-hex) 10%,
-      var(--background-hex) 90%,
-      #000d12
-    );
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
   }
 }
 
-@media (width >= 150rem) {
-  body {
-    background-image: linear-gradient(
-      to right,
-      #000d12,
-      var(--background-hex) 20%,
-      var(--background-hex) 80%,
-      #000d12
-    );
-  }
+@utility text-balance {
+  text-wrap: balance;
+}
+
+@utility text-muted {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+@utility toast-success {
+  /* Toast helpers */
+  @apply px-4 py-2 text-white bg-green-600 rounded-sm hover:bg-green-700;
+}
+
+@utility toast-info {
+  @apply px-4 py-2 text-white bg-blue-600 rounded-sm hover:bg-blue-700;
+}
+
+@utility toast-warning {
+  @apply px-4 py-2 text-white bg-yellow-600 rounded-sm hover:bg-yellow-700;
+}
+
+@utility toast-error {
+  @apply px-4 py-2 text-white bg-red-600 rounded-sm hover:bg-red-700;
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
+  :root {
+    --foreground-hex: #ffffff;
+    --background-hex: #00171f;
   }
 
-  .text-muted {
-    color: rgba(255, 255, 255, 0.6);
+  body {
+    color: var(--foreground-hex);
+    background-color: var(--background-hex);
   }
 
-  /* Toast helpers */
-  .toast-success {
-    @apply px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700;
+  @media (width >= 120rem) {
+    body {
+      background-image: linear-gradient(
+        to right,
+        #000d12,
+        var(--background-hex) 10%,
+        var(--background-hex) 90%,
+        #000d12
+      );
+    }
   }
 
-  .toast-info {
-    @apply px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700;
-  }
-
-  .toast-warning {
-    @apply px-4 py-2 text-white bg-yellow-600 rounded hover:bg-yellow-700;
-  }
-
-  .toast-error {
-    @apply px-4 py-2 text-white bg-red-600 rounded hover:bg-red-700;
+  @media (width >= 150rem) {
+    body {
+      background-image: linear-gradient(
+        to right,
+        #000d12,
+        var(--background-hex) 20%,
+        var(--background-hex) 80%,
+        #000d12
+      );
+    }
   }
 }

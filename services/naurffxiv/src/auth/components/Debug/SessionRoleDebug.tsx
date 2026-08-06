@@ -73,7 +73,7 @@ export default function SessionRoleDebug(): ReactElement | null {
         <summary className="text-blue-400 underline cursor-pointer">
           View Raw Session JSON
         </summary>
-        <pre className="p-2 mt-2 overflow-auto text-xs text-green-300 bg-gray-800 border border-gray-700 rounded">
+        <pre className="p-2 mt-2 overflow-auto text-xs text-green-300 bg-gray-800 border border-gray-700 rounded-sm">
           {JSON.stringify(session, null, 2)}
         </pre>
       </details>

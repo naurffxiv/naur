@@ -7,7 +7,7 @@ import { ModNavigation } from "@/components/ModPortal/ModNavigation/ModNavigatio
 
 export default function ModPortalLayout({ children }: WithChildren): ReactNode {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[25ch_1fr] max-w-screen-2xl mx-auto py-4">
+    <div className="grid grid-cols-1 lg:grid-cols-[25ch_1fr] max-w-(--breakpoint-2xl) mx-auto py-4">
       <div className="scrollbar">
         <ModNavigation />
       </div>

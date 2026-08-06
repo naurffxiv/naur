@@ -14,7 +14,7 @@ export default function SimplePage({
 }: SimplePageProps): ReactElement {
   return (
     <div className="flex flex-col">
-      <main className="flex-grow p-6">
+      <main className="grow p-6">
         <h1 className="mb-6 text-3xl font-extrabold">{title}</h1>
         <div>
           {children ? (
