@@ -206,7 +206,9 @@ module.exports = async ({ github, context, core }) => {
             `Script error: ${error.message ?? "Unknown error"}`.slice(0, 140),
         });
       }
-    } catch (_) {}
+    } catch (statusError) {
+      console.log(`Failed to post commit status: ${statusError.message}`);
+    }
     core.setFailed(`QA Approval Gate Failure: ${error.message}`);
   }
 };
