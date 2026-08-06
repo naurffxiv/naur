@@ -30,6 +30,7 @@ FROM base AS dev
 WORKDIR /app
 COPY --from=installer /app/ .
 COPY package.json turbo.json pnpm-workspace.yaml ./
+COPY packages/shared packages/shared
 COPY services/naurffxiv services/naurffxiv
 CMD ["sh", "-c", "pnpm install --ignore-scripts && pnpm --filter naurffxiv dev"]
 
@@ -38,6 +39,7 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=installer /app/ .
 COPY package.json turbo.json pnpm-workspace.yaml ./
+COPY packages/shared packages/shared
 COPY services/naurffxiv services/naurffxiv
 
 # Build with cache mount for Next.js

@@ -12,6 +12,8 @@
 # Allow source code directories
 !services/naurffxiv/
 !services/naurffxiv/**
+!packages/shared/
+!packages/shared/**
 #!services/raidingway/
 #!services/raidingway/**
 
