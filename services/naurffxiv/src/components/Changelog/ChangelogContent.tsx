@@ -61,7 +61,7 @@ export default function ChangelogContent(): React.JSX.Element | null {
   return (
     <div className="max-w-5xl px-4 py-8 mx-auto">
       {/* Top Banner Static Image */}
-      <div className="relative w-full aspect-[2.5/1] mb-12 overflow-hidden rounded-lg shadow-lg">
+      <div className="relative w-full aspect-2.5/1 mb-12 overflow-hidden rounded-lg shadow-lg">
         <Image
           src="/images/changelog.avif"
           alt="Changelog Banner"

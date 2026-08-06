@@ -1,64 +1,63 @@
-@config "../../../../tailwind.config.ts";
-@tailwind utilities;
+@reference "../../../app/globals.css";
 
-@keyframes ellipsis {
-  0% {
-    opacity: 0;
-  }
-  33% {
-    opacity: 1;
-  }
-  66% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 0;
-  }
+@utility animate-ellipsis {
+  animation: ellipsis 1.2s infinite;
 }
 
-@keyframes wave {
-  0% {
-    transform: rotate(0deg);
-  }
-  15% {
-    transform: rotate(14deg);
-  }
-  30% {
-    transform: rotate(-8deg);
-  }
-  40% {
-    transform: rotate(14deg);
-  }
-  50% {
-    transform: rotate(-4deg);
-  }
-  60% {
-    transform: rotate(10deg);
-  }
-  70% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(0deg);
-  }
+@utility delay-100 {
+  animation-delay: 0.2s;
+}
+
+@utility delay-200 {
+  animation-delay: 0.4s;
+}
+
+@utility animate-wave {
+  animation: wave 1.4s ease-in-out infinite;
+  transform-origin: 70% 70%;
+  display: inline-block;
 }
 
 @layer utilities {
-  .animate-ellipsis {
-    animation: ellipsis 1.2s infinite;
+  @keyframes ellipsis {
+    0% {
+      opacity: 0;
+    }
+    33% {
+      opacity: 1;
+    }
+    66% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 0;
+    }
   }
 
-  .delay-100 {
-    animation-delay: 0.2s;
-  }
-
-  .delay-200 {
-    animation-delay: 0.4s;
-  }
-
-  .animate-wave {
-    animation: wave 1.4s ease-in-out infinite;
-    transform-origin: 70% 70%;
-    display: inline-block;
+  @keyframes wave {
+    0% {
+      transform: rotate(0deg);
+    }
+    15% {
+      transform: rotate(14deg);
+    }
+    30% {
+      transform: rotate(-8deg);
+    }
+    40% {
+      transform: rotate(14deg);
+    }
+    50% {
+      transform: rotate(-4deg);
+    }
+    60% {
+      transform: rotate(10deg);
+    }
+    70% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(0deg);
+    }
   }
 }

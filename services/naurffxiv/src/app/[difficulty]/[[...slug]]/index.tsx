@@ -32,8 +32,8 @@ function MDXPage({
 
   return (
     <MdxLayout>
-      <div className="grid grid-cols-1 lg:grid-cols-[90ch_1fr] xl:grid-cols-[1fr_90ch_1fr] max-w-screen-2xl mx-auto">
-        <aside className="top-[5.5rem] self-start hidden xl:block sticky h-[calc(100vh-100px)] scrollbar">
+      <div className="grid grid-cols-1 lg:grid-cols-[90ch_1fr] xl:grid-cols-[1fr_90ch_1fr] max-w-(--breakpoint-2xl) mx-auto">
+        <aside className="top-22 self-start hidden xl:block sticky h-[calc(100vh-100px)] scrollbar">
           <TableOfContents
             toc={toc!}
             frontmatter={frontmatter as { collapseToc?: boolean }}
@@ -42,7 +42,7 @@ function MDXPage({
         <main className="max-w-[90ch] min-h-screen prose prose-invert m-auto mx-6 pt-8">
           {children}
         </main>
-        <aside className="prose prose-invert top-[5.5rem] self-start hidden lg:block sticky h-[calc(100vh-100px)] scrollbar">
+        <aside className="prose prose-invert top-22 self-start hidden lg:block sticky h-[calc(100vh-100px)] scrollbar">
           {quickLinks}
         </aside>
         <MobileDrawer>{quickLinks}</MobileDrawer>
