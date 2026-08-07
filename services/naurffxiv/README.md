@@ -201,6 +201,10 @@ pnpm add -D eslint
 pnpm exec eslint . --ext .js,.jsx,.ts,.tsx
 ```
 
+## Image Assets
+
+See [IMAGE_ASSETS.md](IMAGE_ASSETS.md) for the `public/images/` folder structure, naming convention, and the `public/` vs `src/assets/` rules.
+
 ## Contributing
 
 If you would like to contribute, please take a look over at our [Wiki](https://github.com/naurffxiv/naurffxiv/wiki) on certain processes.
