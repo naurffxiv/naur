@@ -23,9 +23,15 @@ var postgres = builder.AddPostgres("postgres")
 
 var authingwayDb = postgres.AddDatabase("authingwaydb", databaseName: "authingway");
 
+var discordToken = builder.AddParameter(
+    "DiscordToken",
+    () => builder.Configuration["Parameters:DiscordToken"] ?? string.Empty,
+    secret: true);
+
 var authingway = builder.AddProject<Projects.Naur_Authingway>("authingway")
     .WithReference(authingwayDb)
     .WaitFor(authingwayDb)
+    .WithEnvironment("Discord__Token", discordToken)
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/health");
 
