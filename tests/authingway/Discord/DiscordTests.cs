@@ -9,22 +9,22 @@ using NetCord.Gateway;
 namespace Naur.Authingway.Tests.Discord;
 
 /// <summary>
-/// Contains tests that verify Discord components are absent from the running application when no token is configured.
+/// Contains tests that verify Discord components are correctly registered in the dependency injection container.
 /// </summary>
 /// <param name="serviceProvider">The service provider used to resolve registered services for testing.</param>
 [AuthingwayDataSource]
 public class DiscordTests(IServiceProvider serviceProvider)
 {
     /// <summary>
-    /// Verifies that no gateway client is registered when the running application has no configured token.
+    /// Verifies that the GatewayClient service is registered in the dependency injection container.
     /// </summary>
     /// <returns>A task that represents the asynchronous test operation.</returns>
     [Test]
-    public async Task GatewayClientNotRegisteredWithoutToken()
+    public async Task GatewayClientRegistered()
     {
         var gatewayClient = serviceProvider.GetService<GatewayClient>();
 
         await Assert.That(gatewayClient)
-            .IsNull();
+            .IsNotNull();
     }
 }
