@@ -12,4 +12,8 @@ WORKERS = (
 
 def start_tasks(bot):
     for worker in WORKERS:
+        if worker.is_running():
+            continue
+        worker.clear_exception_types()
+        worker.add_exception_type(Exception)
         worker.start(bot)
