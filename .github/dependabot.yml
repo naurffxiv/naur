@@ -18,6 +18,14 @@ updates:
     open-pull-requests-limit: 10
     commit-message:
       prefix: "build"
+    # typescript-eslint has no published version that supports TypeScript
+    # >=6.1.0 (peer range: ">=4.8.4 <6.1.0"), and TS 7.0 support was closed
+    # "not planned": https://github.com/typescript-eslint/typescript-eslint/issues/12518
+    # Revisit once that changes; until then major bumps just produce PRs we
+    # can't merge without dropping type-aware linting.
+    ignore:
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
     groups:
       linting:
         patterns:
@@ -25,6 +33,7 @@ updates:
           - "eslint-*"
           - "prettier"
           - "@typescript-eslint/*"
+          - "typescript-eslint"
       npm-other:
         patterns: ["*"]
         exclude-patterns:
@@ -32,6 +41,7 @@ updates:
           - "eslint-*"
           - "prettier"
           - "@typescript-eslint/*"
+          - "typescript-eslint"
 
   - package-ecosystem: "npm"
     directory: "/services/naurffxiv"
@@ -40,6 +50,14 @@ updates:
     open-pull-requests-limit: 10
     commit-message:
       prefix: "build"
+    # typescript-eslint has no published version that supports TypeScript
+    # >=6.1.0 (peer range: ">=4.8.4 <6.1.0"), and TS 7.0 support was closed
+    # "not planned": https://github.com/typescript-eslint/typescript-eslint/issues/12518
+    # Revisit once that changes; until then major bumps just produce PRs we
+    # can't merge without dropping type-aware linting.
+    ignore:
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
     groups:
       next-and-react:
         patterns:
@@ -54,6 +72,7 @@ updates:
           - "eslint-*"
           - "prettier"
           - "@typescript-eslint/*"
+          - "typescript-eslint"
       npm-other:
         patterns: ["*"]
         exclude-patterns:
@@ -66,6 +85,7 @@ updates:
           - "eslint-*"
           - "prettier"
           - "@typescript-eslint/*"
+          - "typescript-eslint"
 
   - package-ecosystem: "npm"
     directory: "/tests/e2e"
@@ -74,6 +94,14 @@ updates:
     open-pull-requests-limit: 10
     commit-message:
       prefix: "build"
+    # typescript-eslint has no published version that supports TypeScript
+    # >=6.1.0 (peer range: ">=4.8.4 <6.1.0"), and TS 7.0 support was closed
+    # "not planned": https://github.com/typescript-eslint/typescript-eslint/issues/12518
+    # Revisit once that changes; until then major bumps just produce PRs we
+    # can't merge without dropping type-aware linting.
+    ignore:
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
     groups:
       npm-all:
         patterns: ["*"]
