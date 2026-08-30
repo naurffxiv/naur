@@ -2,9 +2,14 @@ from .autounexile import autounexile_users
 from .forum_automod import autodelete_posts, autodelete_threads
 from .strike_decrement import decrement_strikes
 
+WORKERS = (
+    autounexile_users,
+    autodelete_threads,
+    decrement_strikes,
+    autodelete_posts,
+)
 
-def start_tasks(self):
-    autounexile_users.start(self)
-    autodelete_threads.start(self)
-    decrement_strikes.start(self)
-    autodelete_posts.start(self)
+
+def start_tasks(bot):
+    for worker in WORKERS:
+        worker.start(bot)
