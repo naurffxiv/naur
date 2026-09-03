@@ -69,7 +69,9 @@ async def add_strike(
         f"<@{user.id}> was given a strike, bringing them to {db_user.get_strike_points()} points from {previous_points} points",
     )
 
-    punishment = await _apply_punishment(logging_embed, user, db_user, previous_points)
+    punishment = await _apply_punishment(
+        logging_embed, user, db_user, previous_points, author
+    )
     logging_embed.add_field(name="Punishment", value=punishment)
 
     # message user
@@ -183,6 +185,7 @@ async def _apply_punishment(
     user: discord.Member,
     db_user: User,
     previous_points: int,
+    author: discord.Member,
 ) -> str:
     total_points = db_user.get_strike_points()
 
@@ -196,7 +199,7 @@ async def _apply_punishment(
         await ban_service.ban_member(
             logging_embed,
             user,
-            "Your strike were severe or frequent to be removed from NA Ultimate Raiding - FFXIV",
+            "Your strikes were severe or frequent enough for you to be removed from NA Ultimate Raiding - FFXIV",
             False,
         )
         return punishment
@@ -208,6 +211,10 @@ async def _apply_punishment(
     else:
         punishment = f"{punishment_days} day exile"
         await exile_service.exile_user(
-            logging_embed, user, timedelta(days=punishment_days), exile_reason
+            logging_embed,
+            user,
+            timedelta(days=punishment_days),
+            exile_reason,
+            author=author,
         )
     return punishment
