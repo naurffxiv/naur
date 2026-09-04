@@ -1,3 +1,5 @@
 packages:
   - "services/naurffxiv"
+  - "packages/shared"
   - "tests/e2e"
+  - "tests/naurffxiv"

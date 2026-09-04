@@ -1,6 +1,6 @@
 "use client";
 
-import type { FCWithChildren } from "@/types/common";
+import type { FCWithChildren } from "@naur/shared/types";
 import WithAuthLayout from "@auth/components/Gates/WithAuthLayout";
 
 const ProtectedLayout: FCWithChildren = ({ children }) => {

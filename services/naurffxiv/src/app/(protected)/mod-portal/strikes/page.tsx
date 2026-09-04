@@ -4,6 +4,7 @@ import { ReactNode } from "react";
 
 import { ModPortalDataGrid } from "@/components/ModPortal/ModPortalDataGrid/ModPortalDataGrid";
 import { makeData } from "@/components/ModPortal/makeData";
+import { GridColDef } from "@mui/x-data-grid";
 
 const testData = makeData(100, [
   "userId",
@@ -13,7 +14,7 @@ const testData = makeData(100, [
   "strikeSummary",
 ]);
 
-const columns = [
+const columns: GridColDef[] = [
   { headerName: "User ID", field: "userId", width: 100 },
   { headerName: "Issued by", field: "issuedBy", width: 120 },
   { headerName: "Created", field: "created", width: 150 },

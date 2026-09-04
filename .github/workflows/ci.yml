@@ -23,6 +23,7 @@ jobs:
       moddingway: ${{ steps.filter.outputs.moddingway }}
       authingway: ${{ steps.filter.outputs.authingway }}
       findingway: ${{ steps.filter.outputs.findingway }}
+      clearingway: ${{ steps.filter.outputs.clearingway }}
       apphost: ${{ steps.filter.outputs.apphost }}
       run_e2e: ${{ steps.e2e-check.outputs.run_e2e }}
     steps:
@@ -51,6 +52,10 @@ jobs:
             findingway:
               - *ci
               - 'services/findingway/**'
+              - '.github/workflows/pipeline-go.yml'
+            clearingway:
+              - *ci
+              - 'services/clearingway/**'
               - '.github/workflows/pipeline-go.yml'
             authingway:
               - *ci
@@ -153,14 +158,15 @@ jobs:
     needs: [detect-changes]
     if: |
       github.event_name == 'push' ||
-      needs.detect-changes.outputs.findingway == 'true'
+      needs.detect-changes.outputs.findingway == 'true' ||
+      needs.detect-changes.outputs.clearingway == 'true'
     permissions:
       contents: read
       actions: read
       pull-requests: write
     strategy:
       matrix:
-        service: [findingway]
+        service: [findingway, clearingway]
       fail-fast: false
     uses: ./.github/workflows/pipeline-go.yml
     with:
@@ -181,14 +187,17 @@ jobs:
 
   deploy-preview:
     needs: [detect-changes, ci-node]
-    if: github.event_name == 'pull_request' && needs.detect-changes.outputs.naurffxiv == 'true'
+    if: >
+      github.event_name == 'pull_request' &&
+      needs.detect-changes.outputs.naurffxiv == 'true' &&
+      github.actor != 'dependabot[bot]' &&
+      github.event.pull_request.head.repo.fork == false
     permissions:
       contents: read
       pull-requests: write
     uses: ./.github/workflows/deploy-pr-netlify.yml
     with:
       pr_number: "${{ github.event.pull_request.number }}"
-      should_run: ${{ github.event_name == 'pull_request' && needs.detect-changes.outputs.naurffxiv == 'true' }}
     secrets: inherit
 
   e2e:

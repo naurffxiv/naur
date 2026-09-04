@@ -1,4 +1,4 @@
-import type { CachedDiscordMember } from "@/types/discord";
+import type { CachedDiscordMember } from "@naur/shared/types";
 import { MEMBER_CACHE_TTL_SECONDS } from "@/lib/discord/cache/constants";
 import NodeCache from "node-cache";
 
