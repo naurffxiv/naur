@@ -68,8 +68,8 @@ func (r *Role) Ensure(guildId string, s *discordgo.Session, existingRoles []*dis
 	}
 
 	roleParams := &discordgo.RoleParams{
-		Name:  r.Name,
-		Color: &r.Color,
+		Name:        r.Name,
+		Color:       &r.Color,
 		Permissions: &[]int64{0}[0], // No permissions
 	}
 
