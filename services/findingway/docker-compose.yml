@@ -1,0 +1,15 @@
+services:
+  findingway:
+    container_name: findingway
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DISCORD_TOKEN: ${DISCORD_TOKEN}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_USER: ${REDIS_USER}
+    volumes:
+      - ./naur.crt:/findingway/naur.crt:ro
+      - ./naur.key:/findingway/naur.key:ro
+      - ./hyddwn-ca.crt:/findingway/hyddwn-ca.crt:ro
+    restart: unless-stopped
