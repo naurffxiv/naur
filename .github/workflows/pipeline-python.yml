@@ -14,6 +14,10 @@ on:
         required: false
         type: boolean
         default: true
+      has_docker_smoke_test:
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   lint:
@@ -27,12 +31,12 @@ jobs:
       run:
         working-directory: services/${{ inputs.service }}
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install uv
-        uses: astral-sh/setup-uv@eb1897b8dc4b5d5bfe39a428a8f2304605e0983c # v7.0.0
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
-          version: "0.10.4"
+          version: "0.11.14"
           enable-cache: true
           python-version: ${{ inputs.python-version }}
           cache-dependency-glob: "services/${{ inputs.service }}/uv.lock"
@@ -70,12 +74,12 @@ jobs:
       run:
         working-directory: services/${{ inputs.service }}
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install uv
-        uses: astral-sh/setup-uv@eb1897b8dc4b5d5bfe39a428a8f2304605e0983c # v7.0.0
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
-          version: "0.10.4"
+          version: "0.11.14"
           enable-cache: true
           python-version: ${{ inputs.python-version }}
           cache-dependency-glob: "services/${{ inputs.service }}/uv.lock"
@@ -101,12 +105,12 @@ jobs:
       run:
         working-directory: services/${{ inputs.service }}
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install uv
-        uses: astral-sh/setup-uv@eb1897b8dc4b5d5bfe39a428a8f2304605e0983c # v7.0.0
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
-          version: "0.10.4"
+          version: "0.11.14"
           enable-cache: true
           python-version: ${{ inputs.python-version }}
           cache-dependency-glob: "services/${{ inputs.service }}/uv.lock"
@@ -120,16 +124,56 @@ jobs:
           service: ${{ inputs.service }}
           step-number: 30
           step-name: "Unit Tests"
-          command: uv run pytest ../../tests/${{ inputs.service }} --cov=${{ inputs.service }} --cov-report=xml:../../tests/${{ inputs.service }}/coverage.xml
+          command: >-
+            ${{ inputs.service == 'moddingway' && 'make test-ci' || format('uv run pytest ../../tests/{0} --cov={0} --cov-report=xml:../../tests/{0}/coverage.xml', inputs.service) }}
           output-file: pytest.txt
           working-directory: services/${{ inputs.service }}
           fail-on-error: true
 
       - name: Upload Coverage
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: coverage-${{ inputs.service }}
           path: tests/${{ inputs.service }}/coverage.xml
           if-no-files-found: ignore
-          retention-days: 1
+          retention-days: 7
+
+  docker-smoke-test:
+    needs: [test]
+    if: inputs.should_run && inputs.has_docker_smoke_test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/${{ inputs.service }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Build API Image
+        run: docker compose build python-api
+
+      - name: Smoke Test API
+        env:
+          POSTGRES_USER: moddingwayLocalDB
+          POSTGRES_PASSWORD: moddingwayLocalDBPassword
+          POSTGRES_DB: moddingway
+          MODDINGWAY_ENVIRONMENT: local
+        run: |
+          docker compose up -d python-api-local
+
+          for i in {1..60}; do
+            if curl -sf http://localhost:8000/health; then
+              echo "API is healthy"
+              docker compose logs python-api-local
+              docker compose down
+              exit 0
+            fi
+            echo "Waiting for API to be healthy..."
+            sleep 2
+          done
+
+          echo "API failed health check within timeout"
+          docker compose logs python-api-local
+          docker compose logs postgres_local
+          docker compose down
+          exit 1

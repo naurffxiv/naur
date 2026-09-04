@@ -1,6 +1,6 @@
 "use client";
 
-import type { AuthErrorResult } from "@auth/types/auth-error";
+import type { AuthErrorResult } from "@naur/shared/types";
 import { useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";

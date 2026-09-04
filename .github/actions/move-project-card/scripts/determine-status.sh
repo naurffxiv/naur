@@ -5,10 +5,14 @@ REVIEW_STATE=$2
 IS_DRAFT=$3
 IS_MERGED=$4
 NEEDS_QA=${5:-false}
+ACTION=${6:-}
 
 if [ "$EVENT_NAME" = "pull_request" ] && [ "$IS_MERGED" = "true" ]; then
   target="Done"
   reason="PR merged"
+elif [ "$EVENT_NAME" = "pull_request" ] && [ "$ACTION" = "review_requested" ]; then
+  echo "Skipping: review_requested does not change board status" >&2
+  exit 0
 elif [ "$EVENT_NAME" = "pull_request_review" ] && [ "$REVIEW_STATE" = "approved" ]; then
   if [ "$NEEDS_QA" = "true" ]; then
     target="QA Review"
@@ -19,6 +23,9 @@ elif [ "$EVENT_NAME" = "pull_request_review" ] && [ "$REVIEW_STATE" = "approved"
 elif [ "$EVENT_NAME" = "pull_request_review" ] && [ "$REVIEW_STATE" = "changes_requested" ]; then
   target="Change requested"
   reason="Changes requested"
+elif [ "$EVENT_NAME" = "pull_request_review" ] && [ "$REVIEW_STATE" = "commented" ]; then
+  echo "Skipping: review comment does not change board status" >&2
+  exit 0
 elif [ "$IS_DRAFT" = "true" ]; then
   target="In progress"
   reason="draft PR"

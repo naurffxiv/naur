@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+import discord
 import pytest
 
 from moddingway import constants, util
@@ -90,3 +91,33 @@ async def test_add_and_remove_role(create_member):
 
     removed_role = mocked_member.remove_roles.call_args[0][0]
     assert removed_role.name == role_to_remove.value
+
+
+@pytest.mark.parametrize(
+    "input_roles,expected_result",
+    [
+        ([constants.Role.MOD], True),
+        ([constants.Role.ADMIN], True),
+        ([constants.Role.MOD, constants.Role.ADMIN], True),
+        ([constants.Role.VERIFIED], False),
+        ([], False),
+    ],
+)
+@pytest.mark.asyncio
+async def test_is_user_moderator(
+    mocker,
+    create_member,
+    input_roles: list[constants.Role],
+    expected_result: bool,
+):
+    mocked_member = create_member(roles=input_roles)
+
+    mocked_interaction = mocker.Mock(spec=discord.Interaction)
+    mocked_interaction.user = mocked_member
+
+    if expected_result:
+        result = await util.is_user_moderator(mocked_interaction)
+        assert result is True
+    else:
+        with pytest.raises(discord.app_commands.MissingAnyRole):
+            await util.is_user_moderator(mocked_interaction)

@@ -20,7 +20,7 @@ repos:
         name: prettier
         entry: npx prettier --write --ignore-unknown --cache
         language: system
-        files: \.(js|jsx|ts|tsx|json|css|scss|md|mdx)$
+        files: \.(js|jsx|ts|tsx|json|css|scss)$
         exclude: (package-lock\.json|.*\.min\.js)
         priority: 0
 

@@ -51,7 +51,7 @@ $script:ServiceRegistry = @{
     }
 }
 
-$script:UvVersion = "0.10.4"
+$script:UvVersion = "0.11.14"
 
 $script:PackageManager = @{
     Name         = "pnpm"

@@ -1,4 +1,4 @@
-import type { DiscordUser } from "@/types/discord";
+import type { DiscordUser } from "@naur/shared/types";
 
 const DISCORD_CDN = "https://cdn.discordapp.com";
 
