@@ -1,11 +1,11 @@
-package commands
+package clearingway
 
 import (
 	"github.com/bwmarrin/discordgo"
 )
 
 // PingCommand - Returns a ping command that responds with "Pong!".
-func PingCommand() Command {
+func (cw *Clearingway) PingCommand() Command {
 	return Command{
 		ApplicationCommand: &discordgo.ApplicationCommand{
 			Name:        "ping",

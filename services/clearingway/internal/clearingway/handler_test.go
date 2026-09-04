@@ -1,4 +1,4 @@
-package commands
+package clearingway
 
 import (
 	"errors"
@@ -10,14 +10,14 @@ import (
 )
 
 func TestNewHandler(t *testing.T) {
-	handler := NewHandler()
+	handler := NewCommandHandler()
 	assert.NotNil(t, handler)
 	assert.NotNil(t, handler.commands)
 	assert.Equal(t, 0, len(handler.commands))
 }
 
 func TestCommandHandler_Register(t *testing.T) {
-	handler := NewHandler()
+	handler := NewCommandHandler()
 
 	cmd := Command{
 		ApplicationCommand: &discordgo.ApplicationCommand{
@@ -37,7 +37,7 @@ func TestCommandHandler_Register(t *testing.T) {
 }
 
 func TestCommandHandler_Register_Overwrite(t *testing.T) {
-	handler := NewHandler()
+	handler := NewCommandHandler()
 
 	originalCmd := Command{
 		ApplicationCommand: &discordgo.ApplicationCommand{
@@ -71,7 +71,7 @@ func TestCommandHandler_Register_Overwrite(t *testing.T) {
 }
 
 func TestCommandHandler_Register_NoName(t *testing.T) {
-	handler := NewHandler()
+	handler := NewCommandHandler()
 
 	cmd := Command{
 		ApplicationCommand: &discordgo.ApplicationCommand{
@@ -89,7 +89,7 @@ func TestCommandHandler_Register_NoName(t *testing.T) {
 }
 
 func TestCommandHandler_Register_NilHandler(t *testing.T) {
-	handler := NewHandler()
+	handler := NewCommandHandler()
 
 	cmd := Command{
 		ApplicationCommand: &discordgo.ApplicationCommand{
@@ -105,7 +105,7 @@ func TestCommandHandler_Register_NilHandler(t *testing.T) {
 }
 
 func TestCommandHandler_GetCommand(t *testing.T) {
-	handler := NewHandler()
+	handler := NewCommandHandler()
 
 	t.Run("returns command when exists", func(t *testing.T) {
 		cmd := Command{
@@ -133,7 +133,7 @@ func TestCommandHandler_GetCommand(t *testing.T) {
 }
 
 func TestCommandHandler_GetCommand_UnknownCommand(t *testing.T) {
-	handler := NewHandler()
+	handler := NewCommandHandler()
 
 	retrievedCmd, ok := handler.GetCommand("nonexistent")
 	assert.False(t, ok)
@@ -141,7 +141,7 @@ func TestCommandHandler_GetCommand_UnknownCommand(t *testing.T) {
 }
 
 func TestCommandHandler_HandleInteraction_UnknownCommand(t *testing.T) {
-	handler := NewHandler()
+	handler := NewCommandHandler()
 
 	mockSession := &MockSession{
 		InteractionRespondFunc: func(interaction *discordgo.Interaction, response *discordgo.InteractionResponse, options ...discordgo.RequestOption) error {
@@ -167,7 +167,7 @@ func TestCommandHandler_HandleInteraction_UnknownCommand(t *testing.T) {
 }
 
 func TestCommandHandler_HandleInteraction_KnownCommand_Success(t *testing.T) {
-	handler := NewHandler()
+	handler := NewCommandHandler()
 
 	handlerExecuted := false
 	cmd := Command{
@@ -212,7 +212,7 @@ func TestCommandHandler_HandleInteraction_KnownCommand_Success(t *testing.T) {
 }
 
 func TestCommandHandler_HandleInteraction_KnownCommand_HandlerError(t *testing.T) {
-	handler := NewHandler()
+	handler := NewCommandHandler()
 
 	handlerError := errors.New("handler error")
 	cmd := Command{
@@ -250,7 +250,7 @@ func TestCommandHandler_HandleInteraction_KnownCommand_HandlerError(t *testing.T
 }
 
 func TestCommandHandler_HandleInteraction_HandlerErrorEditFallback(t *testing.T) {
-	handler := NewHandler()
+	handler := NewCommandHandler()
 
 	handlerError := errors.New("handler error")
 	cmd := Command{
@@ -292,7 +292,7 @@ func TestCommandHandler_HandleInteraction_HandlerErrorEditFallback(t *testing.T)
 }
 
 func TestCommandHandler_HandleInteraction_HandlerErrorEditFallbackError(t *testing.T) {
-	handler := NewHandler()
+	handler := NewCommandHandler()
 
 	handlerError := errors.New("handler error")
 	cmd := Command{
@@ -339,7 +339,7 @@ func TestCommandHandler_HandleInteraction_HandlerErrorEditFallbackError(t *testi
 }
 
 func TestCommandHandler_HandleInteraction_InvalidInteractionType(t *testing.T) {
-	handler := NewHandler()
+	handler := NewCommandHandler()
 
 	mockSession := &MockSession{
 		InteractionRespondFunc: func(interaction *discordgo.Interaction, response *discordgo.InteractionResponse, options ...discordgo.RequestOption) error {
@@ -364,7 +364,7 @@ func TestCommandHandler_HandleInteraction_InvalidInteractionType(t *testing.T) {
 }
 
 func TestCommandHandler_HandleInteraction_InvalidInteractionType_RespondError(t *testing.T) {
-	handler := NewHandler()
+	handler := NewCommandHandler()
 
 	respondError := errors.New("respond failed")
 	mockSession := &MockSession{
@@ -390,7 +390,7 @@ func TestCommandHandler_HandleInteraction_InvalidInteractionType_RespondError(t 
 }
 
 func TestCommandHandler_RegisterAll_Success(t *testing.T) {
-	handler := NewHandler()
+	handler := NewCommandHandler()
 
 	cmd := Command{
 		ApplicationCommand: &discordgo.ApplicationCommand{
@@ -425,7 +425,7 @@ func TestCommandHandler_RegisterAll_Success(t *testing.T) {
 }
 
 func TestCommandHandler_RegisterAll_Error(t *testing.T) {
-	handler := NewHandler()
+	handler := NewCommandHandler()
 
 	cmd := Command{
 		ApplicationCommand: &discordgo.ApplicationCommand{
@@ -458,7 +458,7 @@ func TestCommandHandler_RegisterAll_Error(t *testing.T) {
 }
 
 func TestCommandHandler_RegisterAll_UserError(t *testing.T) {
-	handler := NewHandler()
+	handler := NewCommandHandler()
 
 	cmd := Command{
 		ApplicationCommand: &discordgo.ApplicationCommand{
@@ -488,7 +488,7 @@ func TestCommandHandler_RegisterAll_UserError(t *testing.T) {
 }
 
 func TestCommandHandler_RegisterAll_EmptyCommands(t *testing.T) {
-	handler := NewHandler()
+	handler := NewCommandHandler()
 
 	user := &discordgo.User{
 		ID: "test-app-id",

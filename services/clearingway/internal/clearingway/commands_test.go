@@ -1,4 +1,4 @@
-package commands
+package clearingway
 
 import (
 	"testing"
@@ -8,7 +8,7 @@ import (
 )
 
 func TestPingCommand(t *testing.T) {
-	cmd := PingCommand()
+	cmd := (&Clearingway{}).PingCommand()
 
 	assert.Equal(t, "ping", cmd.ApplicationCommand.Name)
 	assert.Equal(t, "Responds with Pong!", cmd.ApplicationCommand.Description)
