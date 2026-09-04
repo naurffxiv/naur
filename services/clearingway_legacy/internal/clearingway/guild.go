@@ -311,7 +311,7 @@ func (g *Guild) InitDiscordMenu() {
 		g.Menus.AutoCompleteTrie.Insert(menu.Name)
 	}
 
-	for group, _ := range g.Menus.MenuGroups {
+	for group := range g.Menus.MenuGroups {
 		menuGroupName := "group " + group
 		g.Menus.Autocomplete = append(g.Menus.Autocomplete, &discordgo.ApplicationCommandOptionChoice{
 			Name:  menuGroupName,

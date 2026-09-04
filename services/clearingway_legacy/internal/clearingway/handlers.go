@@ -861,7 +861,7 @@ func (c *Clearingway) ToggleColor(s *discordgo.Session, i *discordgo.Interaction
 			}
 			tempstr += fmt.Sprintf("\nSuccessfully added role: <@&%v>", requestedColorRole.DiscordRole.ID)
 		}
-		discord.ContinueInteraction(s, i.Interaction, tempstr)
+		_ = discord.ContinueInteraction(s, i.Interaction, tempstr)
 	} else {
 		// remove the requested color role if it's the same
 		// edge case where someone has clears removed and doesn't want the color
@@ -871,7 +871,7 @@ func (c *Clearingway) ToggleColor(s *discordgo.Session, i *discordgo.Interaction
 				return
 			}
 			tempstr := fmt.Sprintf("Successfully removed role: <@&%v>", roleToRemove.DiscordRole.ID)
-			discord.ContinueInteraction(s, i.Interaction, tempstr)
+			_ = discord.ContinueInteraction(s, i.Interaction, tempstr)
 		} else {
 			// user doesn't meet the requirements
 			tempstr := fmt.Sprintf("You do not have the required role: <@&%v>", clearedRole.DiscordRole.ID)
@@ -928,14 +928,14 @@ func (c *Clearingway) Autocomplete(s *discordgo.Session, i *discordgo.Interactio
 			})
 		}
 		return
-	} else {
-		for _, worldCompletion := range c.AutoCompleteTrie.SearchAll(world) {
-			worldCompletionTitle := title.String(worldCompletion)
-			choices = append(choices, &discordgo.ApplicationCommandOptionChoice{
-				Name:  worldCompletionTitle,
-				Value: worldCompletion,
-			})
-		}
+	}
+
+	for _, worldCompletion := range c.AutoCompleteTrie.SearchAll(world) {
+		worldCompletionTitle := title.String(worldCompletion)
+		choices = append(choices, &discordgo.ApplicationCommandOptionChoice{
+			Name:  worldCompletionTitle,
+			Value: worldCompletion,
+		})
 	}
 
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{

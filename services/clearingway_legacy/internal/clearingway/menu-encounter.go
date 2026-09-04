@@ -124,7 +124,7 @@ func (c *Clearingway) MenuEncounterSend(s *discordgo.Session, i *discordgo.Inter
 
 	menu, ok := g.Menus.Menus[menuName]
 	if !ok {
-		discord.StartInteraction(s, i.Interaction, "Error: Menu not found.")
+		_ = discord.StartInteraction(s, i.Interaction, "Error: Menu not found.")
 		return
 	}
 	additionalData := menu.AdditionalData
@@ -143,7 +143,7 @@ func (c *Clearingway) MenuEncounterSend(s *discordgo.Session, i *discordgo.Inter
 
 	// set default selections based on roles present
 	for index, dropdown := range dropdowns {
-		for selectMenuOption, _ := range dropdown.SelectMenuOptions {
+		for selectMenuOption := range dropdown.SelectMenuOptions {
 			option := &dropdowns[index].SelectMenuOptions[selectMenuOption]
 			if _, ok := userRoleMap[option.Value]; ok {
 				option.Default = true
@@ -168,7 +168,7 @@ func (c *Clearingway) MenuEncounterSend(s *discordgo.Session, i *discordgo.Inter
 			maxValues = append(maxValues, len(dropdown.SelectMenuOptions))
 		}
 	} else {
-		for _, _ = range dropdowns {
+		for range dropdowns {
 			maxValues = append(maxValues, 1)
 		}
 	}
@@ -254,7 +254,7 @@ func (c *Clearingway) MenuEncounterProcess(s *discordgo.Session, i *discordgo.In
 
 	menu, ok := g.Menus.Menus[menuName]
 	if !ok {
-		discord.StartInteraction(s, i.Interaction, "Error: Menu not found.")
+		_ = discord.StartInteraction(s, i.Interaction, "Error: Menu not found.")
 		return
 	}
 	additionalData := menu.AdditionalData
@@ -274,7 +274,7 @@ func (c *Clearingway) MenuEncounterProcess(s *discordgo.Session, i *discordgo.In
 	// indicates what roles are relevant
 	menuIndex, err := strconv.Atoi(menuIndexString)
 	if err != nil {
-		discord.StartInteraction(s, i.Interaction, "Error: Invalid custom ID.")
+		_ = discord.StartInteraction(s, i.Interaction, "Error: Invalid custom ID.")
 		return
 	}
 

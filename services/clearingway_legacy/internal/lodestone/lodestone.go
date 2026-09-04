@@ -37,10 +37,10 @@ func SetCharacterLodestoneID(c *ffxiv.Character) error {
 			var charID int
 			n, err := fmt.Sscanf(linkText, "/lodestone/character/%d/", &charID)
 			if n == 0 {
-				errors = append(errors, fmt.Errorf("Could not find character ID!"))
+				errors = append(errors, fmt.Errorf("could not find character ID"))
 			}
 			if err != nil {
-				errors = append(errors, fmt.Errorf("Could not parse lodestone URL: %w", err))
+				errors = append(errors, fmt.Errorf("could not parse lodestone URL: %w", err))
 			}
 			charIDs = append(charIDs, charID)
 		}
@@ -52,17 +52,17 @@ func SetCharacterLodestoneID(c *ffxiv.Character) error {
 		pages := e.ChildText(".btn__pager__current")
 		n, err := fmt.Sscanf(pages, "Page %d of %d", &currentPage, &maxPages)
 		if n == 0 {
-			errors = append(errors, fmt.Errorf("Could not find pager!"))
+			errors = append(errors, fmt.Errorf("could not find pager"))
 		}
 		if err != nil {
-			errors = append(errors, fmt.Errorf("Could not parse pager: %w", err))
+			errors = append(errors, fmt.Errorf("could not parse pager: %w", err))
 		}
 		if !spawnedChildren && currentPage == 1 && maxPages != 1 {
 			spawnedChildren = true
 			for i := 2; i <= maxPages; i++ {
 				err = e.Request.Visit(lodestoneUrl + searchUrl + fmt.Sprintf("&page=%d", i))
 				if err != nil {
-					errors = append(errors, fmt.Errorf("Could not spawn child page: %w", err))
+					errors = append(errors, fmt.Errorf("could not spawn child page: %w", err))
 				}
 			}
 		}
@@ -74,7 +74,7 @@ func SetCharacterLodestoneID(c *ffxiv.Character) error {
 
 	err := collector.Visit(lodestoneUrl + searchUrl)
 	if err != nil {
-		return fmt.Errorf("Could not visit Lodestone: %w", err)
+		return fmt.Errorf("could not visit Lodestone: %w", err)
 	}
 	collector.Wait()
 
@@ -84,14 +84,14 @@ func SetCharacterLodestoneID(c *ffxiv.Character) error {
 
 	if len(charIDs) == 0 {
 		return fmt.Errorf(
-			"No character found on the Lodestone for `%v (%v)`! If you recently renamed yourself or server transferred it can take up to a day for this to be reflected on the Lodestone; please try again later.",
+			"no character found on the Lodestone for `%v (%v)`! If you recently renamed yourself or server transferred it can take up to a day for this to be reflected on the Lodestone; please try again later",
 			c.Name(),
 			c.World,
 		)
 	}
 	if len(charIDs) > 1 {
 		return fmt.Errorf(
-			"Too many characters found for name %s (%s)! Ensure it is exactly your character name.\nAlternatively, import your character to FFlogs at https://www.fflogs.com/lodestone/import to circumvent a Lodestone search.",
+			"too many characters found for name %s (%s)! Ensure it is exactly your character name.\nAlternatively, import your character to FFlogs at https://www.fflogs.com/lodestone/import to circumvent a Lodestone search",
 			c.Name(),
 			c.World,
 		)
@@ -118,7 +118,7 @@ func CharacterIsOwnedByDiscordUser(c *ffxiv.Character, discordId string) (bool, 
 
 	err := collector.Visit(lodestoneUrl + fmt.Sprintf("/character/%d/", c.LodestoneID))
 	if err != nil {
-		return false, fmt.Errorf("Could not visit Lodestone: %w", err)
+		return false, fmt.Errorf("could not visit Lodestone: %w", err)
 	}
 	collector.Wait()
 
@@ -138,5 +138,5 @@ func buildError(errors []error) error {
 	for _, e := range errors {
 		errorText.WriteString(e.Error() + "\n")
 	}
-	return fmt.Errorf("Encountered search errors:\n%v", errorText.String())
+	return fmt.Errorf("encountered search errors:\n%v", errorText.String())
 }

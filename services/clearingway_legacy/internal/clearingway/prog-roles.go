@@ -45,7 +45,7 @@ func ProgRoles(rs []*ConfigRole, e *Encounter) *Roles {
 
 		// Create return message.
 		messageString := strings.Builder{}
-		messageString.WriteString(fmt.Sprintf("⮕ Fight %d\n", furthestFight.ID))
+		fmt.Fprintf(&messageString, "⮕ Fight %d\n", furthestFight.ID)
 
 		// Does this report contain a kill?
 		if furthestFight.Kill {
@@ -59,24 +59,20 @@ func ProgRoles(rs []*ConfigRole, e *Encounter) *Roles {
 		// Bail out if the furthest prog point in the fight is less than one
 		// the user already possesses
 		if existingProgRole != nil && furthestProgRoleIndex < existingProgRoleIndex {
-			messageString.WriteString(fmt.Sprintf(
-				"You already have a prog role further than the furthest prog in this report! Your existing prog point is `%s` (%s), and the furthest prog point seen by you in this report is `%s` (%s).",
+			fmt.Fprintf(&messageString, "You already have a prog role further than the furthest prog in this report! Your existing prog point is `%s` (%s), and the furthest prog point seen by you in this report is `%s` (%s).",
 				existingProgRole.Name,
 				existingProgRole.Phase(existingProgRoleIndex+1),
 				furthestProgRole.Name,
-				furthestProgRole.Phase(furthestProgRoleIndex+1),
-			))
+				furthestProgRole.Phase(furthestProgRoleIndex+1))
 			return false, messageString.String(), nil, nil
 		}
 
 		// If this fight has the same furthest prog point the user already has,
 		// we are done.
 		if existingProgRole != nil && existingProgRoleIndex == furthestProgRoleIndex {
-			messageString.WriteString(fmt.Sprintf(
-				"Your furthest prog point, `%s` (%s), is the same as the furthest prog point in this report.",
+			fmt.Fprintf(&messageString, "Your furthest prog point, `%s` (%s), is the same as the furthest prog point in this report.",
 				existingProgRole.Name,
-				existingProgRole.Phase(existingProgRoleIndex+1),
-			))
+				existingProgRole.Phase(existingProgRoleIndex+1))
 			return false, messageString.String(), nil, nil
 		}
 
@@ -88,11 +84,9 @@ func ProgRoles(rs []*ConfigRole, e *Encounter) *Roles {
 			lowerRoles = roles.Roles[0:furthestProgRoleIndex]
 		}
 
-		messageString.WriteString(fmt.Sprintf(
-			"Your furthest prog point is now `%s` (%s).\n",
+		fmt.Fprintf(&messageString, "Your furthest prog point is now `%s` (%s).\n",
 			furthestProgRole.Name,
-			furthestProgRole.Phase(furthestProgRoleIndex+1),
-		))
+			furthestProgRole.Phase(furthestProgRoleIndex+1))
 		return true, messageString.String(), []*Role{furthestProgRole}, lowerRoles
 	}
 

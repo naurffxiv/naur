@@ -120,7 +120,7 @@ func (m *Menu) Init(c *ConfigMenu) {
 				button.Style = discordgo.ButtonStyle(1)
 			}
 
-			customIDslice := []string{}
+			var customIDslice []string
 			if len(configButton.MenuName) != 0 && len(configButton.MenuType) != 0 {
 				menuType := MenuType(configButton.MenuType)
 				switch menuType {

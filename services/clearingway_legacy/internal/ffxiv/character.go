@@ -24,10 +24,10 @@ type Character struct {
 
 func (cs *Characters) Init(world, firstName, lastName string) (*Character, error) {
 	if len(firstName) < 2 {
-		return nil, fmt.Errorf("First name must be at least two characters.")
+		return nil, fmt.Errorf("first name must be at least two characters")
 	}
 	if len(lastName) < 2 {
-		return nil, fmt.Errorf("Last name must be at least two characters.")
+		return nil, fmt.Errorf("last name must be at least two characters")
 	}
 	name := firstName + " " + lastName
 

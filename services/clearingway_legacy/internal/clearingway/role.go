@@ -84,7 +84,7 @@ func (r *Role) Ensure(guildId string, s *discordgo.Session, existingRoles []*dis
 	if existingRole == nil {
 		newRole, err := s.GuildRoleCreate(guildId, roleParams)
 		if err != nil {
-			return fmt.Errorf("Could not create new role for %v: %w.\n", r.Name, err)
+			return fmt.Errorf("could not create new role for %v: %w", r.Name, err)
 		}
 		existingRole = newRole
 	}

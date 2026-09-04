@@ -48,15 +48,11 @@ func legendRoleString(clearedEncounters *Encounters, rankings *fflogs.Rankings) 
 	clearedString.WriteString(p.Sprintf("Cleared the following %d Ultimate fights:\n", len(clears)))
 	for name, ranking := range clears {
 		rank := ranking.RanksByTime()[0]
-		clearedString.WriteString(
-			fmt.Sprintf(
-				"     `%v` with `%v` on <t:%v:F> (%v).\n",
-				name,
-				rank.Job.Abbreviation,
-				rank.UnixTime(),
-				rank.Report.Url(),
-			),
-		)
+		fmt.Fprintf(&clearedString, "     `%v` with `%v` on <t:%v:F> (%v).\n",
+			name,
+			rank.Job.Abbreviation,
+			rank.UnixTime(),
+			rank.Report.Url())
 	}
 
 	return strings.TrimSuffix(clearedString.String(), "\n")
@@ -186,15 +182,11 @@ func LegendRoles() *Roles {
 					)
 					for name, ranking := range clears {
 						rank := ranking.RanksByTime()[0]
-						clearedString.WriteString(
-							fmt.Sprintf(
-								"     `%v` with `%v` on <t:%v:F> (%v).\n",
-								name,
-								rank.Job.Abbreviation,
-								rank.UnixTime(),
-								rank.Report.Url(),
-							),
-						)
+						fmt.Fprintf(&clearedString, "     `%v` with `%v` on <t:%v:F> (%v).\n",
+							name,
+							rank.Job.Abbreviation,
+							rank.UnixTime(),
+							rank.Report.Url())
 					}
 					return true, strings.TrimSuffix(clearedString.String(), "\n")
 				}
@@ -234,15 +226,11 @@ func LegendRoles() *Roles {
 					)
 					for name, ranking := range clears {
 						rank := ranking.RanksByTime()[0]
-						clearedString.WriteString(
-							fmt.Sprintf(
-								"     `%v` with `%v` on <t:%v:F> (%v).\n",
-								name,
-								rank.Job.Abbreviation,
-								rank.UnixTime(),
-								rank.Report.Url(),
-							),
-						)
+						fmt.Fprintf(&clearedString, "     `%v` with `%v` on <t:%v:F> (%v).\n",
+							name,
+							rank.Job.Abbreviation,
+							rank.UnixTime(),
+							rank.Report.Url())
 					}
 					return true, strings.TrimSuffix(clearedString.String(), "\n")
 				}
@@ -284,15 +272,11 @@ func LegendRoles() *Roles {
 					)
 					for name, ranking := range clears {
 						rank := ranking.RanksByTime()[0]
-						clearedString.WriteString(
-							fmt.Sprintf(
-								"     `%v` with `%v` on <t:%v:F> (%v).\n",
-								name,
-								rank.Job.Abbreviation,
-								rank.UnixTime(),
-								rank.Report.Url(),
-							),
-						)
+						fmt.Fprintf(&clearedString, "     `%v` with `%v` on <t:%v:F> (%v).\n",
+							name,
+							rank.Job.Abbreviation,
+							rank.UnixTime(),
+							rank.Report.Url())
 					}
 					return true, strings.TrimSuffix(clearedString.String(), "\n")
 				}

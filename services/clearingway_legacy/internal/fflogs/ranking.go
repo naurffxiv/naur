@@ -62,16 +62,17 @@ func (rs *Rankings) Add(id int, r *Ranking) error {
 
 	if !ok {
 		for _, rank := range r.Ranks {
-			if r.Metric == Hps {
+			switch r.Metric {
+			case Hps:
 				rank.HPSPercent = rank.RankPercent
 				rank.HPSParseFound = true
-			} else if r.Metric == Dps {
+			case Dps:
 				rank.DPSPercent = rank.RankPercent
 				rank.DPSParseFound = true
 			}
 			j, ok := ffxiv.Jobs[rank.Spec]
 			if !ok {
-				return fmt.Errorf("Could not find job %s for rank %+v", rank.Spec, rank)
+				return fmt.Errorf("could not find job %s for rank %+v", rank.Spec, rank)
 			}
 			rank.Job = j
 		}
@@ -93,10 +94,11 @@ func (rs *Rankings) Add(id int, r *Ranking) error {
 		for _, existingRank := range existingRankings.Ranks {
 			if existingRank.SameFight(newRank) {
 				found = true
-				if r.Metric == Hps {
+				switch r.Metric {
+				case Hps:
 					existingRank.HPSPercent = newRank.RankPercent
 					existingRank.HPSParseFound = true
-				} else if r.Metric == Dps {
+				case Dps:
 					existingRank.DPSPercent = newRank.RankPercent
 					existingRank.DPSParseFound = true
 				}
@@ -104,16 +106,17 @@ func (rs *Rankings) Add(id int, r *Ranking) error {
 			}
 		}
 		if !found {
-			if r.Metric == Hps {
+			switch r.Metric {
+			case Hps:
 				newRank.HPSPercent = newRank.RankPercent
 				newRank.HPSParseFound = true
-			} else if r.Metric == Dps {
+			case Dps:
 				newRank.DPSPercent = newRank.RankPercent
 				newRank.DPSParseFound = true
 			}
 			j, ok := ffxiv.Jobs[newRank.Spec]
 			if !ok {
-				return fmt.Errorf("Could not find job %s for rank %+v", newRank.Spec, newRank)
+				return fmt.Errorf("could not find job %s for rank %+v", newRank.Spec, newRank)
 			}
 			newRank.Job = j
 			rs.Rankings[id].Ranks = append(rs.Rankings[id].Ranks, newRank)

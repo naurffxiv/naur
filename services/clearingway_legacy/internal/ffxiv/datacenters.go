@@ -217,7 +217,7 @@ func WorldsForLogicalDatacenter(logicalDatacenter string) (map[string]*World, er
 	case "Meteor":
 		return JP.LogicalDatacenters["Meteor"].Worlds, nil
 	default:
-		return nil, fmt.Errorf("Could not find datacenter: %v", logicalDatacenter)
+		return nil, fmt.Errorf("could not find datacenter: %v", logicalDatacenter)
 	}
 }
 

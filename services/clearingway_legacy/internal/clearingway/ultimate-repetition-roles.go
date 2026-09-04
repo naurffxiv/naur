@@ -1,9 +1,5 @@
 package clearingway
 
-import (
-	"fmt"
-)
-
 func UltimateRepetitionRoles() *Roles {
 	roles := &Roles{Roles: []*Role{}}
 
@@ -38,9 +34,7 @@ func UltimateRepetitionRoles() *Roles {
 
 						if clears == 1 {
 							return true,
-								fmt.Sprintf(
-									"Cleared " + ult.Name + "... but only once.\nUse `/uncomfy` if you don't want this role.",
-								)
+								"Cleared " + ult.Name + "... but only once.\nUse `/uncomfy` if you don't want this role."
 						}
 					}
 
@@ -75,9 +69,7 @@ func UltimateRepetitionRoles() *Roles {
 
 						if clears >= ult.TotalWeaponsAvailable {
 							return true,
-								fmt.Sprintf(
-									"Cleared " + ult.Name + " enough times to have every single weapon.",
-								)
+								"Cleared " + ult.Name + " enough times to have every single weapon."
 						}
 					}
 

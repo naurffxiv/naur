@@ -83,9 +83,7 @@ func RelevantRepetitionRoles(encs *Encounters) *Roles {
 
 					if clears == 1 {
 						return true,
-							fmt.Sprintf(
-								"Cleared `" + enc.Name + "`... but only **once**.\nUse `/uncomfy` if you don't want this role.",
-							)
+							"Cleared `" + enc.Name + "`... but only **once**.\nUse `/uncomfy` if you don't want this role."
 					}
 				}
 
@@ -121,9 +119,7 @@ func RelevantRepetitionRoles(encs *Encounters) *Roles {
 
 					if clears >= enc.TotalWeaponsAvailable {
 						return true,
-							fmt.Sprintf(
-								"Cleared `" + enc.Name + "` at least **" + enc.CompleteNumber() + "** times.",
-							)
+							"Cleared `" + enc.Name + "` at least **" + enc.CompleteNumber() + "** times."
 					}
 				}
 
