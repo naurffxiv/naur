@@ -15,7 +15,7 @@
     "typecheck": "tsc --noEmit",
     "prettier:check": "prettier --ignore-path ../../.prettierignore --check .",
     "prettier:write": "prettier --ignore-path ../../.prettierignore --write .",
-    "check:routes": "tsx scripts/middleware/validateRoutes.ts",
+    "check:routes": "tsx scripts/proxy/validateRoutes.ts",
     "compress": "tsx scripts/compress-images.ts"
   },
   "dependencies": {
@@ -28,11 +28,11 @@
     "@mui/material": "^6.4.7",
     "@mui/x-data-grid": "^7.28.2",
     "@naur/shared": "workspace:*",
-    "@next/mdx": "15.5.22",
+    "@next/mdx": "16.3.0",
     "@stefanprobst/rehype-extract-toc": "^3.0.0",
     "clsx": "^2.1.1",
     "highlight.js": "^11.11.1",
-    "next": "15.5.22",
+    "next": "16.3.0",
     "next-auth": "^4.24.15",
     "next-mdx-remote": "^6.0.0",
     "node-cache": "^5.1.2",
@@ -56,8 +56,6 @@
     "unist-util-visit": "^5.0.0"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.1",
-    "@eslint/js": "^9.24.0",
     "@netlify/plugin-nextjs": "^5.15.13",
     "@tailwindcss/typography": "^0.5.20",
     "@types/hast": "^3.0.5",
@@ -65,10 +63,9 @@
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.4",
     "eslint": "^9.24.0",
-    "eslint-config-next": "15.5.22",
+    "eslint-config-next": "16.3.0",
     "eslint-config-prettier": "^10.1.1",
     "glob": "^13.0.6",
-    "globals": "^17.9.0",
     "postcss": "^8.5.23",
     "prettier": "^3.9.6",
     "tailwindcss": "^3.4.17",
