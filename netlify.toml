@@ -11,3 +11,15 @@ NODE_VERSION = "22.13.0"
 NEXT_DISABLE_SWC_BINARY_PATCHING = "1"
 NETLIFY_NEXT_PLUGIN_SKIP_INSTALL_DEPENDENCIES = "true"
 PNPM_FLAGS = "--shamefully-hoist"
+
+[[redirects]]
+  from = "https://naurffxiv.net/*"
+  to = "https://naurffxiv.com/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://www.naurffxiv.net/*"
+  to = "https://naurffxiv.com/:splat"
+  status = 301
+  force = true
