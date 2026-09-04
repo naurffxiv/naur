@@ -57,6 +57,16 @@ func urlToToken(url string) string {
 	if i := strings.IndexByte(path, '/'); i >= 0 {
 		path = path[:i]
 	}
+	// Skip a generic "plan" segment (e.g. raidplan.io/plan/<code>)
+	if path == "plan" {
+		if i := strings.IndexByte(url[slashIdx+1:], '/'); i >= 0 {
+			rest := url[slashIdx+1:][i+1:]
+			if j := strings.IndexByte(rest, '/'); j >= 0 {
+				rest = rest[:j]
+			}
+			path = rest
+		}
+	}
 
 	if len(path) >= 2 {
 		return path
@@ -70,7 +80,7 @@ var stopWords = map[string]bool{
 	"it": true, "no": true, "at": true, "we": true, "for": true,
 	"th": true, "or": true, "be": true, "as": true, "by": true,
 	// pure english filler
-	"not": true, "with": true, "this": true, "have": true, "lets": true,
+	"not": true, "with": true, "this": true, "have": true, "lets": true, "are": true,
 	"let's": true, "please": true, "but": true, "can": true, "some": true,
 	"get": true, "out": true, "come": true, "time": true,
 	// vague action words
@@ -167,12 +177,12 @@ func (t *Tokenizer) Init() {
 
 	cert, err := tls.LoadX509KeyPair("naur.crt", "naur.key")
 	if err != nil {
-		panic(fmt.Errorf("Error loading certificates %s", err))
+		panic(fmt.Errorf("error loading certificates %s", err))
 	}
 
 	caCert, err := os.ReadFile("hyddwn-ca.crt")
 	if err != nil {
-		panic(fmt.Errorf("Error loading CA certificate %s", err))
+		panic(fmt.Errorf("error loading CA certificate %s", err))
 	}
 	caPool := x509.NewCertPool()
 	if !caPool.AppendCertsFromPEM(caCert) {
@@ -203,7 +213,7 @@ func (t *Tokenizer) TokenizeListings(listings *ffxiv.Listings) {
 	pfDescriptions := []string{}
 
 	scopedListings := listings.ForDutiesAndDataCentres(
-		[]string{"HighEndDuty", "Dancing Mad (Ultimate)"},
+		[]string{"Dancing Mad (Ultimate)"},
 		[]string{"Aether", "Crystal", "Dynamis", "Primal"})
 
 	seenKey := fmt.Sprintf("seen:%d", currentDayNumber)
