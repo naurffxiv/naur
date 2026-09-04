@@ -41,5 +41,5 @@ channels:
     dataCentres: [Aether, Crystal, Dynamis, Primal]
   - id: "1511412259895771237"
     name: "naur dancing mad check"
-    duty: "HighEndDuty"
+    duty: "Dancing Mad (Ultimate)"
     dataCentres: [Aether, Crystal, Dynamis, Primal]
