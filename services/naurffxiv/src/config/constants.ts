@@ -24,8 +24,8 @@ export const ultimateList: FightGuideEntry[] = [
   {
     title: "Dancing Mad",
     url: "/ultimate/kefka",
-    img: "/images/ultimate/kefka/banner.avif",
-    alt: "Dancing Mad",
+    img: "/images/ultimates/kefka/kefka-banner-cropped.avif",
+    alt: "Dancing Mad (Ultimate)",
   },
   {
     title: "Futures Rewritten",
