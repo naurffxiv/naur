@@ -1,0 +1,78 @@
+{
+  // REQUIRED: The internal name of the menu. This is used as the unique identifier.
+  "name": "<menu name>",
+
+  // REQUIRED: The menu type. One of: "menuMain", "menuVerify", "menuRemove", "menuEncounter".
+  "type": "<menu type>",
+
+  // OPTIONAL: The title displayed at the top of the embed.
+  "title": "<menu title>",
+
+  // OPTIONAL: The description text shown in the menu.
+  "description": "<menu description>",
+
+  // OPTIONAL: URL string for the thumbnail image displayed in the embed.
+  "thumbnailUrl": "<thumbnail url>",
+
+  // OPTIONAL: URL string for a large image displayed at the bottom of the embed.
+  "imageUrl": "<image url>",
+
+  // OPTIONAL: Array of field objects, each shown as a field in the embed.
+  "fields": [
+    {
+      // REQUIRED: Field title
+      "name": "<field name>",
+      // REQUIRED: Field description
+      "value": "<field value>",
+      // OPTIONAL: Whether the field is inline (true/false). Default is false.
+      "inline": false
+    }
+    // ...more fields
+  ],
+
+  // OPTIONAL: List of button definitions for menuMain.
+  "buttons": [
+    {
+      // REQUIRED: Button label
+      "label": "<button label>",
+      // REQUIRED: Button style (1=Primary, 2=Secondary, 3=Success, 4=Danger)
+      "style": 1,
+      // REQUIRED: Target menu name this button leads to when clicked
+      "menuName": "<target menu name>",
+      // REQUIRED: Target menu type
+      "menuType": "<target menu type>"
+    }
+    // ...more buttons
+  ],
+
+  // OPTIONAL: (menuEncounter only) If true, allows selecting multiple roles at once. Default is false.
+  "multiSelect": false,
+
+  // OPTIONAL: (menuEncounter only, encounter-tied roles) Require the user to have a cleared role for the encounter.
+  "requireClear": false,
+
+  // OPTIONAL: (menuEncounter only, encounter-tied roles) Filter by these difficulty values (e.g. ["Ultimate", "Savage"]).
+  "difficulties": ["<difficulty1>", "<difficulty2>"],
+
+  // OPTIONAL: (menuEncounter only, encounter-tied roles) Select using these role type labels (e.g. ["Reclear", "C4X", "Name Color", etc]).
+  "roleType": ["<role type 1>", "<role type 2>"],
+
+  // OPTIONAL: (menuEncounter only, per-role) Specify roles directly.
+  "roles": [
+    {
+      // REQUIRED: Name of the role
+      "name": "<role name>",
+      // OPTIONAL: Type/category of the role ("Cleared", "Prog", "Reclear", "C4X", "Name Color", etc)
+      "type": "<role type>",
+      // OPTIONAL: Hex color (as string or integer)
+      "color": "0x123456",
+      // OPTIONAL: Should role be hoisted in Discord user list
+      "hoist": false,
+      // OPTIONAL: Is the Discord role mentionable
+      "mention": false,
+      // OPTIONAL: Role's internal description
+      "description": "<role description>"
+    }
+    // ...more roles
+  ]
+}

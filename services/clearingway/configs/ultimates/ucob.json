@@ -1,0 +1,32 @@
+{
+  "ids": [1060, 1047, 1039, 1073],
+  "name": "The Unending Coil of Bahamut (Ultimate)",
+  "difficulty": "Ultimate",
+  "roles": [
+    {
+      "name": "UCoB Cleared",
+      "type": "Cleared",
+      "color": "0xfdfd96"
+    },
+    {
+      "name": "UCoB Reclear",
+      "type": "Reclear",
+      "color": "0x979c9f"
+    },
+    {
+      "name": "UCoB Prog",
+      "type": "Prog",
+      "color": "0x979c9f"
+    },
+    {
+      "name": "UCoB C4X",
+      "type": "C4X",
+      "color": "0x979c9f"
+    },
+    {
+      "name": "The Legend's Color",
+      "type": "Name Color",
+      "color": "0xfdfd96"
+    }
+  ]
+}
