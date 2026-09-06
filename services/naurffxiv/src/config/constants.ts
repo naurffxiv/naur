@@ -24,7 +24,7 @@ export const ultimateList: FightGuideEntry[] = [
   {
     title: "Dancing Mad",
     url: "/ultimate/kefka",
-    img: "/images/thumbnails/Hidden.avif",
+    img: "/images/ultimate/kefka/banner.avif",
     alt: "Dancing Mad",
   },
   {
@@ -86,7 +86,7 @@ export const criterionList: FightGuideEntry[] = [
   {
     title: "Another Merchant's Tale",
     url: "/criterion/merchants-tale",
-    img: "/images/thumbnails/criterion/amt.avif",
+    img: "/images/criterion/merchants-tale/banner.avif",
     alt: "Another Merchant's Tale",
   },
 ];
@@ -95,19 +95,19 @@ export const extremeList: FightGuideEntry[] = [
   {
     title: "The Unmaking",
     url: "/extreme/the-unmaking",
-    img: "/images/thumbnails/extreme/dt-ex8.avif",
+    img: "/images/extreme/dawntrail/the-unmaking/banner.avif",
     alt: "The Unmaking",
   },
   {
     title: "Hell on Rails",
     url: "/extreme/hell-on-rails",
-    img: "/images/thumbnails/extreme/dt-ex7.avif",
+    img: "/images/extreme/dawntrail/hell-on-rails/banner.avif",
     alt: "Hell on Rails",
   },
   {
     title: "The Windward Wilds",
     url: "/extreme/the-windward-wilds",
-    img: "/images/thumbnails/extreme/dt-ex6.avif",
+    img: "/images/extreme/dawntrail/the-windward-wilds/banner.avif",
     alt: "The Windward Wilds",
   },
   {
