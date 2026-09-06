@@ -1,7 +1,8 @@
+import asyncio
 import logging
 from datetime import UTC, datetime
 
-from discord import Guild, User
+from discord import AuditLogAction, Guild, User
 from discord.ext.commands import Bot
 
 from moddingway.constants import Role
@@ -73,8 +74,14 @@ def register_events(bot: Bot):
         db_user.is_banned = True
 
         users_database.update_user(db_user)
-
+        await asyncio.sleep(1)  # waiting discord to write ban into the log
         # Addition of logging embed
+        async for entry in guild.audit_logs(action=AuditLogAction.ban, limit=1):
+            if entry.target is None or entry.user is None:
+                continue
+            if entry.target.id == user.id:
+                if bot.user is not None and entry.user.id == bot.user.id:
+                    return  # if bot executed the ban dismiss global logging
         log_channel = get_log_channel(guild)
 
         if log_channel is None:
