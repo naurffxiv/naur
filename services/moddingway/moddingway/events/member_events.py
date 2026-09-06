@@ -74,9 +74,12 @@ def register_events(bot: Bot):
         db_user.is_banned = True
 
         users_database.update_user(db_user)
-        await asyncio.sleep(1)  # waiting discord to write ban into the log
         # Addition of logging embed
-        async for entry in guild.audit_logs(action=AuditLogAction.ban, limit=1):
+
+        await asyncio.sleep(1)  # waiting discord to write ban into the log
+        async for entry in guild.audit_logs(
+            action=AuditLogAction.ban, limit=5
+        ):  # checking last 5 entries just in case a lot of entries being written into log
             if entry.target is None or entry.user is None:
                 continue
             if entry.target.id == user.id:
