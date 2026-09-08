@@ -17,6 +17,8 @@ from moddingway.util import (
     timestamp_to_epoch,
 )
 
+from . import note_service
+
 settings = get_settings()
 logger = logging.getLogger(__name__)
 
@@ -26,6 +28,8 @@ async def exile_user(
     user: discord.Member,
     duration: datetime.timedelta,
     reason: str,
+    author: discord.User | discord.Member | None = None,
+    add_note: bool = True,
 ) -> str | None:
     db_user = users_database.get_user(user.id)
     if db_user:
@@ -115,6 +119,13 @@ async def exile_user(
         f"You are being exiled from NA Ultimate Raiding - FFXIV.\n**Reason:** {reason}\nExile expiration: <t:{timestamp}:R>",
         context="Exile",
     )
+
+    # sometimes we don't want to add a note (i.e. roulette)
+    if add_note:
+        note_author = author or user.guild.me
+        note_text = f"Exiled until <t:{timestamp}:F>. Reason: {reason}"
+        await note_service.add_note(logging_embed, user, note_text, note_author)
+        logging_embed.set_footer(text=f"Exile ID: {exile_id}")
 
     log_info_and_add_field(
         logging_embed,
