@@ -4,6 +4,7 @@
 
 using FastEndpoints;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
@@ -133,6 +134,13 @@ public static class CoreExtensions
 
     private static IHostApplicationBuilder ConfigureSecurity(this IHostApplicationBuilder builder)
     {
+        builder.Services.Configure<ForwardedHeadersOptions>(options =>
+        {
+            options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+            options.KnownIPNetworks.Clear();
+            options.KnownProxies.Clear();
+        });
+
         builder.Services.AddAuthentication();
         builder.Services.AddAuthorization();
 
@@ -193,6 +201,8 @@ public static class CoreExtensions
 
     private static WebApplication UseSecurity(this WebApplication app)
     {
+        app.UseForwardedHeaders();
+
         if (!app.Environment.IsDevelopment())
         {
             app.UseHsts();
