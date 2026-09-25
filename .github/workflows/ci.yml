@@ -24,6 +24,7 @@ jobs:
       authingway: ${{ steps.filter.outputs.authingway }}
       findingway: ${{ steps.filter.outputs.findingway }}
       clearingway: ${{ steps.filter.outputs.clearingway }}
+      clearingway_legacy: ${{ steps.filter.outputs.clearingway_legacy }}
       apphost: ${{ steps.filter.outputs.apphost }}
       run_e2e: ${{ steps.e2e-check.outputs.run_e2e }}
     steps:
@@ -56,6 +57,10 @@ jobs:
             clearingway:
               - *ci
               - 'services/clearingway/**'
+              - '.github/workflows/pipeline-go.yml'
+            clearingway_legacy:
+              - *ci
+              - 'services/clearingway_legacy/**'
               - '.github/workflows/pipeline-go.yml'
             authingway:
               - *ci
@@ -159,14 +164,15 @@ jobs:
     if: |
       github.event_name == 'push' ||
       needs.detect-changes.outputs.findingway == 'true' ||
-      needs.detect-changes.outputs.clearingway == 'true'
+      needs.detect-changes.outputs.clearingway == 'true' ||
+      needs.detect-changes.outputs.clearingway_legacy == 'true'
     permissions:
       contents: read
       actions: read
       pull-requests: write
     strategy:
       matrix:
-        service: [findingway, clearingway]
+        service: [findingway, clearingway, clearingway_legacy]
       fail-fast: false
     uses: ./.github/workflows/pipeline-go.yml
     with:

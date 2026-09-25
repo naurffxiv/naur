@@ -1,0 +1,8 @@
+coverage.out
+/clearingway
+.env
+.env.*
+!.env.example
+fly.toml
+.git
+.github

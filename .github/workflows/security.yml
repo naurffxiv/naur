@@ -50,6 +50,8 @@ jobs:
             clearingway:
               - 'services/clearingway/**'
               - 'tests/clearingway/**'
+            clearingway_legacy:
+              - 'services/clearingway_legacy/**'
             findingway:
               - 'services/findingway/**'
               - 'tests/findingway/**'
@@ -66,6 +68,7 @@ jobs:
           CHANGED_naurffxiv="${{ steps.filter.outputs.naurffxiv }}"
           CHANGED_moddingway="${{ steps.filter.outputs.moddingway }}"
           CHANGED_clearingway="${{ steps.filter.outputs.clearingway }}"
+          CHANGED_clearingway_legacy="${{ steps.filter.outputs.clearingway_legacy }}"
           CHANGED_findingway="${{ steps.filter.outputs.findingway }}"
           CHANGED_authingway="${{ steps.filter.outputs.authingway }}"
           CHANGED_apphost="${{ steps.filter.outputs.apphost }}"
@@ -76,10 +79,10 @@ jobs:
           # Derive languages from which services changed
           [[ "${CHANGED_naurffxiv}" == "true" ]] && languages+=("javascript")
           [[ "${CHANGED_moddingway}" == "true" ]] && languages+=("python")
-          [[ "${CHANGED_clearingway}" == "true" || "${CHANGED_findingway}" == "true" ]] && languages+=("go")
+          [[ "${CHANGED_clearingway}" == "true" || "${CHANGED_clearingway_legacy}" == "true" || "${CHANGED_findingway}" == "true" ]] && languages+=("go")
           [[ "${CHANGED_authingway}" == "true" || "${CHANGED_apphost}" == "true" ]] && languages+=("csharp")
 
-          for svc in naurffxiv moddingway clearingway findingway authingway apphost; do
+          for svc in naurffxiv moddingway clearingway clearingway_legacy findingway authingway apphost; do
             var="CHANGED_$svc"
             [[ "${!var}" == "true" ]] && services+=("services/$svc")
           done
@@ -95,6 +98,7 @@ jobs:
             services=(
               "services/naurffxiv"
               "services/clearingway"
+              "services/clearingway_legacy"
               "services/findingway"
               "services/moddingway"
               "services/authingway"
