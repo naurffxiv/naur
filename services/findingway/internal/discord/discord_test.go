@@ -74,3 +74,11 @@ func TestPostListings(t *testing.T) {
 	listErr := disc.PostListings("1174350271304958032", &ffxivListings, "Dragonsong's Reprise (Ultimate)", "Aether")
 	assert.NoError(t, listErr)
 }
+
+func TestTokensHeader(t *testing.T) {
+	at := time.Date(2026, 9, 25, 12, 30, 0, 0, time.UTC)
+
+	got := tokensHeader(5, 42, at)
+
+	assert.Equal(t, "**Last 5 days of Tokens (42 listings scanned) as of 2026-09-25 12:30:00\n**", got)
+}
