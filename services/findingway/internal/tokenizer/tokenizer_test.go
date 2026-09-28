@@ -115,6 +115,9 @@ func TestUrlToToken(t *testing.T) {
 		{"https://kefkab.in/", "kefkabin"},
 		{"https://raidplan.io/plan/lpsbjecjdb0xoloz", "lpsbjecjdb0xoloz"},
 		{"pastebin.com/7fs57PyQ", "7fs57PyQ"},
+		{"https://example.com/plan/abc123#2", "abc123"},
+		{"https://example.com/plan", "plan"},
+		{"https://example.com/plan/", "examplecom"},
 	}
 
 	for _, tt := range tests {
@@ -122,6 +125,29 @@ func TestUrlToToken(t *testing.T) {
 			got := urlToToken(tt.input)
 			if got != tt.want {
 				t.Errorf("urlToToken(%q) = %q, want %q", tt.input, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestParseEntry(t *testing.T) {
+	tests := []struct {
+		name            string
+		entry           string
+		wantTimestamp   string
+		wantDescription string
+	}{
+		{"timestamped", "1790328357\tgraven prog", "2026-09-25 09:25:57", "graven prog"},
+		{"legacy", "graven prog", "2026-09-25", "graven prog"},
+		{"non-numeric prefix", "p2\tgraven prog", "2026-09-25", "p2\tgraven prog"},
+	}
+
+	dayNumber := 46320
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			timestamp, description := parseEntry(tt.entry, dayNumber)
+			if timestamp != tt.wantTimestamp || description != tt.wantDescription {
+				t.Errorf("parseEntry(%q) = (%q, %q), want (%q, %q)", tt.entry, timestamp, description, tt.wantTimestamp, tt.wantDescription)
 			}
 		})
 	}
