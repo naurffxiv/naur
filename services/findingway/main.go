@@ -22,7 +22,7 @@ func main() {
 
 	if _, ok := os.LookupEnv("TOKENS_ONLY"); ok {
 		tokens := tok.GatherTokens(lookback)
-		count := tok.GatherListingCount(2)
+		count := tok.GatherListingCount(lookback)
 		fmt.Printf("%d listings scanned over last %d days\n\n", count, lookback)
 		for _, t := range tokens {
 			fmt.Printf("%-30s %d\n", t.String, t.Count)
@@ -59,7 +59,6 @@ func main() {
 	}
 
 	scraper := &scraper.Scraper{Url: "https://xivpf.com"}
-	tokenizer := tok
 
 	fmt.Printf("Starting findingway...\n")
 	loopCount := 0
@@ -94,7 +93,7 @@ func main() {
 			totalWait -= duration
 		}
 
-		tokenizer.TokenizeListings(listings)
+		tok.TokenizeListings(listings)
 
 		// Output values every 1 hours
 		if loopCount%20 == 0 {
@@ -105,16 +104,16 @@ func main() {
 				fmt.Printf("Error cleaning token channel: %s\n", err)
 			}
 
-			tokens := tokenizer.GatherTokens(lookback)
-			listingCount := tokenizer.GatherListingCount(lookback)
-			err = d.PostTokens("1510722864851189981", tokens, listingCount)
+			tokens := tok.GatherTokens(lookback)
+			listingCount := tok.GatherListingCount(lookback)
+			err = d.PostTokens("1510722864851189981", tokens, lookback, listingCount)
 			if err != nil {
 				fmt.Printf("Error posting tokens: %s\n", err)
 			}
 
 			// csv
 			var buf bytes.Buffer
-			tokenizer.CreateCsv(lookback, &buf)
+			tok.CreateCsv(lookback, &buf)
 			err = d.PostDescriptionCsv("1510722864851189981", &buf)
 			if err != nil {
 				fmt.Printf("Error posting csv: %s\n", err)

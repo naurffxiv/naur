@@ -31,6 +31,19 @@ var (
 	raidplanRe = regexp.MustCompile(`(?:https?://)?raidplan\.io/plan/([^#\s]+)(?:#\S+)?`)
 	httpUrlRe  = regexp.MustCompile(`https?://\S+`)
 	bareUrlRe  = regexp.MustCompile(`\b\w[\w.-]+\.[a-z]{2,}/\S*`)
+	splitRe    = regexp.MustCompile(strings.Join([]string{
+		`\|`,   // |
+		`\|\|`, // ||
+		`\/`,   // /
+		`\/\/`, // //
+		`->`,   // ->
+		`for `, // for
+		` `,    // space
+		`to `,  // to
+		`&`,    // &
+		`\+`,   // +
+		"\n",   // newline
+	}, `|`))
 )
 
 // urlToToken extracts the most meaningful token from a URL:
@@ -53,17 +66,11 @@ func urlToToken(url string) string {
 	if i := strings.IndexByte(path, '#'); i >= 0 {
 		path = path[:i]
 	}
-	// Take first path segment only
-	if i := strings.IndexByte(path, '/'); i >= 0 {
-		path = path[:i]
-	}
-	// Skip a generic "plan" segment (e.g. raidplan.io/plan/<code>)
-	if path == "plan" {
-		rest := url[slashIdx+1:][strings.IndexByte(url[slashIdx+1:], '/')+1:]
-		if j := strings.IndexByte(rest, '/'); j >= 0 {
-			rest = rest[:j]
-		}
-		path = rest
+	// Take first path segment only, skipping a generic "plan" segment (e.g. raidplan.io/plan/<code>)
+	segments := strings.Split(path, "/")
+	path = segments[0]
+	if path == "plan" && len(segments) > 1 {
+		path = segments[1]
 	}
 
 	if len(path) >= 2 {
@@ -103,18 +110,16 @@ func normalizeToken(raw string) string {
 
 // parseEntry splits a stored Redis entry into its timestamp and description.
 // New entries are stored as "<unix_ts>\t<description>"; old entries are bare descriptions.
-// Returns a zero Time for old entries so callers can filter them out.
-func parseEntry(entry string, fallbackDayNumber int) (ts time.Time, timestamp string, description string) {
+func parseEntry(entry string, fallbackDayNumber int) (timestamp string, description string) {
 	if idx := strings.IndexByte(entry, '\t'); idx >= 0 {
 		unix, err := strconv.ParseInt(entry[:idx], 10, 64)
 		if err == nil {
-			t := time.Unix(unix, 0).UTC()
-			return t, t.Format(time.DateTime), entry[idx+1:]
+			return time.Unix(unix, 0).UTC().Format(time.DateTime), entry[idx+1:]
 		}
 	}
 	// Fallback for old data without a timestamp
 	day := time.Date(1900, 0, 0, 0, 0, 0, 0, time.UTC).AddDate(0, 0, fallbackDayNumber)
-	return time.Time{}, day.Format(time.DateOnly), entry
+	return day.Format(time.DateOnly), entry
 }
 
 func NowToInt() int {
@@ -134,23 +139,7 @@ func splitListingIntoTokens(listing string) ([]string, error) {
 	// Same for bare domain links without a scheme
 	listing = bareUrlRe.ReplaceAllStringFunc(listing, urlToToken)
 
-	var splitRegex = []string{
-		`\|`,   // |
-		`\|\|`, // ||
-		`\/`,   // /
-		`\/\/`, // //
-		`->`,   // ->
-		`for `, // for
-		` `,    // space
-		`to `,  // to
-		`&`,    // &
-		`\+`,   // +
-		"\n",   // newline
-	}
-
-	fullRegex := strings.Join(splitRegex, `|`)
-	re := regexp.MustCompile(fullRegex)
-	result := re.Split(listing, -1)
+	result := splitRe.Split(listing, -1)
 
 	var resTokens []string
 	for _, raw := range result {
@@ -215,6 +204,7 @@ func (t *Tokenizer) TokenizeListings(listings *ffxiv.Listings) {
 		[]string{"Aether", "Crystal", "Dynamis", "Primal"})
 
 	seenKey := fmt.Sprintf("seen:%d", currentDayNumber)
+	prevSeenKey := fmt.Sprintf("seen:%d", currentDayNumber-1)
 	seenExists, err := t.rdb.Exists(ctx, seenKey).Result()
 	if err != nil {
 		panic(err)
@@ -222,6 +212,14 @@ func (t *Tokenizer) TokenizeListings(listings *ffxiv.Listings) {
 
 	var added int64
 	for _, item := range scopedListings.Listings {
+		seenYesterday, err := t.rdb.SIsMember(ctx, prevSeenKey, item.Id).Result()
+		if err != nil {
+			panic(err)
+		}
+		if seenYesterday {
+			continue
+		}
+
 		added, err = t.rdb.SAdd(ctx, seenKey, item.Id).Result()
 		if err != nil {
 			panic(err)
@@ -273,7 +271,7 @@ func (t *Tokenizer) GatherTokens(lookback int) []Token {
 		}
 
 		for _, entry := range descriptions {
-			_, _, description := parseEntry(entry, prevDayNumber)
+			_, description := parseEntry(entry, prevDayNumber)
 			tokens, _ := splitListingIntoTokens(description)
 			for _, token := range tokens {
 				tokenSum[token] += 1
@@ -329,7 +327,7 @@ func (t *Tokenizer) CreateCsv(lookback int, buf *bytes.Buffer) {
 		}
 
 		for _, entry := range getResult {
-			_, timestampStr, description := parseEntry(entry, prevDayNumber)
+			timestampStr, description := parseEntry(entry, prevDayNumber)
 			err = csvwriter.Write([]string{timestampStr, strings.ReplaceAll(description, "\n", "")})
 			if err != nil {
 				panic(err)
