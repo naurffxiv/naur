@@ -8,7 +8,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, '../../services/naurffxiv/src'),
+      '@': path.resolve(import.meta.dirname, '../../services/naurffxiv/src'),
     },
   },
 });
