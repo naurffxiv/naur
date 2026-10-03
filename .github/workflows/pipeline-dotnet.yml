@@ -108,6 +108,8 @@ jobs:
 
       - name: Unit Tests
         uses: ./.github/actions/run-command-with-report
+        env:
+          Parameters__DiscordToken: ${{ secrets.DISCORD_TOKEN }}
         with:
           service: ${{ inputs.service }}
           step-number: 30
