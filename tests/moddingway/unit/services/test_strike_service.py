@@ -33,6 +33,8 @@ async def test_apply_punishment(
     create_db_user,
 ):
     mocked_user = mocker.Mock()
+    mocked_author = mocker.Mock(spec=discord.Member)
+    mocked_author.id = 99
     mocked_db_user = create_db_user(get_strike_points=total_points)
     mocked_ban_member = mocker.patch("moddingway.services.ban_service.ban_member")
     mocked_ban_user = mocker.patch("moddingway.services.ban_service.ban_user")
@@ -43,7 +45,7 @@ async def test_apply_punishment(
     mocked_exile_user = mocker.patch("moddingway.services.exile_service.exile_user")
 
     res = await strike_service._apply_punishment(
-        mocked_embed, mocked_user, mocked_db_user, previous_points
+        mocked_embed, mocked_user, mocked_db_user, previous_points, mocked_author
     )
     if total_points >= PERMANENT_BAN_STRIKE_THRESHOLD:
         mocked_ban_member.assert_called_once_with(
@@ -64,6 +66,7 @@ async def test_apply_punishment(
                 mocked_user,
                 timedelta(days=punishment_days),
                 mocker.ANY,
+                author=mocked_author,
             )
     assert res == expected_punishment
 
@@ -199,5 +202,5 @@ async def test_add_strike(
     mocked_update_user_strike_points.assert_called_with(mocked_db_user)
 
     mocked__apply_punishment.assert_called_with(
-        mocked_logging_embed, mocked_user, mocked_db_user, 0
+        mocked_logging_embed, mocked_user, mocked_db_user, 0, mocked_author
     )
