@@ -16,7 +16,7 @@ export function LoginButton({ callbackUrl }: LoginButtonProps): ReactElement {
           logError("LoginPage:ManualLoginFailed", err),
         )
       }
-      className="flex items-center justify-center w-full gap-2 px-6 py-3 text-lg font-medium transition-colors bg-blue-600 rounded hover:bg-blue-700"
+      className="flex items-center justify-center w-full gap-2 px-6 py-3 text-lg font-medium transition-colors bg-blue-600 rounded-sm hover:bg-blue-700"
     >
       Sign in with Discord
     </button>
