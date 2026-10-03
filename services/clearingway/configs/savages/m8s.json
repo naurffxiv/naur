@@ -1,0 +1,27 @@
+{
+  "ids": [100],
+  "name": "M8S",
+  "difficulty": "Savage",
+  "roles": [
+    {
+      "name": "M8S Cleared",
+      "type": "Cleared",
+      "color": "0x979c9f"
+    },
+    {
+      "name": "M8S Reclear",
+      "type": "Reclear",
+      "color": "0x979c9f"
+    },
+    {
+      "name": "M8S Prog",
+      "type": "Prog",
+      "color": "0x979c9f"
+    },
+    {
+      "name": "M8S C4X",
+      "type": "C4X",
+      "color": "0x979c9f"
+    }
+  ]
+}

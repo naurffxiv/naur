@@ -1,0 +1,27 @@
+{
+  "ids": [99],
+  "name": "M7S",
+  "difficulty": "Savage",
+  "roles": [
+    {
+      "name": "M7S Cleared",
+      "type": "Cleared",
+      "color": "0x979c9f"
+    },
+    {
+      "name": "M7S Reclear",
+      "type": "Reclear",
+      "color": "0x979c9f"
+    },
+    {
+      "name": "M7S Prog",
+      "type": "Prog",
+      "color": "0x979c9f"
+    },
+    {
+      "name": "M7S C4X",
+      "type": "C4X",
+      "color": "0x979c9f"
+    }
+  ]
+}

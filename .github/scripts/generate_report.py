@@ -12,6 +12,7 @@ ORDERED_SERVICES = [
     "moddingway",
     "authingway",
     "findingway",
+    "clearingway",
 ]
 
 CHECK_MAPPING = {
