@@ -3,3 +3,42 @@ packages:
   - "packages/shared"
   - "tests/e2e"
   - "tests/naurffxiv"
+
+# Core resolution and hoisting (moved from .npmrc)
+shamefullyHoist: false
+strictPeerDependencies: true
+autoInstallPeers: true
+engineStrict: true
+
+# Modern Monorepo Optimization
+dedupePeerDependents: true
+resolvePeersFromWorkspaceRoot: true
+
+# Security & Reliability
+verifyStoreIntegrity: true
+
+# Moved from package.json's "pnpm" field, which v11 no longer reads
+overrides:
+  "@types/react": "19.2.18"
+  "@types/react-dom": "19.2.4"
+  rollup: ">=4.59.0"
+  vite: "^8.2.0"
+  js-yaml: "^4.3.0"
+  brace-expansion: "5.0.8"
+  "brace-expansion@^1.1.7": "1.1.18"
+  "next>postcss": "8.5.18"
+  "sharp@<0.35.0": "0.35.3"
+  flatted: "3.4.2"
+  ajv: "6.14.0"
+  "minimatch@^3.1.0": "3.1.5"
+  "minimatch@^9.0.5": "9.0.7"
+  "picomatch@^2.3.0": "2.3.2"
+  "picomatch@^4.0.0": "4.0.4"
+  "yaml@^2.8.0": "2.8.3"
+
+# Replaces onlyBuiltDependencies (removed in v11)
+allowBuilds:
+  "@parcel/watcher": true
+  esbuild: true
+  sharp: true
+  unrs-resolver: true
