@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"os"
 	"regexp"
@@ -151,32 +152,37 @@ func splitListingIntoTokens(listing string) ([]string, error) {
 	return resTokens, nil
 }
 
-func (t *Tokenizer) Init() {
+func newRedisClient(opts *redis.Options) *redis.Client {
+	opts.ContextTimeoutEnabled = true
+	return redis.NewClient(opts)
+}
+
+func (t *Tokenizer) Init() error {
 	redisPw, ok := os.LookupEnv("REDIS_PASSWORD")
 	redisUser, userOk := os.LookupEnv("REDIS_USER")
 
 	if !userOk {
-		panic("You must supply a REDIS_USER to start!")
+		return errors.New("REDIS_USER is not set")
 	}
 	if !ok {
-		panic("You must supply a REDIS_PASSWORD to start!")
+		return errors.New("REDIS_PASSWORD is not set")
 	}
 
 	cert, err := tls.LoadX509KeyPair("naur.crt", "naur.key")
 	if err != nil {
-		panic(fmt.Errorf("error loading certificates %s", err))
+		return fmt.Errorf("error loading certificates: %w", err)
 	}
 
 	caCert, err := os.ReadFile("hyddwn-ca.crt")
 	if err != nil {
-		panic(fmt.Errorf("error loading CA certificate %s", err))
+		return fmt.Errorf("error loading CA certificate: %w", err)
 	}
 	caPool := x509.NewCertPool()
 	if !caPool.AppendCertsFromPEM(caCert) {
-		panic("Failed to append CA certificate")
+		return errors.New("failed to append CA certificate")
 	}
 
-	t.rdb = redis.NewClient(&redis.Options{
+	t.rdb = newRedisClient(&redis.Options{
 		Addr:     "redis.hyddwn.net:6380",
 		Username: redisUser,
 		Password: redisPw,
@@ -185,17 +191,15 @@ func (t *Tokenizer) Init() {
 			RootCAs:      caPool,
 		},
 	})
-
-	ctx := context.Background()
-	_, err = t.rdb.Ping(ctx).Result()
-	if err != nil {
-		panic(err)
-	}
+	return nil
 }
 
-func (t *Tokenizer) TokenizeListings(listings *ffxiv.Listings) {
+func (t *Tokenizer) Ping(ctx context.Context) error {
+	return t.rdb.Ping(ctx).Err()
+}
+
+func (t *Tokenizer) TokenizeListings(ctx context.Context, listings *ffxiv.Listings) error {
 	currentDayNumber := NowToInt()
-	ctx := context.Background()
 
 	pfDescriptions := []string{}
 
@@ -207,14 +211,14 @@ func (t *Tokenizer) TokenizeListings(listings *ffxiv.Listings) {
 	prevSeenKey := fmt.Sprintf("seen:%d", currentDayNumber-1)
 	seenExists, err := t.rdb.Exists(ctx, seenKey).Result()
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	var added int64
 	for _, item := range scopedListings.Listings {
 		seenYesterday, err := t.rdb.SIsMember(ctx, prevSeenKey, item.Id).Result()
 		if err != nil {
-			panic(err)
+			return err
 		}
 		if seenYesterday {
 			continue
@@ -222,7 +226,7 @@ func (t *Tokenizer) TokenizeListings(listings *ffxiv.Listings) {
 
 		added, err = t.rdb.SAdd(ctx, seenKey, item.Id).Result()
 		if err != nil {
-			panic(err)
+			return err
 		}
 		if added == 0 {
 			continue // already counted today
@@ -232,33 +236,37 @@ func (t *Tokenizer) TokenizeListings(listings *ffxiv.Listings) {
 	}
 
 	if seenExists == 0 {
-		t.rdb.Expire(ctx, seenKey, 24*32*time.Hour)
+		if err := t.rdb.Expire(ctx, seenKey, 24*32*time.Hour).Err(); err != nil {
+			return err
+		}
 	}
 
 	// Store description list into redis
 	descriptionKey := fmt.Sprintf("descriptions:%d", currentDayNumber)
 	todayExists, err := t.rdb.Exists(ctx, descriptionKey).Result()
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	for _, description := range pfDescriptions {
 		entry := fmt.Sprintf("%d\t%s", time.Now().Unix(), description)
 		err = t.rdb.RPush(ctx, descriptionKey, entry).Err()
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
 
 	if todayExists == 0 {
-		t.rdb.Expire(ctx, descriptionKey, 24*32*time.Hour)
+		if err := t.rdb.Expire(ctx, descriptionKey, 24*32*time.Hour).Err(); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
-func (t *Tokenizer) GatherTokens(lookback int) []Token {
+func (t *Tokenizer) GatherTokens(ctx context.Context, lookback int) ([]Token, error) {
 
 	tokenSum := make(map[string]int)
-	ctx := context.Background()
 
 	todayDayNumber := NowToInt()
 
@@ -267,7 +275,7 @@ func (t *Tokenizer) GatherTokens(lookback int) []Token {
 
 		descriptions, err := t.rdb.LRange(ctx, fmt.Sprintf("descriptions:%d", prevDayNumber), 0, -1).Result()
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 
 		for _, entry := range descriptions {
@@ -289,33 +297,31 @@ func (t *Tokenizer) GatherTokens(lookback int) []Token {
 		return res[i].Count > res[j].Count
 	})
 
-	return res
+	return res, nil
 }
 
-func (t *Tokenizer) GatherListingCount(lookback int) int64 {
-	ctx := context.Background()
+func (t *Tokenizer) GatherListingCount(ctx context.Context, lookback int) (int64, error) {
 	todayDayNumber := NowToInt()
 	var total int64
 	for i := range lookback {
 		count, err := t.rdb.SCard(ctx, fmt.Sprintf("seen:%d", todayDayNumber-i)).Result()
 		if err != nil {
-			panic(err)
+			return 0, err
 		}
 		total += count
 	}
-	return total
+	return total, nil
 }
 
-func (t *Tokenizer) CreateCsv(lookback int, buf *bytes.Buffer) {
+func (t *Tokenizer) CreateCsv(ctx context.Context, lookback int, buf *bytes.Buffer) error {
 
 	todayDayNumber := NowToInt()
 	csvwriter := csv.NewWriter(buf)
 
 	err := csvwriter.Write([]string{"Timestamp", "Description"})
 	if err != nil {
-		panic(err)
+		return err
 	}
-	ctx := context.Background()
 
 	for i := range lookback {
 		prevDayNumber := todayDayNumber - i
@@ -323,17 +329,18 @@ func (t *Tokenizer) CreateCsv(lookback int, buf *bytes.Buffer) {
 		getResult, err := t.rdb.LRange(ctx, fmt.Sprintf("descriptions:%d", prevDayNumber), 0, -1).Result()
 
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		for _, entry := range getResult {
 			timestampStr, description := parseEntry(entry, prevDayNumber)
 			err = csvwriter.Write([]string{timestampStr, strings.ReplaceAll(description, "\n", "")})
 			if err != nil {
-				panic(err)
+				return err
 			}
 		}
 	}
 
 	csvwriter.Flush()
+	return csvwriter.Error()
 }
