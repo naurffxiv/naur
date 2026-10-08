@@ -229,6 +229,10 @@ func (f *Fflogs) Token() (*oauth2.Token, error) {
 		_ = resp.Body.Close()
 	}()
 
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("fflogs oauth2 token request returned HTTP %d", resp.StatusCode)
+	}
+
 	returnedFflogsToken := &fflogsAccessToken{}
 	err = json.NewDecoder(resp.Body).Decode(returnedFflogsToken)
 	if err != nil {
@@ -237,6 +241,10 @@ func (f *Fflogs) Token() (*oauth2.Token, error) {
 
 	if returnedFflogsToken.Error != "" {
 		return nil, fmt.Errorf("token error %v: %v", returnedFflogsToken.Error, returnedFflogsToken.ErrorDescription)
+	}
+
+	if returnedFflogsToken.AccessToken == "" {
+		return nil, fmt.Errorf("fflogs oauth2 token response contained no access token")
 	}
 
 	token := &oauth2.Token{}
