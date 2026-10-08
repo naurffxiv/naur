@@ -44,7 +44,7 @@ export default function MDXComponents(
       }
       return (
         <>
-          <h1 className="scroll-mt-[5.5rem]" {...props} />
+          <h1 className="scroll-mt-22" {...props} />
           {isFirst && <LastUpdated lastUpdated={lastUpdated} />}
         </>
       );

@@ -34,7 +34,7 @@ function Text(): JSX.Element {
 
 export default function Header(): JSX.Element {
   return (
-    <div className="grid mx-auto max-w-screen-2xl md:grid-cols-2 2xl:px-6">
+    <div className="grid mx-auto max-w-(--breakpoint-2xl) md:grid-cols-2 2xl:px-6">
       <div className="px-5 py-16 bg-center bg-header-default md:bg-none md:bg-left">
         <div className="max-w-3xl mx-auto mr-0">
           <div className="max-w-fit">
@@ -42,7 +42,7 @@ export default function Header(): JSX.Element {
           </div>
         </div>
       </div>
-      <div className="max-w-screen-md">
+      <div className="max-w-(--breakpoint-md)">
         <div className="hidden h-full bg-center bg-cover md:block bg-header-wide">
           <div className="h-full bg-header-right-gradient 2xl:bg-header-right-ultrawide-gradient" />
         </div>
