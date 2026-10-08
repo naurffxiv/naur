@@ -2,8 +2,8 @@ import chalk from "chalk";
 import fs from "fs";
 import path from "path";
 
-const ROUTES_FILE = path.resolve("src/auth/middleware/routes.config.ts");
-const MIDDLEWARE_FILE = path.resolve("src/middleware.ts");
+const ROUTES_FILE = path.resolve("src/auth/proxy/routes.config.ts");
+const PROXY_FILE = path.resolve("src/proxy.ts");
 
 function extractRoutes(): string[] {
   const content = fs.readFileSync(ROUTES_FILE, "utf8");
@@ -47,7 +47,7 @@ function generateUpdatedMatchers(
   fromRoutes: string[],
 ): string[] {
   const seen = new Set(existing);
-  // Add /:path* suffix to each route (Next.js middleware matcher syntax)
+  // Add /:path* suffix to each route (Next.js proxy matcher syntax)
   for (const route of fromRoutes.map((r) => `${r}/:path*`)) {
     if (!seen.has(route)) {
       existing.push(route);
@@ -60,16 +60,16 @@ function generateUpdatedMatchers(
 function syncMatchers(): void {
   const routes = extractRoutes();
 
-  const middlewareContent = fs.readFileSync(MIDDLEWARE_FILE, "utf8");
+  const proxyContent = fs.readFileSync(PROXY_FILE, "utf8");
 
   // Matches: matcher: [ ... ]
   // Captures everything between the opening and closing brackets of the matcher array
   // [\s\S]*? = any character (including newlines), non-greedy match to find the shortest match
   const matcherRegex = /matcher:\s*\[([\s\S]*?)\]/;
-  const match = matcherRegex.exec(middlewareContent);
+  const match = matcherRegex.exec(proxyContent);
 
   if (!match) {
-    console.error("Could not find matcher array in middleware.ts");
+    console.error("Could not find matcher array in proxy.ts");
     process.exit(1);
   }
 
@@ -83,20 +83,23 @@ function syncMatchers(): void {
   // Merge existing matchers with new routes (avoiding duplicates)
   const combinedMatchers = generateUpdatedMatchers(existingMatchers, routes);
 
+  // Match the file's existing line ending to avoid mixed LF/CRLF output
+  const eol = proxyContent.includes("\r\n") ? "\r\n" : "\n";
+
   // Reconstruct the matcher array with proper formatting
-  const newBlock = `matcher: [\n${combinedMatchers
+  const newBlock = `matcher: [${eol}${combinedMatchers
     // Format each route with indentation, quotes, and trailing comma
     .map((r) => `    "${r}",`)
     // Join routes with newlines for readability
-    .join("\n")}\n  ]`;
+    .join(eol)}${eol}  ]`;
 
-  // Replace the old matcher array with the new one in middleware.ts
-  const updatedMiddleware = middlewareContent.replace(matcherRegex, newBlock);
+  // Replace the old matcher array with the new one in proxy.ts
+  const updatedProxy = proxyContent.replace(matcherRegex, newBlock);
 
-  fs.writeFileSync(MIDDLEWARE_FILE, updatedMiddleware, "utf8");
+  fs.writeFileSync(PROXY_FILE, updatedProxy, "utf8");
   if (process.env.NODE_ENV === "development") {
     console.log(
-      chalk.green(" Matchers appended into middleware.ts without duplicates."),
+      chalk.green(" Matchers appended into proxy.ts without duplicates."),
     );
   }
 }

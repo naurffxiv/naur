@@ -6,9 +6,9 @@ import readline from "readline";
 
 const cwd = process.cwd();
 
-const ROUTES_FILE = path.join(cwd, "src/auth/middleware/routes.config.ts");
+const ROUTES_FILE = path.join(cwd, "src/auth/proxy/routes.config.ts");
 const ROUTE_ROLES_FILE = path.join(cwd, "src/auth/core/routeRoles.ts");
-const MIDDLEWARE_FILE = path.join(cwd, "src/middleware.ts");
+const PROXY_FILE = path.join(cwd, "src/proxy.ts");
 
 function readFileOrExit(filePath: string, label: string): string {
   if (!fs.existsSync(filePath)) {
@@ -49,15 +49,15 @@ function getProtectedRoutes(): string[] {
 }
 
 /**
- * Extracts matchers from middleware.ts
+ * Extracts matchers from proxy.ts
  * Searches for the matcher array configuration
  */
-function getMiddlewareMatchers(): string[] {
-  const content = readFileOrExit(MIDDLEWARE_FILE, "Middleware");
+function getProxyMatchers(): string[] {
+  const content = readFileOrExit(PROXY_FILE, "Proxy");
 
   // Matches: matcher: [ ... ]
-  // ((?:.|\n)*?) = non-greedy capture of any character including newlines
-  const match = /matcher:\s*\[((?:.|\n)*?)\]/m.exec(content);
+  // [\s\S]*? = non-greedy capture of any character including newlines
+  const match = /matcher:\s*\[([\s\S]*?)\]/m.exec(content);
 
   if (!match) return [];
   // TODO(#346): Centralize regex parsing logic in shared helper
@@ -133,18 +133,14 @@ function askUserYesNo(question: string): Promise<boolean> {
 
 async function validate(): Promise<void> {
   const protectedRoutes = getProtectedRoutes();
-  const matchers = getMiddlewareMatchers();
+  const matchers = getProxyMatchers();
   const routeRoles = getRouteRoleKeys();
 
   const expectedMatchers = protectedRoutes.map((r) => `${r}/:path*`);
 
   // Find discrepancies between all three configuration sources
-  const missingInMiddleware = expectedMatchers.filter(
-    (r) => !matchers.includes(r),
-  );
-  const extraInMiddleware = matchers.filter(
-    (m) => !expectedMatchers.includes(m),
-  );
+  const missingInProxy = expectedMatchers.filter((r) => !matchers.includes(r));
+  const extraInProxy = matchers.filter((m) => !expectedMatchers.includes(m));
   const missingInRouteRoles = protectedRoutes.filter(
     (r) => !routeRoles.includes(r),
   );
@@ -168,9 +164,9 @@ async function validate(): Promise<void> {
   }
 
   if (duplicateMatchers.length) {
-    console.log(chalk.red("Duplicate matchers in middleware config:\n"));
+    console.log(chalk.red("Duplicate matchers in proxy config:\n"));
     duplicateMatchers.forEach((r) =>
-      console.log("  -", formatPathWithSource(r, MIDDLEWARE_FILE)),
+      console.log("  -", formatPathWithSource(r, PROXY_FILE)),
     );
     hasProblems = true;
   }
@@ -183,22 +179,22 @@ async function validate(): Promise<void> {
     hasProblems = true;
   }
 
-  if (missingInMiddleware.length) {
-    console.log(chalk.red("Missing matchers in middleware.ts:\n"));
-    missingInMiddleware.forEach((r) =>
+  if (missingInProxy.length) {
+    console.log(chalk.red("Missing matchers in proxy.ts:\n"));
+    missingInProxy.forEach((r) =>
       console.log("  -", formatPathWithSource(r, ROUTES_FILE)),
     );
     hasProblems = true;
 
     console.log(chalk.cyan("The following matchers will be added:\n"));
-    missingInMiddleware.forEach((m) => console.log(`  • ${m}`));
+    missingInProxy.forEach((m) => console.log(`  • ${m}`));
 
     const shouldFix = await askUserYesNo(
       "Would you like to auto-fix matchers now?",
     );
     if (shouldFix) {
       console.log(chalk.yellow("Running matcher sync script...\n"));
-      execSync("npx tsx scripts/middleware/syncMatchers.ts", {
+      execSync("npx tsx scripts/proxy/syncMatchers.ts", {
         stdio: "inherit",
       });
       console.log(chalk.green("Matchers fixed. Please re-run the check.\n"));
@@ -208,10 +204,10 @@ async function validate(): Promise<void> {
     }
   }
 
-  if (extraInMiddleware.length) {
+  if (extraInProxy.length) {
     console.log(chalk.yellow("Extra matchers not in protectedRoutes:\n"));
-    extraInMiddleware.forEach((r) =>
-      console.log("  -", formatPathWithSource(r, MIDDLEWARE_FILE)),
+    extraInProxy.forEach((r) =>
+      console.log("  -", formatPathWithSource(r, PROXY_FILE)),
     );
     hasProblems = true;
   }

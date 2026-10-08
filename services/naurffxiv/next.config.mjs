@@ -2,23 +2,18 @@
 import path from "path";
 import { fileURLToPath } from "url";
 import createMDX from "@next/mdx";
-import rehypeAutolinkHeadings from "rehype-autolink-headings";
-import rehypeImgSize from "rehype-img-size";
-import rehypeSlug from "rehype-slug";
-import remarkFrontmatter from "remark-frontmatter";
-import remarkToc from "remark-toc";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const withMDX = createMDX({
   extension: /\.mdx?$/,
   options: {
-    remarkPlugins: [remarkFrontmatter, remarkToc],
+    remarkPlugins: ["remark-frontmatter", "remark-toc"],
     rehypePlugins: [
-      rehypeSlug,
-      [rehypeImgSize, { dir: "public" }],
+      "rehype-slug",
+      ["rehype-img-size", { dir: "public" }],
       [
-        rehypeAutolinkHeadings,
+        "rehype-autolink-headings",
         {
           behaviour: "append",
           properties: {

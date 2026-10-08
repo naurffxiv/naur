@@ -1,7 +1,7 @@
 import { logError, logInfo, logWarn } from "@/lib/logger/logger";
 
 import { DEBUG_FLAGS } from "@auth/core/config";
-import type { LogAccessDeniedParams } from "@auth/types/middleware";
+import type { LogAccessDeniedParams } from "@auth/types/proxy";
 import type { NextRequest } from "next/server";
 
 export function logDiscordCallbackMetadata(request: NextRequest): void {

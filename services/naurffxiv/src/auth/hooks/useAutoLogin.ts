@@ -20,13 +20,17 @@ export function useAutoLogin(
     if (status !== "unauthenticated" || !autoLogin) return;
     if (errorCode === "SessionExpired") return;
 
-    setAutoTriggered(true);
-    logDebug("LoginPage:AutoLoginTriggered");
+    (async (): Promise<void> => {
+      setAutoTriggered(true);
+      logDebug("LoginPage:AutoLoginTriggered");
 
-    signIn("discord", { callbackUrl }).catch((err) => {
-      logError("LoginPage:AutoLoginFailed", err);
-      setAutoTriggered(false);
-    });
+      try {
+        await signIn("discord", { callbackUrl });
+      } catch (err) {
+        logError("LoginPage:AutoLoginFailed", err);
+        setAutoTriggered(false);
+      }
+    })();
   }, [status, autoLogin, callbackUrl, errorCode]);
 
   return autoTriggered;
