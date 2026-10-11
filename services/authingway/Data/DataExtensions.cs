@@ -2,7 +2,9 @@
 // The NAUR Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Naur.Authingway.Data.Entities;
 using Naur.Authingway.Data.Extensions;
 using Naur.Authingway.Data.Workers;
 
@@ -28,6 +30,8 @@ public static class DataExtensions
     {
         builder.AddNpgsqlDbContext<AppDbContext>("authingwaydb", configureDbContextOptions: options =>
         {
+            options.UseOpenIddict<Application, Authorization, Scope, Token, Guid>();
+
             if (builder.Environment.IsDevelopment())
             {
                 options.EnableSensitiveDataLogging();
