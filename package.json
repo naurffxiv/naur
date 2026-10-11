@@ -15,18 +15,20 @@
   "license": "MIT",
   "type": "commonjs",
   "devDependencies": {
+    "@eslint/js": "^9.24.0",
     "@j178/prek": "^0.4.12",
-    "@typescript-eslint/eslint-plugin": "^8.66.0",
-    "@typescript-eslint/parser": "^8.66.0",
-    "eslint": "^8.57.1",
+    "eslint": "^9.24.0",
+    "globals": "^17.9.0",
     "prettier": "^3.9.6",
     "turbo": "^2.10.8",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.66.0"
   },
   "scripts": {
     "prepare": "prek install",
     "build:naur": "turbo run build --filter=naurffxiv",
     "dev:naur": "pnpm --filter naurffxiv dev",
+    "lint": "eslint .",
     "lint:naur": "pnpm --filter naurffxiv lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo test",
