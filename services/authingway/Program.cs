@@ -4,6 +4,7 @@
 
 using Naur.Authingway.Core;
 using Naur.Authingway.Data;
+using Naur.Authingway.Identity;
 
 namespace Naur.Authingway;
 
@@ -21,7 +22,8 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.ConfigureCore()
-            .ConfigureData();
+            .ConfigureData()
+            .ConfigureIdentity();
 
         var app = builder.Build();
 
