@@ -11,6 +11,36 @@ settings = get_settings()
 logger = logging.getLogger(__name__)
 
 
+def get_user_by_internal_id(user_id: int) -> User | None:
+    conn = DatabaseConnection()
+
+    with conn.get_cursor() as cursor:
+        query = """
+        SELECT
+        u.userid, u.discordUserId, u.discordGuildId, u.userRole, u.temporaryPoints, u.permanentPoints, u.lastInfractionTimestamp, u.isBanned
+        FROM users u
+        where u.userid = %s
+        """
+
+        params = (user_id,)
+
+        cursor.execute(query, params)
+
+        res = cursor.fetchone()
+
+        if res:
+            return User(
+                user_id=res[0],
+                discord_user_id=res[1],
+                discord_guild_id=res[2],
+                user_role=res[3],
+                temporary_points=res[4],
+                permanent_points=res[5],
+                last_infraction_timestamp=res[6],
+                is_banned=res[7],
+            )
+
+
 def get_user(discord_user_id: int) -> User | None:
     conn = DatabaseConnection()
 

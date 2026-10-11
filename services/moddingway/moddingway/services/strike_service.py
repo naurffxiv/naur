@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import discord
 
 from moddingway.constants import (
+    MAX_STRIKE_REASON_LENGTH,
     MINOR_INFRACTION_POINTS,
     MODERATE_INFRACTION_POINTS,
     PERMANENT_BAN_STRIKE_THRESHOLD,
@@ -132,6 +133,113 @@ async def delete_strike(logging_embed: discord.Embed, strike_id: int) -> str:
     )
 
     return f"Successfully deleted strike {strike_id}"
+
+
+async def edit_strike(
+    logging_embed: discord.Embed,
+    editor: discord.User | discord.Member,
+    client: discord.Client,
+    strike_id: int,
+    reason: str | None,
+    severity: StrikeSeverity | None,
+) -> str:
+    strike = strikes_database.get_strike(strike_id)
+
+    # doing this because of ruff's return count limit
+    errors = []
+    if strike is None:
+        log_info_and_add_field(
+            logging_embed,
+            logger,
+            "Result",
+            "Strike not found",
+        )
+        errors.append("Strike not found in database")
+
+    if reason is None and severity is None:
+        errors.append("No updates provided. Please specify a reason and/or severity.")
+
+    if reason is not None and len(reason) > MAX_STRIKE_REASON_LENGTH:
+        errors.append(
+            f"Reason is too long (max {MAX_STRIKE_REASON_LENGTH} characters). "
+            "Please shorten the strike reason."
+        )
+
+    if len(errors) > 0:
+        return "\n".join(errors)
+
+    new_reason = reason if reason is not None else strike.reason  # ty: ignore[unresolved-attribute]
+    old_severity = strike.severity  # ty: ignore[unresolved-attribute]
+    new_severity = severity if severity is not None else old_severity
+
+    if new_severity != old_severity:
+        db_user = users_database.get_user_by_internal_id(strike.user_id)  # ty: ignore[unresolved-attribute]
+        if db_user is None:
+            return "User not found in database"
+
+        temporary_points_to_remove = 0
+        permanent_points_to_remove = 0
+
+        if old_severity == StrikeSeverity.SERIOUS:
+            permanent_points_to_remove = _get_severity_points(old_severity)
+        else:
+            temporary_points_to_remove = _get_severity_points(old_severity)
+
+        users_database.decrement_user_strike_points(
+            strike.user_id,  # ty: ignore[unresolved-attribute]
+            temporary_points_to_remove,
+            permanent_points_to_remove,
+        )
+
+        # refetch after update
+        db_user = users_database.get_user_by_internal_id(strike.user_id)  # ty: ignore[unresolved-attribute]
+        if db_user is None:
+            return "User not found in database"
+
+        _apply_strike_point_penalty(db_user, new_severity)
+        users_database.update_user_strike_points(db_user)
+
+        log_info_and_add_field(
+            logging_embed,
+            logger,
+            "Strike Point Adjustment",
+            f"<@{strike.discord_user_id}> strike severity changed from {old_severity.name} to {new_severity.name}, bringing them to {db_user.get_strike_points()} points",  # ty: ignore[unresolved-attribute]
+        )
+
+    updated = strikes_database.update_strike(
+        strike_id=strike_id,
+        reason=new_reason,
+        severity=new_severity,
+        editor_id=str(editor.id),
+        update_timestamp=datetime.now(),
+    )
+
+    if not updated:
+        return "There was an error updating the strike"
+
+    logging_embed.set_footer(text=f"Strike ID: {strike_id}")
+    if reason is not None:
+        logging_embed.add_field(name="Old reason", value=strike.reason)  # ty: ignore[unresolved-attribute]
+    if severity is not None:
+        logging_embed.add_field(name="Old severity", value=old_severity.name)
+
+    log_info_and_add_field(
+        logging_embed,
+        logger,
+        "Result",
+        "Strike updated",
+    )
+
+    strike_user = await client.fetch_user(int(strike.discord_user_id))  # ty: ignore[unresolved-attribute]
+    await send_dm(
+        logging_embed,
+        strike_user,
+        "Your strike in NA Ultimate Raiding - FFXIV has been updated.\n"
+        f"**Reason:** {new_reason}\n**Severity:** {new_severity.name}",
+        context="Strike edit",
+    )
+
+    return "Strike successfully updated"
 
 
 def _apply_strike_point_penalty(db_user: User, severity: StrikeSeverity):

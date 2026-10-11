@@ -113,4 +113,36 @@ def create_strikes_commands(bot: Bot) -> None:
             ) as logging_embed:
                 result = await decrement_strikes(bot)
                 log_info_and_add_field(logging_embed, logger, "Result", result)
-            response_message.set_string(result)
+                response_message.set_string(result)
+
+    @bot.tree.command()
+    @discord.app_commands.check(is_user_moderator)
+    @discord.app_commands.describe(
+        strike_id="ID of the strike to edit",
+        reason="Updated strike reason",
+        severity="Updated strike severity",
+    )
+    async def edit_strike(
+        interaction: discord.Interaction,
+        strike_id: int,
+        reason: str | None = None,
+        severity: StrikeSeverity | None = None,
+    ):
+        """Edit an existing strike"""
+        async with create_response_context(interaction) as response_message:
+            async with create_logging_embed(
+                interaction,
+                strike_id=strike_id,
+                reason=reason,
+                severity=severity.name if severity else None,
+            ) as logging_embed:
+                msg = await strike_service.edit_strike(
+                    logging_embed,
+                    interaction.user,
+                    interaction.client,
+                    strike_id,
+                    reason,
+                    severity,
+                )
+
+                response_message.set_string(msg)
