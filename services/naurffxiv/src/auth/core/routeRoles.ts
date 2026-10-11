@@ -4,7 +4,7 @@ import { Roles } from "@auth/core/roleConstants";
 // Maps route prefixes to Discord roles that are allowed access.
 //
 // Used for:
-// - Middleware authorization (src/auth/middleware/auth.ts)
+// - Proxy authorization (src/auth/proxy/auth.ts)
 // - UI access control (e.g. session.role-based rendering)
 //
 // NOTE: This uses **prefix matching**, so all nested routes are also protected.

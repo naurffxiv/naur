@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { extractRoleIds, getRoleName } from "@/auth/core/roleUtils";
 
 import { DEBUG_FLAGS } from "@auth/core/config";
-import { SessionToken } from "@auth/types/middleware";
+import { SessionToken } from "@auth/types/proxy";
 import { getAllowedRolesForPath } from "@auth/core/routeRoles";
 import { getToken } from "next-auth/jwt";
-import { logAccessDenied } from "@auth/middleware/authLogger";
+import { logAccessDenied } from "@auth/proxy/authLogger";
 import { logDebug } from "@/lib/logger/logger";
-import { protectedRoutes } from "@auth/middleware/routes.config";
+import { protectedRoutes } from "@auth/proxy/routes.config";
 
 //
 // Entry point for protected route access control

@@ -1,7 +1,19 @@
 "use client";
 import clsx from "clsx";
-import { useEffect, useState, type ReactElement } from "react";
+import { useSyncExternalStore, type ReactElement } from "react";
 import type { VideoEmbedProps } from "./types";
+
+function subscribe(): () => void {
+  return () => {};
+}
+
+function getHostnameSnapshot(): string {
+  return window.location.hostname;
+}
+
+function getServerHostnameSnapshot(): string {
+  return "";
+}
 
 export default function TwitchClip({
   width = "100%",
@@ -9,11 +21,11 @@ export default function TwitchClip({
   videoId,
   className,
 }: VideoEmbedProps): ReactElement | "" {
-  const [hostname, setHostname] = useState<string>("");
-
-  useEffect(() => {
-    setHostname(window.location.hostname);
-  }, []);
+  const hostname = useSyncExternalStore(
+    subscribe,
+    getHostnameSnapshot,
+    getServerHostnameSnapshot,
+  );
 
   if (!hostname) return "";
 
