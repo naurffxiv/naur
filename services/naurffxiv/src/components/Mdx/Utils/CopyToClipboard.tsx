@@ -22,7 +22,7 @@ export const CopyToClipboard = ({
       <button
         aria-label="Copy code"
         type="button"
-        className="absolute w-10 h-10 p-1 transition-colors rounded right-2 top-2 hover:bg-gray-700 active:bg-gray-600"
+        className="absolute w-10 h-10 p-1 transition-colors rounded-sm right-2 top-2 hover:bg-gray-700 active:bg-gray-600"
         onClick={onCopy}
       >
         <ContentCopy />
