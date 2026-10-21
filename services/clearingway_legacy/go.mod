@@ -1,6 +1,6 @@
 module github.com/Veraticus/clearingway
 
-go 1.26.0
+go 1.26.10
 
 require (
 	github.com/Vivino/go-autocomplete-trie v0.0.0-20230301121706-da951497d081
