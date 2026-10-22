@@ -11,7 +11,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o findingway .
 
 FROM alpine:3.22
-RUN apk add --no-cache ca-certificates && adduser -D appuser
+RUN apk add --no-cache --upgrade ca-certificates && adduser -D appuser
 WORKDIR /findingway
 COPY --from=builder /src/findingway .
 COPY --from=builder /src/config.yaml .
