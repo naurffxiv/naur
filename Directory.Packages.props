@@ -27,6 +27,7 @@
     <PackageVersion Include="TUnit.Assertions" Version="1.61.38" />
   </ItemGroup>
   <ItemGroup Label="Transitive Pins">
+    <PackageVersion Include="MessagePack" Version="2.5.303" />
     <PackageVersion Include="Microsoft.OpenApi" Version="2.11.0" />
   </ItemGroup>
 </Project>
