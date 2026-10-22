@@ -52,7 +52,7 @@ WORKDIR /app
 
 # Install curl for healthchecks and clean up in same layer
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends curl && \
+    apt-get install -y --no-install-recommends curl ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production
