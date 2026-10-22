@@ -1,6 +1,6 @@
 module clearingway
 
-go 1.25
+go 1.26.10
 
 require (
 	github.com/bwmarrin/discordgo v0.29.0
