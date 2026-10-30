@@ -5,9 +5,13 @@
  * Non-QA PRs (Needs QA unchecked) always pass immediately.
  */
 
+const shared = require("../shared.js");
+
+const REVIEW_PROPAGATION_DELAY_MS = 5000;
+const REVIEW_PROPAGATION_RETRIES = 3;
+
 module.exports = async ({ github, context, core }) => {
   try {
-    const shared = require("../shared.js");
     const pr = context.payload.pull_request;
     const body = pr.body || "";
     const sha = pr.head.sha;
@@ -33,23 +37,6 @@ module.exports = async ({ github, context, core }) => {
       return;
     }
 
-    const reviews = await github.paginate(github.rest.pulls.listReviews, {
-      ...shared.repoParams(context),
-      pull_number: pr.number,
-    });
-
-    // Last non-comment state per reviewer is the one that counts.
-    const latestByReviewer = new Map();
-    for (const review of reviews) {
-      if (review.state === "COMMENTED" || !review.user) continue;
-      if (review.user.login === pr.user.login) continue;
-      latestByReviewer.set(review.user.login, review.state);
-    }
-
-    const approvers = [...latestByReviewer.entries()]
-      .filter(([, state]) => state === "APPROVED")
-      .map(([login]) => login);
-
     const qaMemberLogins = await shared.getTeamMemberLogins(
       github,
       context,
@@ -64,16 +51,72 @@ module.exports = async ({ github, context, core }) => {
       false,
     );
 
-    const hasQAApproval = approvers.some((login) => qaMemberLogins.has(login));
-    // "Dev approval" means any approver outside the QA and CM teams.
-    // Two QA members approving does NOT satisfy the gate
-    const hasDevApproval = approvers.some(
-      (login) => !qaMemberLogins.has(login) && !cmMemberLogins.has(login),
-    );
+    // On pull_request_review events, GitHub's API may not yet reflect the
+    // new review that triggered this run. Retry with backoff to handle this
+    // propagation delay.
+    const isReviewEvent = context.eventName === "pull_request_review";
+    const maxAttempts = isReviewEvent ? REVIEW_PROPAGATION_RETRIES : 1;
 
-    console.log(
-      `QA gate: QA approval=${hasQAApproval}, dev approval=${hasDevApproval}`,
-    );
+    let hasQAApproval = false;
+    let hasDevApproval = false;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      if (attempt > 1) {
+        console.log(
+          `QA approval not yet visible, retrying in ${REVIEW_PROPAGATION_DELAY_MS / 1000}s... (attempt ${attempt}/${maxAttempts})`,
+        );
+        await new Promise((resolve) =>
+          setTimeout(resolve, REVIEW_PROPAGATION_DELAY_MS),
+        );
+      }
+
+      const reviews = await github.paginate(github.rest.pulls.listReviews, {
+        ...shared.repoParams(context),
+        pull_number: pr.number,
+      });
+
+      // Last non-comment state per reviewer is the one that counts.
+      const latestByReviewer = new Map();
+      for (const review of reviews) {
+        if (review.state === "COMMENTED" || !review.user) continue;
+        if (review.user.login === pr.user.login) continue;
+        latestByReviewer.set(review.user.login, review.state);
+      }
+
+      const approvers = [...latestByReviewer.entries()]
+        .filter(([, state]) => state === "APPROVED")
+        .map(([login]) => login);
+
+      hasQAApproval = approvers.some((login) => qaMemberLogins.has(login));
+      // "Dev approval" means any approver outside the QA and CM teams.
+      // Two QA members approving does NOT satisfy the gate
+      hasDevApproval = approvers.some(
+        (login) => !qaMemberLogins.has(login) && !cmMemberLogins.has(login),
+      );
+
+      console.log(
+        `QA gate (attempt ${attempt}): QA approval=${hasQAApproval}, dev approval=${hasDevApproval}`,
+      );
+
+      if (hasQAApproval && hasDevApproval) break;
+
+      // If the triggering review's approval type is already reflected
+      // in the API, no point retrying.
+      if (isReviewEvent) {
+        const triggeringLogin = context.payload.review?.user?.login;
+        const triggeringState = context.payload.review?.state?.toUpperCase();
+        if (
+          triggeringLogin &&
+          triggeringState === "APPROVED" &&
+          latestByReviewer.get(triggeringLogin) === "APPROVED"
+        ) {
+          console.log(
+            "Triggering review is now visible in API. Stopping retry.",
+          );
+          break;
+        }
+      }
+    }
 
     const gatePass = hasQAApproval && hasDevApproval;
 
@@ -121,20 +164,13 @@ module.exports = async ({ github, context, core }) => {
 
     if (gatePass) {
       console.log("✅ QA gate passed.");
-      try {
-        await github.rest.repos.createCommitStatus({
-          ...shared.repoParams(context),
-          sha,
-          state: "success",
-          context: "QA Approval Gate",
-          description: "Code reviewer + QA team approved.",
-        });
-      } catch (error) {
-        console.warn(
-          `Failed to set QA Approval Gate status to success for sha ${sha}:`,
-          error.message,
-        );
-      }
+      await github.rest.repos.createCommitStatus({
+        ...shared.repoParams(context),
+        sha,
+        state: "success",
+        context: "QA Approval Gate",
+        description: "Code reviewer + QA team approved.",
+      });
     } else {
       let pendingDescription;
       if (!hasDevApproval && !hasQAApproval) {
@@ -148,27 +184,19 @@ module.exports = async ({ github, context, core }) => {
           "Code reviewer approved. Waiting for a QA team approval.";
       }
       console.log(`QA gate pending: ${pendingDescription}`);
-      try {
-        await github.rest.repos.createCommitStatus({
-          ...shared.repoParams(context),
-          sha,
-          state: "pending",
-          context: "QA Approval Gate",
-          description: pendingDescription.slice(0, 140),
-        });
-      } catch (error) {
-        console.warn(
-          `Failed to set QA Approval Gate status to pending for sha ${sha}:`,
-          error.message,
-        );
-      }
+      await github.rest.repos.createCommitStatus({
+        ...shared.repoParams(context),
+        sha,
+        state: "pending",
+        context: "QA Approval Gate",
+        description: pendingDescription.slice(0, 140),
+      });
     }
   } catch (error) {
     console.error("QA Approval Gate Error:", error);
     try {
       const sha = context.payload.pull_request?.head?.sha;
       if (sha) {
-        const shared = require("../shared.js");
         await github.rest.repos.createCommitStatus({
           ...shared.repoParams(context),
           sha,

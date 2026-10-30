@@ -21,6 +21,7 @@ try {
     # Get service paths from registry
     $moddingwayPath = Get-ServicePath -ServiceName "Moddingway" -ProjectRoot $ProjectRoot
     $findingwayPath = Get-ServicePath -ServiceName "Findingway" -ProjectRoot $ProjectRoot
+    $clearingwayPath = Get-ServicePath -ServiceName "Clearingway" -ProjectRoot $ProjectRoot
 
     # .NET services to lint
     $dotnetServices = @("AppHost", "Authingway")
@@ -74,6 +75,9 @@ try {
         if ($Fix) { golangci-lint run --fix } else { golangci-lint run }
     }
 
+    Run-Lint -Name "Clearingway (Go)" -Path $clearingwayPath -Command {
+        if ($Fix) { golangci-lint run --fix } else { golangci-lint run }
+    }
 
     Run-Lint -Name ".NET Services" -Path "." -Command {
         foreach ($serviceName in $dotnetServices) {

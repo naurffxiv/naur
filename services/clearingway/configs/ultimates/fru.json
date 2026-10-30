@@ -1,0 +1,32 @@
+{
+  "ids": [1079],
+  "name": "Futures Rewritten (Ultimate)",
+  "difficulty": "Ultimate",
+  "roles": [
+    {
+      "name": "Fru Cleared",
+      "type": "Cleared",
+      "color": "0xa3f8e3"
+    },
+    {
+      "name": "Fru Reclear",
+      "type": "Reclear",
+      "color": "0x979c9f"
+    },
+    {
+      "name": "Fru Prog",
+      "type": "Prog",
+      "color": "0x979c9f"
+    },
+    {
+      "name": "Fru C4X",
+      "type": "C4X",
+      "color": "0x979c9f"
+    },
+    {
+      "name": "The Roommate Color",
+      "type": "Name Color",
+      "color": "0xa3f8e3"
+    }
+  ] 
+}

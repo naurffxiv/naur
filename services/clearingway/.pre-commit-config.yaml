@@ -1,0 +1,15 @@
+# Go service configuration
+orphan: true
+repos:
+  - repo: builtin
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+
+  - repo: https://github.com/golangci/golangci-lint
+    rev: v2.8.0
+    hooks:
+      - id: golangci-lint
+        entry: golangci-lint run --fix
+        pass_filenames: false
+        priority: 1

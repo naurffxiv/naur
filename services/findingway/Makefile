@@ -1,7 +1,10 @@
-.PHONY: test build
+.PHONY: test build tokens
 
 test:
 	go test ./... -race -covermode=atomic -coverprofile=coverage.out
+
+tokens:
+	docker compose run --rm --env-file .env -e TOKENS_ONLY=true findingway
 
 build:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s -X main.buildSha=`git rev-parse HEAD` -X main.buildTime=`date +'%Y-%m-%d_%T'`"

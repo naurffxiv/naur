@@ -6,23 +6,35 @@ on:
       service:
         required: true
         type: string
-      go-version:
-        required: true
-        type: string
       should_run:
         required: false
         type: boolean
         default: true
 
 jobs:
+  resolve-go-version:
+    if: inputs.should_run
+    runs-on: ubuntu-latest
+    outputs:
+      go-version: ${{ steps.read.outputs.go-version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Read Go version from go.mod
+        id: read
+        run: |
+          VERSION=$(grep '^go ' services/${{ inputs.service }}/go.mod | awk '{print $2}')
+          echo "go-version=$VERSION" >> $GITHUB_OUTPUT
+
   lint:
+    needs: [resolve-go-version]
     if: inputs.should_run
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: ${{ inputs.go-version }}
+          go-version: ${{ needs.resolve-go-version.outputs.go-version }}
           cache-dependency-path: services/${{ inputs.service }}/go.sum
 
       - name: Register Problem Matchers
@@ -48,7 +60,7 @@ jobs:
       - name: Install golangci-lint
         uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
         with:
-          version: v2.8.0
+          version: v2.9.0
           install-only: true
 
       - name: Lint
@@ -62,13 +74,14 @@ jobs:
           fail-on-error: true
 
   build:
+    needs: [resolve-go-version]
     if: inputs.should_run
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: ${{ inputs.go-version }}
+          go-version: ${{ needs.resolve-go-version.outputs.go-version }}
           cache-dependency-path: services/${{ inputs.service }}/go.sum
 
       - name: Build
@@ -82,14 +95,14 @@ jobs:
           fail-on-error: true
 
   test:
-    needs: [build]
+    needs: [resolve-go-version, build]
     if: inputs.should_run
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: ${{ inputs.go-version }}
+          go-version: ${{ needs.resolve-go-version.outputs.go-version }}
           cache-dependency-path: services/${{ inputs.service }}/go.sum
 
       - name: Unit Tests

@@ -1,0 +1,27 @@
+{
+  "ids": [98],
+  "name": "M6S",
+  "difficulty": "Savage",
+  "roles": [
+    {
+      "name": "M6S Cleared",
+      "type": "Cleared",
+      "color": "0x979c9f"
+    },
+    {
+      "name": "M6S Reclear",
+      "type": "Reclear",
+      "color": "0x979c9f"
+    },
+    {
+      "name": "M6S Prog",
+      "type": "Prog",
+      "color": "0x979c9f"
+    },
+    {
+      "name": "M6S C4X",
+      "type": "C4X",
+      "color": "0x979c9f"
+    }
+  ]
+}
