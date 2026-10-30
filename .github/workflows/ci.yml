@@ -121,7 +121,7 @@ jobs:
     uses: ./.github/workflows/pipeline-node.yml
     with:
       service: naurffxiv
-      node-version: "22.13.0"
+      node-version: "22.23.4"
       upload-build-artifact: ${{ github.event_name == 'pull_request' }}
       should_run: ${{ github.event_name == 'push' || needs.detect-changes.outputs.naurffxiv == 'true' }}
     secrets: inherit # pragma: allowlist secret
