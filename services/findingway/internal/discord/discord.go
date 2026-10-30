@@ -165,9 +165,13 @@ func (d *Discord) sendMessage(channelId string, fields []*discordgo.MessageEmbed
 	return nil
 }
 
-func (d *Discord) PostTokens(channelId string, tokens []tokenizer.Token, listingCount int64) error {
+func tokensHeader(lookback int, listingCount int64, at time.Time) string {
+	return fmt.Sprintf("**Last %d days of Tokens (%d listings scanned) as of %s\n**", lookback, listingCount, at.Format(time.DateTime))
+}
 
-	tokenString := fmt.Sprintf("**Last 2 days of Tokens (%d listings scanned) as of %s\n**", listingCount, time.Now().Format(time.DateTime))
+func (d *Discord) PostTokens(channelId string, tokens []tokenizer.Token, lookback int, listingCount int64) error {
+
+	tokenString := tokensHeader(lookback, listingCount, time.Now())
 	tokenSlice := tokens[:min(75, len(tokens))]
 	for _, token := range tokenSlice {
 		tokenString = tokenString + fmt.Sprintf("`%s` %d\n", token.String, token.Count)
