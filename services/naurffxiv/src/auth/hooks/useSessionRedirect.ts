@@ -22,8 +22,9 @@ export function useSessionRedirect(
     }
 
     const hasAnyRoles = (session?.user?.roles?.length ?? 0) > 0;
+    if (!hasAnyRoles) return;
 
-    if (hasAnyRoles) {
+    (async (): Promise<void> => {
       logDebug("LoginPage:AutoRedirect", {
         userId: session?.user?.id,
         to: callbackUrl,
@@ -36,7 +37,7 @@ export function useSessionRedirect(
         logError("LoginPage:RedirectFailure", err, { callbackUrl });
         setRedirecting(false);
       }
-    }
+    })();
   }, [session, status, router, callbackUrl]);
 
   return redirecting;

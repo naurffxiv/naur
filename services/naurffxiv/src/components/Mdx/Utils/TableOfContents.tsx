@@ -1,6 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, ReactElement } from "react";
+import {
+  useCallback,
+  useMemo,
+  useSyncExternalStore,
+  ReactElement,
+} from "react";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import type { Toc } from "@stefanprobst/rehype-extract-toc";
 
@@ -16,9 +21,12 @@ interface TableOfContentsProps {
  * Custom hook to track the active section ID based on scroll position.
  */
 function useActiveId(ids: string[], offset: number = 88): string {
-  const [activeId, setActiveId] = useState("");
+  const subscribe = useCallback((onStoreChange: () => void): (() => void) => {
+    window.addEventListener("scroll", onStoreChange, { passive: true });
+    return () => window.removeEventListener("scroll", onStoreChange);
+  }, []);
 
-  const updateActiveId = useCallback((): void => {
+  const getSnapshot = useCallback((): string => {
     let currentActiveId = "";
     for (const id of ids) {
       const element = document.getElementById(id);
@@ -33,16 +41,12 @@ function useActiveId(ids: string[], offset: number = 88): string {
         }
       }
     }
-    setActiveId(currentActiveId);
+    return currentActiveId;
   }, [ids, offset]);
 
-  useEffect((): (() => void) => {
-    window.addEventListener("scroll", updateActiveId, { passive: true });
-    updateActiveId();
-    return () => window.removeEventListener("scroll", updateActiveId);
-  }, [updateActiveId]);
+  const getServerSnapshot = useCallback((): string => "", []);
 
-  return activeId;
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
 
 function recursiveToc(
