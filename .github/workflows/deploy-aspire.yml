@@ -87,16 +87,17 @@ jobs:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Add known hosts
-        run: ssh-keyscan -H ${{ secrets.TARGET_HOST }} >> ~/.ssh/known_hosts
+        run: ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy
         env:
           EnableHttps: "true"
-          Parameters__PostgresPassword: ${{ secrets.POSTGRES_PASSWORD }}
+          Parameters__PostgresPassword: ${{ secrets.AUTHINGWAY_POSTGRES_PASSWORD }}
+          Parameters__DiscordToken: ${{ secrets.AUTHINGWAY_DISCORD_TOKEN }}
           Parameters__Domain: ${{ vars.DEPLOY_DOMAIN }}
           Parameters__LetsEncryptEmail: ${{ vars.LETSENCRYPT_EMAIL }}
-          DockerSSH__TargetHost: ${{ secrets.TARGET_HOST }}
-          DockerSSH__SshUsername: ${{ secrets.SSH_USERNAME }}
+          DockerSSH__TargetHost: ${{ secrets.SERVER_HOST }}
+          DockerSSH__SshUsername: ${{ secrets.SERVER_USER }}
           DockerRegistry__RegistryUrl: ghcr.io
           DockerRegistry__RepositoryPrefix: ${{ github.repository }}
           DockerRegistry__RegistryUsername: ${{ github.actor }}
