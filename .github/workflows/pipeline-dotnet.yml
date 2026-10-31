@@ -109,7 +109,7 @@ jobs:
       - name: Unit Tests
         uses: ./.github/actions/run-command-with-report
         env:
-          Parameters__DiscordToken: ${{ secrets.AUTHINGWAY_DISCORD_TOKEN }}
+          AUTHINGWAY_TEST_DISCORD_TOKEN: ${{ secrets.AUTHINGWAY_TEST_DISCORD_TOKEN }}
         with:
           service: ${{ inputs.service }}
           step-number: 30
