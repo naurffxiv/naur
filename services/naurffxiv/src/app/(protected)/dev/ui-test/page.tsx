@@ -99,7 +99,7 @@ export default function UiTestPage(): ReactElement {
         <select
           id="avatar-size"
           name="avatar-size"
-          className="border p-2 rounded text-black"
+          className="border p-2 rounded-sm text-black"
           value={avatarSize}
           onChange={(e) => setAvatarSize(Number(e.target.value))}
         >

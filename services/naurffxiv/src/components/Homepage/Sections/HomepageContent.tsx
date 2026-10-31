@@ -4,7 +4,7 @@ import Offerings from "../Widgets/OfferingCards";
 
 export default function HomepageContent(): JSX.Element {
   return (
-    <div className="grid p-10 mx-auto max-w-screen-2xl gap-y-10">
+    <div className="grid p-10 mx-auto max-w-(--breakpoint-2xl) gap-y-10">
       <FightGuideList />
       <Offerings />
       <p className="text-xl text-center">
