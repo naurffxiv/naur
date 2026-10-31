@@ -96,7 +96,7 @@ module.exports = async ({ github, context }) => {
         name: label,
       });
       console.log("Removed stale label:", label);
-    } catch (e) {
+    } catch (_e) {
       // Race condition
       console.log(`Label "${label}" already gone, skipping.`);
     }
