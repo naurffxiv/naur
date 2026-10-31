@@ -1,5 +1,6 @@
 import asyncio
 import contextlib
+from datetime import timedelta
 
 import pytest
 from pytest_mock.plugin import MockerFixture
@@ -81,7 +82,9 @@ async def test_thread_worker_moves_past_a_channel_that_hangs(
     monkeypatch, forum_bot, reported
 ):
     bot, automod_thread, healthy_thread = forum_bot
-    monkeypatch.setattr(forum_automod, "CHANNEL_PASS_TIMEOUT", 0.05, raising=False)
+    monkeypatch.setattr(
+        forum_automod, "CHANNEL_PASS_TIMEOUT", timedelta(milliseconds=50)
+    )
 
     result = await asyncio.wait_for(forum_automod.autodelete_threads.coro(bot), 1)
 

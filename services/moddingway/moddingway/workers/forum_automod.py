@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from discord.ext import tasks
 
@@ -20,7 +20,7 @@ from .helper import (
 settings = get_settings()
 logger = logging.getLogger(__name__)
 
-CHANNEL_PASS_TIMEOUT = 30 * 60
+CHANNEL_PASS_TIMEOUT = timedelta(minutes=30)
 
 
 # Worker for thread automodding
@@ -43,7 +43,7 @@ async def autodelete_threads(self):
         num_removed = 0
         num_errors = 0
         try:
-            async with asyncio.timeout(CHANNEL_PASS_TIMEOUT):
+            async with asyncio.timeout(CHANNEL_PASS_TIMEOUT.total_seconds()):
                 channel = guild.get_channel(channel_id)
                 if channel is None:
                     logger.error("Forum channel not found.")
