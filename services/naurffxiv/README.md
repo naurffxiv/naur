@@ -70,7 +70,7 @@ If you prefer to run the project directly on your machine without Docker.
 
 ### Prerequisites
 
-You need **Node.js v22+** and **pnpm v10+**.
+You need **Node.js v22+** and **pnpm v11+**.
 
 #### Check Installed Versions
 
@@ -86,7 +86,7 @@ Expected output:
 v22.6.0
 
 ❯ pnpm -v
-10.29.2
+11.20.0
 ```
 
 ### Installation
