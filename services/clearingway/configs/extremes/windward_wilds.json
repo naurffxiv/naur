@@ -1,0 +1,27 @@
+{
+  "ids": [1082],
+  "name": "The Windward Wilds (Extreme)",
+  "difficulty": "Extreme",
+  "roles": [
+    {
+      "name": "EX6 Cleared",
+      "type": "Cleared",
+      "color": "0x979c9f"
+    },
+    {
+      "name": "EX6 Reclear",
+      "type": "Reclear",
+      "color": "0x979c9f"
+    },
+    {
+      "name": "EX6 Prog",
+      "type": "Prog",
+      "color": "0x979c9f"
+    },
+    {
+      "name": "EX6 C4X",
+      "type": "C4X",
+      "color": "0x979c9f"
+    }
+  ]
+}

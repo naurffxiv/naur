@@ -1,0 +1,32 @@
+{
+  "ids": [1068, 1077],
+  "name": "The Omega Protocol (Ultimate)",
+  "difficulty": "Ultimate",
+  "roles": [
+    {
+      "name": "TOP Cleared",
+      "type": "Cleared",
+      "color": "0x8d5af3"
+    },
+    {
+      "name": "TOP Reclear",
+      "type": "Reclear",
+      "color": "0x979c9f"
+    },
+    {
+      "name": "TOP Prog",
+      "type": "Prog",
+      "color": "0x979c9f"
+    },
+    {
+      "name": "TOP C4X",
+      "type": "C4X",
+      "color": "0x979c9f"
+    },
+    {
+      "name": "The Alpha Color",
+      "type": "Name Color",
+      "color": "0x8d5af3"
+    }
+  ]
+}
