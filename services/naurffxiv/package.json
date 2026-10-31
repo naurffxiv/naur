@@ -73,7 +73,7 @@
     "eslint-plugin-n": "^16.6.2",
     "eslint-plugin-promise": "^6.6.0",
     "eslint-plugin-react": "^7.37.5",
-    "glob": "^13.0.6",
+    "glob": "^14.0.2",
     "globals": "^17.8.0",
     "postcss": "^8.5.23",
     "prettier": "^3.9.6",
