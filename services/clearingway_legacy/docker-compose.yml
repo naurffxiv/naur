@@ -1,0 +1,20 @@
+services:
+  clearingway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: clearingway
+    env_file:
+      - .env
+    volumes:
+      - ./config.yaml:/clearingway/config.yaml:ro
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: rebuild
+          path: .
+          ignore:
+            - .git/
+            - coverage.out
+            - clearingway
+            - .env.example

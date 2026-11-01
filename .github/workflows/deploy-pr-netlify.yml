@@ -33,7 +33,7 @@ jobs:
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: "22.13.0"
+          node-version: "22.23.4"
           cache: "pnpm"
           cache-dependency-path: "pnpm-lock.yaml"
 
@@ -85,6 +85,12 @@ jobs:
           echo "edge_logs=$edge_logs" >> $GITHUB_OUTPUT
 
           echo "Deployed to: $deploy_url"
+
+      - name: Smoke Test Deployed Pages
+        working-directory: .
+        env:
+          SMOKE_BASE_URL: ${{ steps.netlify.outputs.deploy_url }}
+        run: pnpm --filter naurffxiv-tests exec vitest run src/smoke
 
       - name: Generate Report
         if: always()
