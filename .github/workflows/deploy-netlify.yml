@@ -102,6 +102,12 @@ jobs:
 
           echo "Deployed to: $site_url"
 
+      - name: Smoke Test Deployed Pages
+        working-directory: .
+        env:
+          SMOKE_BASE_URL: ${{ steps.deploy.outputs.deploy_url }}
+        run: pnpm --filter naurffxiv-tests exec vitest run src/smoke
+
       - name: Summary
         if: always()
         run: |
