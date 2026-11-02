@@ -92,17 +92,8 @@ updates:
     commit-message:
       prefix: "build"
     groups:
-      aspire:
-        patterns:
-          - "Aspire.*"
-      opentelemetry:
-        patterns:
-          - "OpenTelemetry.*"
-      nuget-other:
+      nuget:
         patterns: ["*"]
-        exclude-patterns:
-          - "Aspire.*"
-          - "OpenTelemetry.*"
 
   - package-ecosystem: "uv"
     directory: "/services/moddingway"
