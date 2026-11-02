@@ -1,0 +1,27 @@
+{
+  "ids": [97],
+  "name": "M5S",
+  "difficulty": "Savage",
+  "roles": [
+    {
+      "name": "M5S Cleared",
+      "type": "Cleared",
+      "color": "0x979c9f"
+    },
+    {
+      "name": "M5S Reclear",
+      "type": "Reclear",
+      "color": "0x979c9f"
+    },
+    {
+      "name": "M5S Prog",
+      "type": "Prog",
+      "color": "0x979c9f"
+    },
+    {
+      "name": "M5S C4X",
+      "type": "C4X",
+      "color": "0x979c9f"
+    }
+  ]
+}

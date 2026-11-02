@@ -48,8 +48,14 @@ func (d *Discord) CleanChannel(channelId string) error {
 		return fmt.Errorf("could not list messages: %w", err)
 	}
 	messageIds := []string{}
+	botId := d.Session.State.User.ID
 	for _, message := range messages {
-		messageIds = append(messageIds, message.ID)
+		if message.Author.ID == botId {
+			messageIds = append(messageIds, message.ID)
+		}
+	}
+	if len(messageIds) == 0 {
+		return nil
 	}
 	err = d.Session.ChannelMessagesBulkDelete(channelId, messageIds)
 	if err != nil {
@@ -159,9 +165,13 @@ func (d *Discord) sendMessage(channelId string, fields []*discordgo.MessageEmbed
 	return nil
 }
 
-func (d *Discord) PostTokens(channelId string, tokens []tokenizer.Token) error {
+func tokensHeader(lookback int, listingCount int64, at time.Time) string {
+	return fmt.Sprintf("**Last %d days of Tokens (%d listings scanned) as of %s\n**", lookback, listingCount, at.Format(time.DateTime))
+}
 
-	tokenString := fmt.Sprintf("**Last 7 days of Tokens as of %s\n**", time.Now().Format(time.DateTime))
+func (d *Discord) PostTokens(channelId string, tokens []tokenizer.Token, lookback int, listingCount int64) error {
+
+	tokenString := tokensHeader(lookback, listingCount, time.Now())
 	tokenSlice := tokens[:min(75, len(tokens))]
 	for _, token := range tokenSlice {
 		tokenString = tokenString + fmt.Sprintf("`%s` %d\n", token.String, token.Count)

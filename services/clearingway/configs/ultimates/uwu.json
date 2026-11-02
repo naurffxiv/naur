@@ -1,0 +1,32 @@
+{
+  "ids": [1061, 1048, 1042, 1074],
+  "name": "The Weapon's Refrain (Ultimate)",
+  "difficulty": "Ultimate",
+  "roles": [
+    {
+      "name": "UWU Cleared",
+      "type": "Cleared",
+      "color": "0x97cae3"
+    },
+    {
+      "name": "UWU Reclear",
+      "type": "Reclear",
+      "color": "0x979c9f"
+    },
+    {
+      "name": "UWU Prog",
+      "type": "Prog",
+      "color": "0x979c9f"
+    },
+    {
+      "name": "UWU C4X",
+      "type": "C4X",
+      "color": "0x979c9f"
+    },
+    {
+      "name": "The Ultimate Color",
+      "type": "Name Color",
+      "color": "0x97cae3"
+    }
+  ]
+}

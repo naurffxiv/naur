@@ -36,6 +36,9 @@ class ModdingwayBot(Bot):
             logger.info(f"Logged in as {self.user} (ID: {self.user.id})")
         workers.start_tasks(self)
 
+    async def on_resumed(self):
+        workers.start_tasks(self)
+
     def _register_commands(self):
         logger.info("Starting registering commands")
         create_exile_commands(self)
