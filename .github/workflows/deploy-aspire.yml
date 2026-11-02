@@ -2,13 +2,6 @@ name: Deploy Aspire
 
 on:
   workflow_dispatch:
-    inputs:
-      environment:
-        description: "GitHub environment to deploy"
-        required: true
-        type: choice
-        options: [production, development]
-        default: production
   push:
     branches: [main]
     paths:
@@ -20,7 +13,7 @@ on:
       - "services/authingway/**"
 
 concurrency:
-  group: aspire-deploy-${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'production' }}
+  group: aspire-deploy-authingway
   cancel-in-progress: false
 
 jobs:
@@ -59,9 +52,7 @@ jobs:
       needs.detect-changes.outputs.authingway == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    environment:
-      name: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'production' }}
-      url: https://${{ vars.DEPLOY_DOMAIN }}
+    environment: Authingway
     permissions:
       contents: read
       packages: write
@@ -94,12 +85,12 @@ jobs:
           EnableHttps: "true"
           Parameters__PostgresPassword: ${{ secrets.AUTHINGWAY_POSTGRES_PASSWORD }}
           Parameters__DiscordToken: ${{ secrets.AUTHINGWAY_DISCORD_TOKEN }}
-          Parameters__Domain: ${{ vars.DEPLOY_DOMAIN }}
-          Parameters__LetsEncryptEmail: ${{ vars.LETSENCRYPT_EMAIL }}
+          Parameters__Domain: ${{ secrets.DEPLOY_DOMAIN }}
+          Parameters__LetsEncryptEmail: ${{ secrets.LETSENCRYPT_EMAIL }}
           DockerSSH__TargetHost: ${{ secrets.SERVER_HOST }}
           DockerSSH__SshUsername: ${{ secrets.SERVER_USER }}
           DockerRegistry__RegistryUrl: ghcr.io
           DockerRegistry__RepositoryPrefix: ${{ github.repository }}
           DockerRegistry__RegistryUsername: ${{ github.actor }}
           DockerRegistry__RegistryPassword: ${{ secrets.GITHUB_TOKEN }}
-        run: aspire deploy -e ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'production' }}
+        run: aspire deploy -e production
