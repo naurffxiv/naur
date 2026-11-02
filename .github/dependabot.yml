@@ -1,4 +1,8 @@
 version: 2
+registries:
+  davidfowl-aspire:
+    type: nuget-feed
+    url: https://f.feedz.io/davidfowl/aspire/nuget/index.json
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -80,6 +84,8 @@ updates:
 
   - package-ecosystem: "nuget"
     directory: "/"
+    registries:
+      - davidfowl-aspire
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
@@ -143,7 +149,12 @@ updates:
         patterns: ["*"]
 
   - package-ecosystem: "docker"
-    directory: "/"
+    directories:
+      - "/services/clearingway_legacy"
+      - "/services/findingway"
+      - "/services/moddingway/moddingway"
+      - "/services/moddingway/moddingway_api"
+      - "/services/naurffxiv"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10

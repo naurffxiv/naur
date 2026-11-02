@@ -165,8 +165,8 @@ importers:
         specifier: ^9.24.0
         version: 9.39.2
       '@netlify/plugin-nextjs':
-        specifier: ^5.15.13
-        version: 5.15.13
+        specifier: ^5.16.5
+        version: 5.16.5
       '@tailwindcss/typography':
         specifier: ^0.5.20
         version: 0.5.20(tailwindcss@3.4.19(tsx@4.23.1)(yaml@2.8.3))
@@ -1036,8 +1036,8 @@ packages:
   '@napi-rs/wasm-runtime@0.2.12':
     resolution: {integrity: sha512-ZVWUcfwY4E/yPitQJl481FjFo3K22D6qF0DuFH6Y/nbnE11GY5uguDxZMGXPQ8WQ0128MXQD7TnfHyK4oWoIJQ==}
 
-  '@netlify/plugin-nextjs@5.15.13':
-    resolution: {integrity: sha512-gBmWtgG13ZW4ytNMCvacfwZemtdtV/Ekc+6RBYvI5fndjmDvKxgFHylsw7oli+PHMGAtNqaJrN8QccGnDReu6A==}
+  '@netlify/plugin-nextjs@5.16.5':
+    resolution: {integrity: sha512-pt0j/YCZr5Kn2ziGS4Ps+RvREEn5LN2M9iv9iqEgNWZGb4esu7MCMy4RIYS0UR3JuBHxVtsvPHo0gEv+RKFpag==}
     engines: {node: '>=18.0.0'}
 
   '@next/env@15.5.28':
@@ -4607,7 +4607,7 @@ snapshots:
       '@tybys/wasm-util': 0.10.1
     optional: true
 
-  '@netlify/plugin-nextjs@5.15.13': {}
+  '@netlify/plugin-nextjs@5.16.5': {}
 
   '@next/env@15.5.28': {}
 

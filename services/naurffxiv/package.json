@@ -57,7 +57,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.24.0",
-    "@netlify/plugin-nextjs": "^5.15.13",
+    "@netlify/plugin-nextjs": "^5.16.5",
     "@tailwindcss/typography": "^0.5.20",
     "@types/hast": "^3.0.5",
     "@types/node": "^26.1.2",

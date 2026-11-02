@@ -86,6 +86,12 @@ jobs:
 
           echo "Deployed to: $deploy_url"
 
+      - name: Smoke Test Deployed Pages
+        working-directory: .
+        env:
+          SMOKE_BASE_URL: ${{ steps.netlify.outputs.deploy_url }}
+        run: pnpm --filter naurffxiv-tests exec vitest run src/smoke
+
       - name: Generate Report
         if: always()
         run: |
