@@ -83,6 +83,6 @@
     "typescript-eslint": "^8.65.0"
   },
   "optionalDependencies": {
-    "@img/sharp-linux-x64": "^0.35.3"
+    "@img/sharp-linux-x64": "^0.35.5"
   }
 }
