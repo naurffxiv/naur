@@ -14,6 +14,10 @@ updates:
     groups:
       github-actions:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "npm"
     directory: "/"
@@ -29,6 +33,7 @@ updates:
           - "eslint-*"
           - "prettier"
           - "@typescript-eslint/*"
+        update-types: ["minor", "patch"]
       npm-other:
         patterns: ["*"]
         exclude-patterns:
@@ -36,6 +41,10 @@ updates:
           - "eslint-*"
           - "prettier"
           - "@typescript-eslint/*"
+        update-types: ["minor", "patch"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "npm"
     directory: "/services/naurffxiv"
@@ -52,12 +61,14 @@ updates:
           - "react"
           - "react-dom"
           - "next-mdx-remote"
+        update-types: ["minor", "patch"]
       linting:
         patterns:
           - "eslint"
           - "eslint-*"
           - "prettier"
           - "@typescript-eslint/*"
+        update-types: ["minor", "patch"]
       npm-other:
         patterns: ["*"]
         exclude-patterns:
@@ -70,6 +81,10 @@ updates:
           - "eslint-*"
           - "prettier"
           - "@typescript-eslint/*"
+        update-types: ["minor", "patch"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "npm"
     directory: "/tests/e2e"
@@ -81,6 +96,10 @@ updates:
     groups:
       npm-all:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "nuget"
     directory: "/"
@@ -94,6 +113,10 @@ updates:
     groups:
       nuget:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "uv"
     directory: "/services/moddingway"
@@ -105,6 +128,10 @@ updates:
     groups:
       uv:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "gomod"
     directory: "/services/findingway"
@@ -116,6 +143,10 @@ updates:
     groups:
       gomod-findingway:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "gomod"
     directory: "/services/clearingway"
@@ -127,6 +158,10 @@ updates:
     groups:
       gomod-clearingway:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "gomod"
     directory: "/services/clearingway_legacy"
@@ -138,6 +173,10 @@ updates:
     groups:
       gomod-clearingway_legacy:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "docker"
     directories:
@@ -154,3 +193,7 @@ updates:
     groups:
       docker:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
