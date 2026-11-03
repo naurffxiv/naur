@@ -10,7 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 var builder = DistributedApplication.CreateBuilder(args);
 
 #pragma warning disable ASPIRECONTAINERRUNTIME001
-builder.Services.AddSingleton(sp => sp.GetRequiredService<IContainerRuntimeResolver>().ResolveAsync().GetAwaiter().GetResult());
+builder.Services.AddSingleton<IContainerRuntime, ResolvedContainerRuntime>();
 #pragma warning restore ASPIRECONTAINERRUNTIME001
 
 builder.AddDockerComposeEnvironment("env")
