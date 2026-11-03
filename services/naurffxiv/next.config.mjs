@@ -7,6 +7,7 @@ import rehypeImgSize from "rehype-img-size";
 import rehypeSlug from "rehype-slug";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkToc from "remark-toc";
+import { DEVICE_SIZES, IMAGE_SIZES } from "./src/lib/imageVariants.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -37,7 +38,11 @@ const nextConfig = {
   output: "standalone",
   pageExtensions: ["js", "jsx", "ts", "tsx", "md", "mdx"],
   images: {
-    formats: ["image/avif", "image/webp"],
+    // pre-generated variants served as static files (see src/lib/imageLoader.ts)
+    loader: "custom",
+    loaderFile: "./src/lib/imageLoader.ts",
+    deviceSizes: DEVICE_SIZES,
+    imageSizes: IMAGE_SIZES,
     remotePatterns: [
       {
         protocol: "https",

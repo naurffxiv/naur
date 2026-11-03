@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "pnpm check:routes && pnpm exec next dev",
-    "build": "pnpm exec next build",
+    "build": "pnpm images:variants && pnpm exec next build",
     "start": "pnpm exec next start",
     "cf:build": "opennextjs-cloudflare build && opennextjs-cloudflare populateCache local",
     "cf:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
@@ -21,7 +21,8 @@
     "prettier:check": "prettier --ignore-path ../../.prettierignore --check .",
     "prettier:write": "prettier --ignore-path ../../.prettierignore --write .",
     "check:routes": "tsx scripts/middleware/validateRoutes.ts",
-    "compress": "tsx scripts/compress-images.ts"
+    "compress": "tsx scripts/compress-images.ts",
+    "images:variants": "tsx scripts/image-variants.ts"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

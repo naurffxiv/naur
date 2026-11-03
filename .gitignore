@@ -89,6 +89,9 @@ go.work.sum
 *.sqlite
 *.sqlite3
 
+# Generated next/image variants (scripts/image-variants.ts)
+services/naurffxiv/public/_variants/
+
 # Cloudflare / OpenNext
 .open-next/
 .wrangler/

@@ -3,7 +3,6 @@ import "./globals.css";
 import type { ReactElement, ReactNode } from "react";
 import type { Metadata, Viewport } from "next";
 
-import AuthSessionProvider from "@auth/components/Gates/AuthSessionProvider";
 import Footer from "@/components/Layout/Footer/Footer";
 import MUITheme from "@/components/Providers/MUITheme";
 import NavBar from "@/components/Layout/NavBar/NavBar";
@@ -43,27 +42,25 @@ export default function RootLayout({
           paddingBottom: "env(safe-area-inset-bottom)", // Bottom safe-area for devices like iPhone
         }}
       >
-        <AuthSessionProvider>
-          <MUITheme>
-            <NavBar />
-            <main className="flex-grow">
-              {children}
-              <Script id="disable-preview-tracking">
-                {/* Only load on production environment.*/}
-                {`
+        <MUITheme>
+          <NavBar />
+          <main className="flex-grow">
+            {children}
+            <Script id="disable-preview-tracking">
+              {/* Only load on production environment.*/}
+              {`
               if (window.location.host !== 'naurffxiv.com')
                   window.goatcounter = {no_onload: true}
             `}
-              </Script>
-              <Script
-                src="https://gc.zgo.at/count.js"
-                strategy="afterInteractive"
-                data-goatcounter="https://naur.goatcounter.com/count"
-              />
-            </main>
-            <Footer />
-          </MUITheme>
-        </AuthSessionProvider>
+            </Script>
+            <Script
+              src="https://gc.zgo.at/count.js"
+              strategy="afterInteractive"
+              data-goatcounter="https://naur.goatcounter.com/count"
+            />
+          </main>
+          <Footer />
+        </MUITheme>
       </body>
     </html>
   );

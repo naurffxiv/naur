@@ -16,10 +16,6 @@
       "service": "naurffxiv",
     },
   ],
-  // Backs /_next/image with Cloudflare Images
-  "images": {
-    "binding": "IMAGES",
-  },
   // Non-production branch builds get a *.workers.dev preview URL
   "workers_dev": true,
   "preview_urls": true,
