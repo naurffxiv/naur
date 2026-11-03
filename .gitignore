@@ -88,3 +88,9 @@ go.work.sum
 *.db
 *.sqlite
 *.sqlite3
+
+# Cloudflare / OpenNext
+.open-next/
+.wrangler/
+.dev.vars*
+!.dev.vars.example

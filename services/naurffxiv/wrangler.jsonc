@@ -1,0 +1,29 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // Must match the Worker name in the Cloudflare dashboard (Workers Builds fails on a mismatch)
+  "name": "naurffxiv",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS",
+  },
+  // Lets OpenNext call back into this Worker (used for cache revalidation)
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "naurffxiv",
+    },
+  ],
+  // Backs /_next/image with Cloudflare Images
+  "images": {
+    "binding": "IMAGES",
+  },
+  // Non-production branch builds get a *.workers.dev preview URL
+  "workers_dev": true,
+  "preview_urls": true,
+  "observability": {
+    "enabled": true,
+  },
+}

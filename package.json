@@ -58,7 +58,8 @@
       "@parcel/watcher",
       "esbuild",
       "sharp",
-      "unrs-resolver"
+      "unrs-resolver",
+      "workerd"
     ]
   }
 }

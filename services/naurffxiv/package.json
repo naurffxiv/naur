@@ -10,6 +10,11 @@
     "dev": "pnpm check:routes && pnpm exec next dev",
     "build": "pnpm exec next build",
     "start": "pnpm exec next start",
+    "cf:build": "opennextjs-cloudflare build && opennextjs-cloudflare populateCache local",
+    "cf:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "cf:deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "cf:upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
+    "cf:typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "lint": "pnpm exec next lint",
     "test": "pnpm --filter naurffxiv-tests test",
     "typecheck": "tsc --noEmit",
@@ -19,7 +24,6 @@
     "compress": "tsx scripts/compress-images.ts"
   },
   "dependencies": {
-    "@naur/shared": "workspace:*",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mdx-js/loader": "^3.1.0",
@@ -28,6 +32,7 @@
     "@mui/icons-material": "^6.4.7",
     "@mui/material": "^6.4.7",
     "@mui/x-data-grid": "^7.28.2",
+    "@naur/shared": "workspace:*",
     "@next/mdx": "15.5.22",
     "@stefanprobst/rehype-extract-toc": "^3.0.0",
     "clsx": "^2.1.1",
@@ -58,6 +63,7 @@
   "devDependencies": {
     "@eslint/js": "^9.24.0",
     "@netlify/plugin-nextjs": "^5.16.5",
+    "@opennextjs/cloudflare": "1.20.14",
     "@tailwindcss/typography": "^0.5.20",
     "@types/hast": "^3.0.5",
     "@types/node": "^26.1.2",
@@ -80,7 +86,8 @@
     "tailwindcss": "^3.4.17",
     "tsx": "^4.23.1",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.65.0"
+    "typescript-eslint": "^8.65.0",
+    "wrangler": "4.155.0"
   },
   "optionalDependencies": {
     "@img/sharp-linux-x64": "^0.35.3"
