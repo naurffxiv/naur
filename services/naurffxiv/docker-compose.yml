@@ -9,6 +9,7 @@ services:
       - "3000:3000"
     volumes:
       - .:/app/services/naurffxiv:z
+      - ../../packages/shared:/app/packages/shared:z
       - /app/services/naurffxiv/node_modules
       - /app/services/naurffxiv/.next
     environment:

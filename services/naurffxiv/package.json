@@ -32,7 +32,7 @@
     "@stefanprobst/rehype-extract-toc": "^3.0.0",
     "clsx": "^2.1.1",
     "highlight.js": "^11.11.1",
-    "next": "15.5.22",
+    "next": "15.5.28",
     "next-auth": "^4.24.15",
     "next-mdx-remote": "^6.0.0",
     "node-cache": "^5.1.2",
@@ -57,7 +57,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.24.0",
-    "@netlify/plugin-nextjs": "^5.15.13",
+    "@netlify/plugin-nextjs": "^5.16.5",
     "@tailwindcss/typography": "^0.5.20",
     "@types/hast": "^3.0.5",
     "@types/node": "^26.1.2",

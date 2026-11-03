@@ -21,6 +21,14 @@
       "path": "services/findingway"
     },
     {
+      "name": "Clearingway (Go)",
+      "path": "services/clearingway"
+    },
+    {
+      "name": "Clearingway Legacy (Go)",
+      "path": "services/clearingway_legacy"
+    },
+    {
       "name": "Testingway",
       "path": "tests"
     },

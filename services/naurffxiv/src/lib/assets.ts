@@ -2,23 +2,16 @@ import type { StaticImageData } from "next/image";
 import type { SvgIconComponent } from "@mui/icons-material";
 
 // icons
-import Calendar from "@/assets/Icons/Calendar.png";
-import Chat from "@/assets/Icons/Chat.png";
-import Contact from "@/assets/Icons/Contact.png";
-import Discord from "@/assets/Icons/Discord.png";
-import Github from "@/assets/Icons/githublogo.png";
-import Lightbulb from "@/assets/Icons/Lightbulb.png";
-import Naur from "@/assets/Icons/naur_icon.png";
-import Pandora from "@/assets/Images/Pandora.avif";
-import Patreon from "@/assets/Icons/Patreon.png";
+import Calendar from "@/assets/icons/calendar.png";
+import Chat from "@/assets/icons/chat.png";
+import Contact from "@/assets/icons/contact.png";
+import Discord from "@/assets/icons/discord.png";
+import Github from "@/assets/icons/github-logo.png";
+import Lightbulb from "@/assets/icons/lightbulb.png";
+import Naur from "@/assets/icons/naur-icon.png";
+import Patreon from "@/assets/icons/patreon.png";
 // MUI icons
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
-// homepage card images
-import m9s from "@/assets/Images/m9s.avif";
-import m10s from "@/assets/Images/m10s.avif";
-import m11s from "@/assets/Images/m11s.avif";
-import m12s from "@/assets/Images/m12s.avif";
-import recollection from "@/assets/Images/recollection.avif";
 
 export const icons = {
   Chat,
@@ -32,13 +25,13 @@ export const icons = {
 } satisfies Record<string, StaticImageData>;
 
 export const images = {
-  Pandora,
-  m9s,
-  m10s,
-  m11s,
-  m12s,
-  recollection,
-} satisfies Record<string, StaticImageData>;
+  Pandora: "/images/ultimate/fru/banner.avif",
+  m9s: "/images/savage/dawntrail/m9s/banner.avif",
+  m10s: "/images/savage/dawntrail/m10s/banner.avif",
+  m11s: "/images/savage/dawntrail/m11s/banner.avif",
+  m12s: "/images/savage/dawntrail/m12s/banner.avif",
+  recollection: "/images/extreme/dawntrail/recollection/banner.avif",
+} satisfies Record<string, string>;
 
 export const iconsMui = { PersonSearchIcon } satisfies Record<
   string,

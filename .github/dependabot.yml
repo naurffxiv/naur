@@ -1,4 +1,8 @@
 version: 2
+registries:
+  davidfowl-aspire:
+    type: nuget-feed
+    url: https://f.feedz.io/davidfowl/aspire/nuget/index.json
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -80,23 +84,16 @@ updates:
 
   - package-ecosystem: "nuget"
     directory: "/"
+    registries:
+      - davidfowl-aspire
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
     commit-message:
       prefix: "build"
     groups:
-      aspire:
-        patterns:
-          - "Aspire.*"
-      opentelemetry:
-        patterns:
-          - "OpenTelemetry.*"
-      nuget-other:
+      nuget:
         patterns: ["*"]
-        exclude-patterns:
-          - "Aspire.*"
-          - "OpenTelemetry.*"
 
   - package-ecosystem: "uv"
     directory: "/services/moddingway"
@@ -120,8 +117,35 @@ updates:
       gomod-findingway:
         patterns: ["*"]
 
+  - package-ecosystem: "gomod"
+    directory: "/services/clearingway"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "build"
+    groups:
+      gomod-clearingway:
+        patterns: ["*"]
+
+  - package-ecosystem: "gomod"
+    directory: "/services/clearingway_legacy"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "build"
+    groups:
+      gomod-clearingway_legacy:
+        patterns: ["*"]
+
   - package-ecosystem: "docker"
-    directory: "/"
+    directories:
+      - "/services/clearingway_legacy"
+      - "/services/findingway"
+      - "/services/moddingway/moddingway"
+      - "/services/moddingway/moddingway_api"
+      - "/services/naurffxiv"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
