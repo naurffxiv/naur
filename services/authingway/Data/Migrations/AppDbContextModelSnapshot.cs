@@ -22,6 +22,113 @@ namespace Naur.Authingway.Data.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Naur.Authingway.Data.Entities.Application", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ApplicationType")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("ClientId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ClientSecret")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ClientType")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("ConcurrencyToken")
+                        .IsConcurrencyToken()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("ConsentType")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("DisplayName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("DisplayNames")
+                        .HasColumnType("text");
+
+                    b.Property<string>("JsonWebKeySet")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Permissions")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PostLogoutRedirectUris")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Properties")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RedirectUris")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Requirements")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Settings")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClientId")
+                        .IsUnique();
+
+                    b.ToTable("Applications", (string)null);
+                });
+
+            modelBuilder.Entity("Naur.Authingway.Data.Entities.Authorization", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ApplicationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ConcurrencyToken")
+                        .IsConcurrencyToken()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime?>("CreationDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Properties")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Scopes")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Subject")
+                        .HasMaxLength(400)
+                        .HasColumnType("character varying(400)");
+
+                    b.Property<string>("Type")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId", "Status", "Subject", "Type");
+
+                    b.ToTable("Authorizations", (string)null);
+                });
+
             modelBuilder.Entity("Naur.Authingway.Data.Entities.Role", b =>
                 {
                     b.Property<Guid>("Id")
@@ -71,6 +178,107 @@ namespace Naur.Authingway.Data.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("RoleClaims", (string)null);
+                });
+
+            modelBuilder.Entity("Naur.Authingway.Data.Entities.Scope", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ConcurrencyToken")
+                        .IsConcurrencyToken()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Descriptions")
+                        .HasColumnType("text");
+
+                    b.Property<string>("DisplayName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("DisplayNames")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Properties")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Resources")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Scopes", (string)null);
+                });
+
+            modelBuilder.Entity("Naur.Authingway.Data.Entities.Token", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ApplicationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("AuthorizationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ConcurrencyToken")
+                        .IsConcurrencyToken()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime?>("CreationDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ExpirationDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Payload")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Properties")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("RedemptionDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ReferenceId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Status")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Subject")
+                        .HasMaxLength(400)
+                        .HasColumnType("character varying(400)");
+
+                    b.Property<string>("Type")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorizationId");
+
+                    b.HasIndex("ReferenceId")
+                        .IsUnique();
+
+                    b.HasIndex("ApplicationId", "Status", "Subject", "Type");
+
+                    b.ToTable("Tokens", (string)null);
                 });
 
             modelBuilder.Entity("Naur.Authingway.Data.Entities.User", b =>
@@ -238,6 +446,15 @@ namespace Naur.Authingway.Data.Migrations
                     b.ToTable("UserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Naur.Authingway.Data.Entities.Authorization", b =>
+                {
+                    b.HasOne("Naur.Authingway.Data.Entities.Application", "Application")
+                        .WithMany("Authorizations")
+                        .HasForeignKey("ApplicationId");
+
+                    b.Navigation("Application");
+                });
+
             modelBuilder.Entity("Naur.Authingway.Data.Entities.RoleClaim", b =>
                 {
                     b.HasOne("Naur.Authingway.Data.Entities.Role", null)
@@ -245,6 +462,21 @@ namespace Naur.Authingway.Data.Migrations
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Naur.Authingway.Data.Entities.Token", b =>
+                {
+                    b.HasOne("Naur.Authingway.Data.Entities.Application", "Application")
+                        .WithMany("Tokens")
+                        .HasForeignKey("ApplicationId");
+
+                    b.HasOne("Naur.Authingway.Data.Entities.Authorization", "Authorization")
+                        .WithMany("Tokens")
+                        .HasForeignKey("AuthorizationId");
+
+                    b.Navigation("Application");
+
+                    b.Navigation("Authorization");
                 });
 
             modelBuilder.Entity("Naur.Authingway.Data.Entities.UserClaim", b =>
@@ -338,6 +570,18 @@ namespace Naur.Authingway.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Naur.Authingway.Data.Entities.Application", b =>
+                {
+                    b.Navigation("Authorizations");
+
+                    b.Navigation("Tokens");
+                });
+
+            modelBuilder.Entity("Naur.Authingway.Data.Entities.Authorization", b =>
+                {
+                    b.Navigation("Tokens");
                 });
 #pragma warning restore 612, 618
         }
