@@ -7,16 +7,8 @@ import AuthSessionProvider from "@auth/components/Gates/AuthSessionProvider";
 import Footer from "@/components/Layout/Footer/Footer";
 import MUITheme from "@/components/Providers/MUITheme";
 import NavBar from "@/components/Layout/NavBar/NavBar";
-import { Roboto } from "next/font/google";
+import { roboto } from "@/config/fonts";
 import Script from "next/script";
-
-const roboto = Roboto({
-  weight: ["300", "400", "500", "700"],
-  style: ["normal", "italic"],
-  subsets: ["latin"],
-  fallback: ["system-ui", "arial"],
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "NAUR",
