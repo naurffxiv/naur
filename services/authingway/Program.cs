@@ -4,6 +4,8 @@
 
 using Naur.Authingway.Core;
 using Naur.Authingway.Data;
+using Naur.Authingway.Discord;
+using Naur.Authingway.Identity;
 
 namespace Naur.Authingway;
 
@@ -21,7 +23,9 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.ConfigureCore()
-            .ConfigureData();
+            .ConfigureData()
+            .ConfigureDiscord()
+            .ConfigureIdentity();
 
         var app = builder.Build();
 

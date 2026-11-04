@@ -26,9 +26,16 @@ public class TestAppHost : IAsyncDiscoveryInitializer, IAsyncDisposable
     public DistributedApplication Application { get; private set; } = default!;
 
     /// <inheritdoc/>
+    /// <exception cref="InvalidOperationException">The <c>AUTHINGWAY_TEST_DISCORD_TOKEN</c> environment variable is not set.</exception>
     public async Task InitializeAsync()
     {
-        Builder = await DistributedApplicationTestingBuilder.CreateAsync<Projects.Naur_AppHost>();
+        var discordToken = Environment.GetEnvironmentVariable("AUTHINGWAY_TEST_DISCORD_TOKEN");
+        if (string.IsNullOrWhiteSpace(discordToken))
+        {
+            throw new InvalidOperationException("Set AUTHINGWAY_TEST_DISCORD_TOKEN to a test bot token before running the Authingway tests.");
+        }
+
+        Builder = await DistributedApplicationTestingBuilder.CreateAsync<Projects.Naur_AppHost>([$"Parameters:DiscordToken={discordToken}"]);
 
         Builder.Services.ConfigureHttpClientDefaults(http =>
         {
