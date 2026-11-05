@@ -80,6 +80,19 @@ jobs:
       - name: Add known hosts
         run: ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log the server in to GitHub Container Registry
+        env:
+          SERVER: ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "$GHCR_TOKEN" | ssh "$SERVER" docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+
       - name: Deploy
         env:
           EnableHttps: "true"
@@ -91,6 +104,4 @@ jobs:
           DockerSSH__SshUsername: ${{ secrets.SERVER_USER }}
           DockerRegistry__RegistryUrl: ghcr.io
           DockerRegistry__RepositoryPrefix: ${{ github.repository }}
-          DockerRegistry__RegistryUsername: ${{ github.actor }}
-          DockerRegistry__RegistryPassword: ${{ secrets.GITHUB_TOKEN }}
         run: aspire deploy -e production

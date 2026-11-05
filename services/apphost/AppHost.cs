@@ -2,16 +2,10 @@
 // The NAUR Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Aspire.Hosting.Publishing;
 using Aspire.Hosting.Yarp;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 
 var builder = DistributedApplication.CreateBuilder(args);
-
-#pragma warning disable ASPIRECONTAINERRUNTIME001
-builder.Services.AddSingleton<IContainerRuntime, ResolvedContainerRuntime>();
-#pragma warning restore ASPIRECONTAINERRUNTIME001
 
 builder.AddDockerComposeEnvironment("env")
     .WithSshDeploySupport();
