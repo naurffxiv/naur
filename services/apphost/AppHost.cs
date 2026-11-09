@@ -2,12 +2,14 @@
 // The NAUR Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Aspire.Hosting.Yarp;
-using Microsoft.Extensions.Configuration;
+using Aspire.Hosting.Docker.Resources.ComposeNodes;
+using Aspire.Hosting.Yarp.Transforms;
+
+const string TunnelNetwork = "naur-tunnel";
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-builder.AddDockerComposeEnvironment("env")
+var composeEnvironment = builder.AddDockerComposeEnvironment("env")
     .WithSshDeploySupport();
 
 var postgres = builder.AddPostgres("postgres")
@@ -41,61 +43,23 @@ if (!builder.ExecutionContext.IsPublishMode)
 
 if (builder.ExecutionContext.IsPublishMode)
 {
-    var ingress = builder.AddYarp("ingress")
+    composeEnvironment.ConfigureComposeFile(file =>
+    {
+        file.AddNetwork(new Network { Name = TunnelNetwork, External = true });
+        file.Services[$"{composeEnvironment.Resource.Name}-dashboard"].Ports = ["127.0.0.1:18888:18888"];
+    });
+
+    builder.AddYarp("ingress")
         .WithConfiguration(yarp =>
         {
-            yarp.AddRoute(authingway);
+            yarp.AddRoute(authingway)
+                .WithTransformUseOriginalHostHeader();
+        })
+        .WithEnvironment("ASPNETCORE_FORWARDEDHEADERS_ENABLED", "true")
+        .PublishAsDockerComposeService((_, service) =>
+        {
+            service.Networks.Add(TunnelNetwork);
         });
-
-    if (!builder.Configuration.GetValue<bool>("EnableHttps"))
-    {
-        ingress.WithHostPort(80)
-            .WithExternalHttpEndpoints();
-    }
-    else
-    {
-        var domain = builder.AddParameter("Domain");
-        var letsEncryptEmail = builder.AddParameter("LetsEncryptEmail");
-        var letsEncryptVolume = "letsencrypt";
-
-        var certbot = builder.AddContainer("certbot", "certbot/certbot")
-            .WithVolume(letsEncryptVolume, "/etc/letsencrypt")
-            .WithHttpEndpoint(port: 80, targetPort: 80)
-            .WithExternalHttpEndpoints()
-            .WithArgs(
-                "certonly",
-                "--standalone",
-                "--non-interactive",
-                "--agree-tos",
-                "-v",
-                "--keep-until-expiring",
-                "--deploy-hook",
-                "chmod -R 755 /etc/letsencrypt/live && chmod -R 755 /etc/letsencrypt/archive",
-                "--email",
-                letsEncryptEmail.Resource,
-                "-d",
-                domain.Resource);
-
-        ingress.WaitForCompletion(certbot)
-            .WithVolume(letsEncryptVolume, "/etc/letsencrypt", isReadOnly: true)
-            .WithHostPort(80)
-            .WithHttpsEndpoint(443)
-            .WithExternalHttpEndpoints()
-            .WithEnvironment(context =>
-            {
-                context.EnvironmentVariables["Kestrel__Certificates__Default__Path"] =
-                    ReferenceExpression.Create($"/etc/letsencrypt/live/{domain}/fullchain.pem");
-                context.EnvironmentVariables["Kestrel__Certificates__Default__KeyPath"] =
-                    ReferenceExpression.Create($"/etc/letsencrypt/live/{domain}/privkey.pem");
-
-                var yarpResource = (YarpResource)context.Resource;
-                var httpEndpoint = yarpResource.GetEndpoint("http");
-                var httpsEndpoint = yarpResource.GetEndpoint("https");
-
-                context.EnvironmentVariables["ASPNETCORE_URLS"] =
-                    ReferenceExpression.Create($"http://+:{httpEndpoint.Property(EndpointProperty.TargetPort)};https://+:{httpsEndpoint.Property(EndpointProperty.TargetPort)}");
-            });
-    }
 }
 
 builder.Build().Run();

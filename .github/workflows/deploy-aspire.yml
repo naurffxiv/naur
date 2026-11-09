@@ -95,11 +95,8 @@ jobs:
 
       - name: Deploy
         env:
-          EnableHttps: "true"
           Parameters__PostgresPassword: ${{ secrets.AUTHINGWAY_POSTGRES_PASSWORD }}
           Parameters__DiscordToken: ${{ secrets.AUTHINGWAY_DISCORD_TOKEN }}
-          Parameters__Domain: ${{ secrets.DEPLOY_DOMAIN }}
-          Parameters__LetsEncryptEmail: ${{ secrets.LETSENCRYPT_EMAIL }}
           DockerSSH__TargetHost: ${{ secrets.SERVER_HOST }}
           DockerSSH__SshUsername: ${{ secrets.SERVER_USER }}
           DockerRegistry__RegistryUrl: ghcr.io
