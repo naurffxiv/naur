@@ -47,11 +47,23 @@ public static class IdentityExtensions
             .AddServer(options =>
             {
                 options.SetConfigurationEndpointUris("/.well-known/openid-configuration");
+                options.SetJsonWebKeySetEndpointUris("/.well-known/jwks");
+                options.SetAuthorizationEndpointUris("/authorize");
+                options.SetEndSessionEndpointUris("/logout");
+                options.SetTokenEndpointUris("/token");
+                options.SetUserInfoEndpointUris("/userinfo");
+
+                options.AllowAuthorizationCodeFlow();
+                options.AllowRefreshTokenFlow();
 
                 options.AddDevelopmentEncryptionCertificate()
                     .AddDevelopmentSigningCertificate();
 
                 options.UseAspNetCore()
+                    .EnableAuthorizationEndpointPassthrough()
+                    .EnableEndSessionEndpointPassthrough()
+                    .EnableTokenEndpointPassthrough()
+                    .EnableUserInfoEndpointPassthrough()
                     .EnableStatusCodePagesIntegration();
 
                 options.UseDataProtection();
