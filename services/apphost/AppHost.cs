@@ -2,11 +2,6 @@
 // The NAUR Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Aspire.Hosting.Docker.Resources.ComposeNodes;
-using Aspire.Hosting.Yarp.Transforms;
-
-const string TunnelNetwork = "naur-tunnel";
-
 var builder = DistributedApplication.CreateBuilder(args);
 
 var composeEnvironment = builder.AddDockerComposeEnvironment("env")
@@ -45,21 +40,17 @@ if (builder.ExecutionContext.IsPublishMode)
 {
     composeEnvironment.ConfigureComposeFile(file =>
     {
-        file.AddNetwork(new Network { Name = TunnelNetwork, External = true });
         file.Services[$"{composeEnvironment.Resource.Name}-dashboard"].Ports = ["127.0.0.1:18888:18888"];
     });
 
-    builder.AddYarp("ingress")
-        .WithConfiguration(yarp =>
-        {
-            yarp.AddRoute(authingway)
-                .WithTransformUseOriginalHostHeader();
-        })
-        .WithEnvironment("ASPNETCORE_FORWARDEDHEADERS_ENABLED", "true")
-        .PublishAsDockerComposeService((_, service) =>
-        {
-            service.Networks.Add(TunnelNetwork);
-        });
+    authingway.WithEndpoint("http", endpoint => endpoint.TargetPort = 8080);
+
+    var cloudflareToken = builder.AddParameter("CloudflareToken", secret: true);
+
+    builder.AddContainer("cloudflared", "cloudflare/cloudflared", "2026.10.7")
+        .WithArgs("tunnel", "--no-autoupdate", "run")
+        .WithEnvironment("TUNNEL_TOKEN", cloudflareToken)
+        .WaitFor(authingway);
 }
 
 builder.Build().Run();

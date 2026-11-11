@@ -97,6 +97,7 @@ jobs:
         env:
           Parameters__PostgresPassword: ${{ secrets.AUTHINGWAY_POSTGRES_PASSWORD }}
           Parameters__DiscordToken: ${{ secrets.AUTHINGWAY_DISCORD_TOKEN }}
+          Parameters__CloudflareToken: ${{ secrets.AUTHINGWAY_CLOUDFLARE_TOKEN }}
           DockerSSH__TargetHost: ${{ secrets.SERVER_HOST }}
           DockerSSH__SshUsername: ${{ secrets.SERVER_USER }}
           DockerRegistry__RegistryUrl: ghcr.io
