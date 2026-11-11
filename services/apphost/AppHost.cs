@@ -4,7 +4,8 @@
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-var composeEnvironment = builder.AddDockerComposeEnvironment("env")
+builder.AddDockerComposeEnvironment("env")
+    .WithDashboard(enabled: false)
     .WithSshDeploySupport();
 
 var postgres = builder.AddPostgres("postgres")
@@ -38,11 +39,6 @@ if (!builder.ExecutionContext.IsPublishMode)
 
 if (builder.ExecutionContext.IsPublishMode)
 {
-    composeEnvironment.ConfigureComposeFile(file =>
-    {
-        file.Services[$"{composeEnvironment.Resource.Name}-dashboard"].Ports = ["127.0.0.1:18888:18888"];
-    });
-
     authingway.WithEndpoint("http", endpoint => endpoint.TargetPort = 8080);
 
     var cloudflareToken = builder.AddParameter("CloudflareToken", secret: true);
