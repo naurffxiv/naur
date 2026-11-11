@@ -32,14 +32,9 @@ var authingway = builder.AddProject<Projects.Naur_Authingway>("authingway")
     .WithEnvironment("Discord__Token", discordToken)
     .WithHttpHealthCheck("/health");
 
-if (!builder.ExecutionContext.IsPublishMode)
-{
-    authingway.WithExternalHttpEndpoints();
-}
-
 if (builder.ExecutionContext.IsPublishMode)
 {
-    authingway.WithEndpoint("http", endpoint => endpoint.TargetPort = 8080);
+    authingway.WithHttpEndpoint(targetPort: 8080);
 
     var cloudflareToken = builder.AddParameter("CloudflareToken", secret: true);
 
