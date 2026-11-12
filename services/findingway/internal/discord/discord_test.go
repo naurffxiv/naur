@@ -12,9 +12,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const unitTestChannelID = "1566200857207382106"
+
 func TestStartDiscord(t *testing.T) {
-	token, ok := os.LookupEnv("DISCORD_TOKEN")
-	if !ok {
+	token := os.Getenv("DISCORD_TOKEN")
+	if token == "" {
 		t.Skip("DISCORD_TOKEN not set, skipping integration test")
 	}
 
@@ -25,8 +27,8 @@ func TestStartDiscord(t *testing.T) {
 }
 
 func TestPostListings(t *testing.T) {
-	token, ok := os.LookupEnv("DISCORD_TOKEN")
-	if !ok {
+	token := os.Getenv("DISCORD_TOKEN")
+	if token == "" {
 		t.Skip("DISCORD_TOKEN not set, skipping integration test")
 	}
 
@@ -70,8 +72,7 @@ func TestPostListings(t *testing.T) {
 		ffxivListings.Listings = append(ffxivListings.Listings, item.listing)
 	}
 
-	// testing in #staff-actions
-	listErr := disc.PostListings("1174350271304958032", &ffxivListings, "Dragonsong's Reprise (Ultimate)", "Aether")
+	listErr := disc.PostListings(unitTestChannelID, &ffxivListings, "Dragonsong's Reprise (Ultimate)", "Aether")
 	assert.NoError(t, listErr)
 }
 
