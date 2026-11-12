@@ -17,4 +17,7 @@ public static partial class DataMigrationLogger
 
     [LoggerMessage(1003, LogLevel.Information, "Database migration complete!")]
     public static partial void LogDatabaseMigrationComplete(this ILogger logger);
+
+    [LoggerMessage(1004, LogLevel.Information, "Another database migration is running, retrying in 15 seconds...")]
+    public static partial void LogDatabaseMigrationAlreadyRunning(this ILogger logger);
 }

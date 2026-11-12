@@ -23,7 +23,15 @@ public static class DataExtensions
     public static IHostApplicationBuilder ConfigureData(this IHostApplicationBuilder builder)
     {
         return builder.ConfigureDbContext()
+            .ConfigureMigrator()
             .ConfigureMigrationWorker();
+    }
+
+    private static IHostApplicationBuilder ConfigureMigrator(this IHostApplicationBuilder builder)
+    {
+        builder.Services.AddScoped<DatabaseMigrator>();
+
+        return builder;
     }
 
     private static IHostApplicationBuilder ConfigureDbContext(this IHostApplicationBuilder builder)

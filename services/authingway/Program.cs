@@ -29,7 +29,8 @@ public class Program
 
         var app = builder.Build();
 
-        app.UseCore();
+        app.UseCore()
+            .UseDiscord();
 
         app.Run();
     }

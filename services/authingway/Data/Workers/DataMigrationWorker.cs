@@ -2,7 +2,6 @@
 // The NAUR Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Microsoft.EntityFrameworkCore;
 using Naur.Authingway.Data.Loggers;
 using System.Diagnostics;
 
@@ -24,10 +23,7 @@ public class DataMigrationWorker(IServiceProvider serviceProvider, ILogger<DataM
 
         try
         {
-            using var scope = serviceProvider.CreateScope();
-
-            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            await RunDatabaseMigrationsAsync(dbContext, stoppingToken);
+            await RunDatabaseMigrationsAsync(stoppingToken);
         }
         catch (Exception ex)
         {
@@ -36,7 +32,7 @@ public class DataMigrationWorker(IServiceProvider serviceProvider, ILogger<DataM
         }
     }
 
-    private async Task RunDatabaseMigrationsAsync(AppDbContext dbContext, CancellationToken cancellationToken)
+    private async Task RunDatabaseMigrationsAsync(CancellationToken cancellationToken)
     {
         logger.LogDatabaseMigrationStarting();
 
@@ -44,21 +40,23 @@ public class DataMigrationWorker(IServiceProvider serviceProvider, ILogger<DataM
         {
             try
             {
-                var strategy = dbContext.Database.CreateExecutionStrategy();
+                using var scope = serviceProvider.CreateScope();
 
-                await strategy.ExecuteAsync(async () =>
+                var migrator = scope.ServiceProvider.GetRequiredService<DatabaseMigrator>();
+
+                if (await migrator.MigrateAsync(cancellationToken) == MigrationOutcome.Applied)
                 {
-                    await dbContext.Database.MigrateAsync(cancellationToken);
-                });
+                    break;
+                }
+
+                logger.LogDatabaseMigrationAlreadyRunning();
             }
             catch (Exception ex)
             {
                 logger.LogDatabaseMigrationFailed(ex);
-                await Task.Delay(15000, cancellationToken);
-                continue;
             }
 
-            break;
+            await Task.Delay(15000, cancellationToken);
         }
 
         logger.LogDatabaseMigrationComplete();

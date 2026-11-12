@@ -98,6 +98,9 @@ jobs:
           Parameters__PostgresPassword: ${{ secrets.AUTHINGWAY_POSTGRES_PASSWORD }}
           Parameters__DiscordToken: ${{ secrets.AUTHINGWAY_DISCORD_TOKEN }}
           Parameters__CloudflareToken: ${{ secrets.AUTHINGWAY_CLOUDFLARE_TOKEN }}
+          Parameters__DiscordGuildId: ${{ vars.AUTHINGWAY_DISCORD_GUILD_ID || '0' }}
+          Parameters__DiscordMigrationChannelId: ${{ vars.AUTHINGWAY_MIGRATION_CHANNEL_ID || '0' }}
+          Parameters__DiscordDeveloperRoleId: ${{ vars.AUTHINGWAY_DEVELOPER_ROLE_ID || '0' }}
           DockerSSH__TargetHost: ${{ secrets.SERVER_HOST }}
           DockerSSH__SshUsername: ${{ secrets.SERVER_USER }}
           DockerRegistry__RegistryUrl: ghcr.io
