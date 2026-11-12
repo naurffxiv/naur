@@ -56,8 +56,19 @@ public static class IdentityExtensions
                 options.AllowAuthorizationCodeFlow();
                 options.AllowRefreshTokenFlow();
 
-                options.AddDevelopmentEncryptionCertificate()
-                    .AddDevelopmentSigningCertificate();
+                var certificates = builder.Configuration.GetSection(TokenCertificateOptions.SectionName)
+                    .Get<TokenCertificateOptions>() ?? new TokenCertificateOptions();
+
+                if (certificates.IsEmpty && builder.Environment.IsDevelopment())
+                {
+                    options.AddDevelopmentEncryptionCertificate()
+                        .AddDevelopmentSigningCertificate();
+                }
+                else
+                {
+                    options.AddSigningCertificate(certificates.LoadSigningCertificate())
+                        .AddEncryptionCertificate(certificates.LoadEncryptionCertificate());
+                }
 
                 options.UseAspNetCore()
                     .EnableAuthorizationEndpointPassthrough()
