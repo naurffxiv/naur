@@ -98,6 +98,10 @@ jobs:
           Parameters__PostgresPassword: ${{ secrets.AUTHINGWAY_POSTGRES_PASSWORD }}
           Parameters__DiscordToken: ${{ secrets.AUTHINGWAY_DISCORD_TOKEN }}
           Parameters__CloudflareToken: ${{ secrets.AUTHINGWAY_CLOUDFLARE_TOKEN }}
+          Parameters__SigningCertificate: ${{ secrets.AUTHINGWAY_SIGNING_CERTIFICATE }}
+          Parameters__SigningCertificatePassword: ${{ secrets.AUTHINGWAY_SIGNING_CERTIFICATE_PASSWORD }}
+          Parameters__EncryptionCertificate: ${{ secrets.AUTHINGWAY_ENCRYPTION_CERTIFICATE }}
+          Parameters__EncryptionCertificatePassword: ${{ secrets.AUTHINGWAY_ENCRYPTION_CERTIFICATE_PASSWORD }}
           DockerSSH__TargetHost: ${{ secrets.SERVER_HOST }}
           DockerSSH__SshUsername: ${{ secrets.SERVER_USER }}
           DockerRegistry__RegistryUrl: ghcr.io
