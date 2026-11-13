@@ -2,12 +2,11 @@
 // The NAUR Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Naur.Authingway.Data;
 using NetCord;
 using NetCord.Rest;
 using NetCord.Services.ApplicationCommands;
 
-namespace Naur.Authingway.Discord;
+namespace Naur.Authingway.Data.Commands;
 
 /// <summary>
 /// Exposes the database migration command to Discord.

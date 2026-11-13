@@ -18,7 +18,7 @@ namespace Naur.Authingway.Tests.Data;
 public class DatabaseMigratorTests(IServiceProvider serviceProvider)
 {
     /// <summary>
-    /// Verifies that migrations are applied once the startup migration workers release the lock.
+    /// Verifies that migrations are applied when no other caller holds the lock.
     /// </summary>
     /// <returns>A task that represents the asynchronous test operation.</returns>
     [Test]
@@ -28,14 +28,7 @@ public class DatabaseMigratorTests(IServiceProvider serviceProvider)
 
         var migrator = scope.ServiceProvider.GetRequiredService<DatabaseMigrator>();
 
-        var deadline = DateTime.UtcNow.AddSeconds(30);
         var outcome = await migrator.MigrateAsync(CancellationToken.None);
-
-        while (outcome == MigrationOutcome.AlreadyRunning && DateTime.UtcNow < deadline)
-        {
-            await Task.Delay(TimeSpan.FromSeconds(1));
-            outcome = await migrator.MigrateAsync(CancellationToken.None);
-        }
 
         await Assert.That(outcome)
             .IsEqualTo(MigrationOutcome.Applied);

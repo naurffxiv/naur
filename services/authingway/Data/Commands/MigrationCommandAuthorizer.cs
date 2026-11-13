@@ -4,13 +4,13 @@
 
 using Microsoft.Extensions.Options;
 
-namespace Naur.Authingway.Discord;
+namespace Naur.Authingway.Data.Commands;
 
 /// <summary>
 /// Decides whether a migration command invocation is permitted.
 /// </summary>
 /// <param name="options">The configured Discord identifiers. Cannot be null.</param>
-public sealed class MigrationCommandAuthorizer(IOptions<DiscordOptions> options)
+public sealed class MigrationCommandAuthorizer(IOptions<MigrationCommandOptions> options)
 {
     /// <summary>
     /// Determines whether an invocation from the given guild and channel by a user holding the given roles is permitted.

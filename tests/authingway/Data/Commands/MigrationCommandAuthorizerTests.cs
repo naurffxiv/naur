@@ -4,9 +4,9 @@
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
-using Naur.Authingway.Discord;
+using Naur.Authingway.Data.Commands;
 
-namespace Naur.Authingway.Tests.Discord;
+namespace Naur.Authingway.Tests.Data.Commands;
 
 /// <summary>
 /// Contains tests that verify the migration command is restricted to one guild, one channel and one role.
@@ -144,14 +144,14 @@ public class MigrationCommandAuthorizerTests
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                [$"{DiscordOptions.SectionName}:{nameof(DiscordOptions.GuildId)}"] = "",
-                [$"{DiscordOptions.SectionName}:{nameof(DiscordOptions.MigrationChannelId)}"] = "",
-                [$"{DiscordOptions.SectionName}:{nameof(DiscordOptions.DeveloperRoleId)}"] = ""
+                [$"{MigrationCommandOptions.SectionName}:{nameof(MigrationCommandOptions.GuildId)}"] = "",
+                [$"{MigrationCommandOptions.SectionName}:{nameof(MigrationCommandOptions.MigrationChannelId)}"] = "",
+                [$"{MigrationCommandOptions.SectionName}:{nameof(MigrationCommandOptions.DeveloperRoleId)}"] = ""
             })
             .Build();
 
-        var options = new DiscordOptions();
-        configuration.GetSection(DiscordOptions.SectionName).Bind(options);
+        var options = new MigrationCommandOptions();
+        configuration.GetSection(MigrationCommandOptions.SectionName).Bind(options);
 
         var authorizer = new MigrationCommandAuthorizer(Options.Create(options));
 
@@ -161,7 +161,7 @@ public class MigrationCommandAuthorizerTests
 
     private static MigrationCommandAuthorizer CreateAuthorizer(ulong guildId, ulong channelId, ulong roleId)
     {
-        var options = Options.Create(new DiscordOptions
+        var options = Options.Create(new MigrationCommandOptions
         {
             GuildId = guildId,
             MigrationChannelId = channelId,

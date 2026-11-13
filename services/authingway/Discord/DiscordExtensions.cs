@@ -20,9 +20,6 @@ public static class DiscordExtensions
     /// <returns>The same <see cref="IHostApplicationBuilder"/> instance for chaining further configuration.</returns>
     public static IHostApplicationBuilder ConfigureDiscord(this IHostApplicationBuilder builder)
     {
-        builder.Services.Configure<DiscordOptions>(builder.Configuration.GetSection(DiscordOptions.SectionName));
-        builder.Services.AddSingleton<MigrationCommandAuthorizer>();
-
         builder.Services.AddDiscordGateway()
             .AddApplicationCommands();
 
