@@ -25,11 +25,17 @@ var postgres = builder.AddPostgres("postgres")
 var authingwayDb = postgres.AddDatabase("authingwaydb", databaseName: "authingway");
 
 var discordToken = builder.AddParameter("DiscordToken", secret: true);
+var discordGuildId = builder.AddParameter("DiscordGuildId", "0", publishValueAsDefault: true);
+var discordMigrationChannelId = builder.AddParameter("DiscordMigrationChannelId", "0", publishValueAsDefault: true);
+var discordDeveloperRoleId = builder.AddParameter("DiscordDeveloperRoleId", "0", publishValueAsDefault: true);
 
 var authingway = builder.AddProject<Projects.Naur_Authingway>("authingway")
     .WithReference(authingwayDb)
     .WaitFor(authingwayDb)
     .WithEnvironment("Discord__Token", discordToken)
+    .WithEnvironment("Discord__Restrictions__Migration__GuildId", discordGuildId)
+    .WithEnvironment("Discord__Restrictions__Migration__ChannelId", discordMigrationChannelId)
+    .WithEnvironment("Discord__Restrictions__Migration__RoleId", discordDeveloperRoleId)
     .WithHttpHealthCheck("/health");
 
 if (builder.ExecutionContext.IsPublishMode)
