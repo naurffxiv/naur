@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Naur.Authingway.Data.Commands;
 using Naur.Authingway.Data.Entities;
 using Naur.Authingway.Data.Extensions;
+using Naur.Authingway.Discord;
 
 namespace Naur.Authingway.Data;
 
@@ -29,10 +30,8 @@ public static class DataExtensions
     private static IHostApplicationBuilder ConfigureMigrations(this IHostApplicationBuilder builder)
     {
         builder.Services.AddScoped<DatabaseMigrator>();
-        builder.Services.Configure<MigrationCommandOptions>(builder.Configuration.GetSection(MigrationCommandOptions.SectionName));
-        builder.Services.AddSingleton<MigrationCommandAuthorizer>();
 
-        return builder;
+        return builder.AddChannelRoleRestriction(MigrationCommandModule.Restriction);
     }
 
     private static IHostApplicationBuilder ConfigureDbContext(this IHostApplicationBuilder builder)

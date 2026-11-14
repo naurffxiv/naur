@@ -1,0 +1,145 @@
+﻿// Licensed to the NAUR Contributors under one or more agreements.
+// The NAUR Contributors licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
+using Naur.Authingway.Discord;
+
+namespace Naur.Authingway.Tests.Discord;
+
+/// <summary>
+/// Contains tests that verify a channel and role restriction permits only its configured guild, channel and role.
+/// </summary>
+public class ChannelRoleRestrictionOptionsTests
+{
+    private const ulong GuildId = 50;
+    private const ulong ChannelId = 100;
+    private const ulong RoleId = 200;
+
+    /// <summary>
+    /// Verifies that an invocation from the configured guild and channel by a holder of the configured role is permitted.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
+    [Test]
+    public async Task PermitsConfiguredGuildChannelAndRole()
+    {
+        await Assert.That(Create(GuildId, ChannelId, RoleId).Permits(GuildId, ChannelId, [RoleId]))
+            .IsTrue();
+    }
+
+    /// <summary>
+    /// Verifies that an invocation from any other guild is refused.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
+    [Test]
+    public async Task RefusesOtherGuilds()
+    {
+        await Assert.That(Create(GuildId, ChannelId, RoleId).Permits(999, ChannelId, [RoleId]))
+            .IsFalse();
+    }
+
+    /// <summary>
+    /// Verifies that an invocation from outside any guild is refused.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
+    [Test]
+    public async Task RefusesInvocationsOutsideAGuild()
+    {
+        await Assert.That(Create(GuildId, ChannelId, RoleId).Permits(null, ChannelId, [RoleId]))
+            .IsFalse();
+    }
+
+    /// <summary>
+    /// Verifies that an invocation from any other channel is refused.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
+    [Test]
+    public async Task RefusesOtherChannels()
+    {
+        await Assert.That(Create(GuildId, ChannelId, RoleId).Permits(GuildId, 999, [RoleId]))
+            .IsFalse();
+    }
+
+    /// <summary>
+    /// Verifies that a user without the configured role is refused.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
+    [Test]
+    public async Task RefusesUsersWithoutTheRole()
+    {
+        await Assert.That(Create(GuildId, ChannelId, RoleId).Permits(GuildId, ChannelId, [999]))
+            .IsFalse();
+    }
+
+    /// <summary>
+    /// Verifies that a user holding no roles is refused.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
+    [Test]
+    public async Task RefusesUsersWithNoRoles()
+    {
+        await Assert.That(Create(GuildId, ChannelId, RoleId).Permits(GuildId, ChannelId, []))
+            .IsFalse();
+    }
+
+    /// <summary>
+    /// Verifies that nothing is permitted while any identifier is unconfigured.
+    /// </summary>
+    /// <param name="guildId">The configured guild identifier.</param>
+    /// <param name="channelId">The configured channel identifier.</param>
+    /// <param name="roleId">The configured role identifier.</param>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
+    [Test]
+    [Arguments(0UL, ChannelId, RoleId)]
+    [Arguments(GuildId, 0UL, RoleId)]
+    [Arguments(GuildId, ChannelId, 0UL)]
+    public async Task RefusesWhenAnyIdentifierIsUnconfigured(ulong guildId, ulong channelId, ulong roleId)
+    {
+        await Assert.That(Create(guildId, channelId, roleId).Permits(GuildId, ChannelId, [RoleId]))
+            .IsFalse();
+    }
+
+    /// <summary>
+    /// Verifies that a named restriction binds from its own configuration section, and that blank values bind as unconfigured.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
+    [Test]
+    public async Task BindsNamedRestrictionsFromTheirOwnSection()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                [$"{ChannelRoleRestrictionOptions.SectionName}:Configured:GuildId"] = $"{GuildId}",
+                [$"{ChannelRoleRestrictionOptions.SectionName}:Configured:ChannelId"] = $"{ChannelId}",
+                [$"{ChannelRoleRestrictionOptions.SectionName}:Configured:RoleId"] = $"{RoleId}",
+                [$"{ChannelRoleRestrictionOptions.SectionName}:Blank:GuildId"] = "",
+                [$"{ChannelRoleRestrictionOptions.SectionName}:Blank:ChannelId"] = "",
+                [$"{ChannelRoleRestrictionOptions.SectionName}:Blank:RoleId"] = ""
+            })
+            .Build();
+
+        var builder = Host.CreateApplicationBuilder();
+        builder.Configuration.AddConfiguration(configuration);
+        builder.AddChannelRoleRestriction("Configured")
+            .AddChannelRoleRestriction("Blank");
+
+        using var services = builder.Services.BuildServiceProvider();
+        var monitor = services.GetRequiredService<IOptionsMonitor<ChannelRoleRestrictionOptions>>();
+
+        await Assert.That(monitor.Get("Configured").Permits(GuildId, ChannelId, [RoleId])).IsTrue();
+        await Assert.That(monitor.Get("Blank").Permits(GuildId, ChannelId, [RoleId])).IsFalse();
+    }
+
+    private static ChannelRoleRestrictionOptions Create(ulong guildId, ulong channelId, ulong roleId)
+    {
+        return new ChannelRoleRestrictionOptions
+        {
+            GuildId = guildId,
+            ChannelId = channelId,
+            RoleId = roleId
+        };
+    }
+}

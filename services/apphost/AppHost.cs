@@ -33,9 +33,9 @@ var authingway = builder.AddProject<Projects.Naur_Authingway>("authingway")
     .WithReference(authingwayDb)
     .WaitFor(authingwayDb)
     .WithEnvironment("Discord__Token", discordToken)
-    .WithEnvironment("Discord__GuildId", discordGuildId)
-    .WithEnvironment("Discord__MigrationChannelId", discordMigrationChannelId)
-    .WithEnvironment("Discord__DeveloperRoleId", discordDeveloperRoleId)
+    .WithEnvironment("Discord__Restrictions__Migration__GuildId", discordGuildId)
+    .WithEnvironment("Discord__Restrictions__Migration__ChannelId", discordMigrationChannelId)
+    .WithEnvironment("Discord__Restrictions__Migration__RoleId", discordDeveloperRoleId)
     .WithHttpHealthCheck("/health");
 
 if (builder.ExecutionContext.IsPublishMode)
