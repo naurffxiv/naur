@@ -53,6 +53,7 @@ public class MigrationCommandModule(MigrationCommandAuthorizer authorizer, IServ
         {
             MigrationOutcome.Applied => "Database migrations applied.",
             MigrationOutcome.AlreadyRunning => "A migration is already running.",
+            MigrationOutcome.Failed => "Database migrations failed; check the authingway logs.",
             _ => "The migration finished in an unrecognised state."
         };
 

@@ -21,14 +21,20 @@ public enum MigrationOutcome
     /// <summary>
     /// Another caller held the migration lock, so no migrations were attempted.
     /// </summary>
-    AlreadyRunning
+    AlreadyRunning,
+
+    /// <summary>
+    /// The migration attempt raised an error, which was logged.
+    /// </summary>
+    Failed
 }
 
 /// <summary>
 /// Applies database migrations under an advisory lock so that only one caller migrates at a time.
 /// </summary>
 /// <param name="dbContext">The database context whose migrations are applied. Cannot be null.</param>
-public sealed class DatabaseMigrator(AppDbContext dbContext)
+/// <param name="logger">Records failed migration attempts. Cannot be null.</param>
+public sealed partial class DatabaseMigrator(AppDbContext dbContext, ILogger<DatabaseMigrator> logger)
 {
     /// <summary>
     /// The PostgreSQL advisory lock key that serializes migration runs.
@@ -40,39 +46,54 @@ public sealed class DatabaseMigrator(AppDbContext dbContext)
     /// </summary>
     /// <param name="cancellationToken">A token that cancels the operation.</param>
     /// <returns>
-    /// <see cref="MigrationOutcome.Applied"/> when migrations ran, or <see cref="MigrationOutcome.AlreadyRunning"/>
-    /// when the lock was already held.
+    /// <see cref="MigrationOutcome.Applied"/> when migrations ran, <see cref="MigrationOutcome.AlreadyRunning"/>
+    /// when the lock was already held, or <see cref="MigrationOutcome.Failed"/> when connecting, locking or migrating
+    /// raised an error.
     /// </returns>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was canceled.</exception>
     /// <remarks>
     /// The lock is a PostgreSQL session advisory lock held on this context's connection, so it excludes callers in
     /// other processes as well as other threads. Acquisition does not wait: a caller that cannot take the lock returns
-    /// <see cref="MigrationOutcome.AlreadyRunning"/> immediately.
+    /// <see cref="MigrationOutcome.AlreadyRunning"/> immediately. Errors other than cancellation are logged rather
+    /// than thrown.
     /// </remarks>
     public async Task<MigrationOutcome> MigrateAsync(CancellationToken cancellationToken)
     {
-        var connection = dbContext.Database.GetDbConnection();
-
-        if (connection.State != ConnectionState.Open)
-        {
-            await connection.OpenAsync(cancellationToken);
-        }
-
-        if (!await TryAcquireLockAsync(connection, cancellationToken))
-        {
-            return MigrationOutcome.AlreadyRunning;
-        }
-
         try
         {
-            await dbContext.Database.MigrateAsync(cancellationToken);
-        }
-        finally
-        {
-            await ReleaseLockAsync(connection, cancellationToken);
-        }
+            var connection = dbContext.Database.GetDbConnection();
 
-        return MigrationOutcome.Applied;
+            if (connection.State != ConnectionState.Open)
+            {
+                await connection.OpenAsync(cancellationToken);
+            }
+
+            if (!await TryAcquireLockAsync(connection, cancellationToken))
+            {
+                return MigrationOutcome.AlreadyRunning;
+            }
+
+            try
+            {
+                await dbContext.Database.MigrateAsync(cancellationToken);
+            }
+            finally
+            {
+                await ReleaseLockAsync(connection, cancellationToken);
+            }
+
+            return MigrationOutcome.Applied;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            LogMigrationFailed(logger, ex);
+
+            return MigrationOutcome.Failed;
+        }
     }
+
+    [LoggerMessage(1, LogLevel.Error, "Database migration failed.")]
+    private static partial void LogMigrationFailed(ILogger logger, Exception exception);
 
     private static async Task<bool> TryAcquireLockAsync(DbConnection connection, CancellationToken cancellationToken)
     {

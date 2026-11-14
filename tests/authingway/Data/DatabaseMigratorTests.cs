@@ -4,6 +4,7 @@
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using Naur.Authingway.Data;
 using Naur.Authingway.Tests.Testing;
 
@@ -66,6 +67,27 @@ public class DatabaseMigratorTests(IServiceProvider serviceProvider)
         {
             await ExecuteLockFunctionAsync(holderContext, "pg_advisory_unlock", cancellationToken);
         }
+    }
+
+    /// <summary>
+    /// Verifies that a migration attempt that cannot reach the database reports failure instead of throwing.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
+    [Test]
+    public async Task ReportsFailedWhenDatabaseIsUnreachable()
+    {
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseNpgsql("Host=127.0.0.1;Port=1;Database=authingway;Username=postgres;Password=unused;Timeout=2")
+            .Options;
+
+        await using var dbContext = new AppDbContext(options);
+
+        var migrator = new DatabaseMigrator(dbContext, NullLogger<DatabaseMigrator>.Instance);
+
+        var outcome = await migrator.MigrateAsync(CancellationToken.None);
+
+        await Assert.That(outcome)
+            .IsEqualTo(MigrationOutcome.Failed);
     }
 
     private static async Task ExecuteLockFunctionAsync(AppDbContext dbContext, string function, CancellationToken cancellationToken)
