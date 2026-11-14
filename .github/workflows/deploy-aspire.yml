@@ -101,6 +101,10 @@ jobs:
           Parameters__DiscordGuildId: ${{ secrets.AUTHINGWAY_DISCORD_GUILD_ID || '0' }}
           Parameters__DiscordMigrationChannelId: ${{ secrets.AUTHINGWAY_MIGRATION_CHANNEL_ID || '0' }}
           Parameters__DiscordDeveloperRoleId: ${{ secrets.AUTHINGWAY_DEVELOPER_ROLE_ID || '0' }}
+          Parameters__SigningCertificate: ${{ secrets.AUTHINGWAY_SIGNING_CERTIFICATE }}
+          Parameters__SigningCertificatePassword: ${{ secrets.AUTHINGWAY_SIGNING_CERTIFICATE_PASSWORD }}
+          Parameters__EncryptionCertificate: ${{ secrets.AUTHINGWAY_ENCRYPTION_CERTIFICATE }}
+          Parameters__EncryptionCertificatePassword: ${{ secrets.AUTHINGWAY_ENCRYPTION_CERTIFICATE_PASSWORD }}
           DockerSSH__TargetHost: ${{ secrets.SERVER_HOST }}
           DockerSSH__SshUsername: ${{ secrets.SERVER_USER }}
           DockerRegistry__RegistryUrl: ghcr.io

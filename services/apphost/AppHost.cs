@@ -40,7 +40,11 @@ var authingway = builder.AddProject<Projects.Naur_Authingway>("authingway")
 
 if (builder.ExecutionContext.IsPublishMode)
 {
-    authingway.WithHttpEndpoint(targetPort: 8080);
+    authingway.WithHttpEndpoint(targetPort: 8080)
+        .WithEnvironment("OpenIddict__SigningCertificate", builder.AddParameter("SigningCertificate", secret: true))
+        .WithEnvironment("OpenIddict__SigningCertificatePassword", builder.AddParameter("SigningCertificatePassword", secret: true))
+        .WithEnvironment("OpenIddict__EncryptionCertificate", builder.AddParameter("EncryptionCertificate", secret: true))
+        .WithEnvironment("OpenIddict__EncryptionCertificatePassword", builder.AddParameter("EncryptionCertificatePassword", secret: true));
 
     var cloudflareToken = builder.AddParameter("CloudflareToken", secret: true);
 
