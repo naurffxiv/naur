@@ -35,21 +35,6 @@ public static class DiscordExtensions
     }
 
     /// <summary>
-    /// Registers a named <see cref="ChannelRoleRestrictionOptions"/> bound from <c>Discord:Restrictions:{name}</c>.
-    /// </summary>
-    /// <param name="builder">The host application builder to configure. Cannot be null.</param>
-    /// <param name="name">The restriction name, as passed to <see cref="RequireChannelRoleAttribute{TContext}"/>. Cannot be null.</param>
-    /// <returns>The same <see cref="IHostApplicationBuilder"/> instance for chaining further configuration.</returns>
-    public static IHostApplicationBuilder AddChannelRoleRestriction(this IHostApplicationBuilder builder, string name)
-    {
-        builder.Services.Configure<ChannelRoleRestrictionOptions>(
-            name,
-            builder.Configuration.GetSection($"{ChannelRoleRestrictionOptions.SectionName}:{name}"));
-
-        return builder;
-    }
-
-    /// <summary>
     /// Registers the Discord command modules for the application.
     /// </summary>
     /// <param name="app">The application to configure. Cannot be null.</param>

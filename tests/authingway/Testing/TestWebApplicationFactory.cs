@@ -51,8 +51,13 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncD
 
         await using var scope = Services.CreateAsyncScope();
 
-        await scope.ServiceProvider.GetRequiredService<DatabaseMigrator>()
-            .MigrateAsync(CancellationToken.None);
+        var outcome = await scope.ServiceProvider.GetRequiredService<DatabaseMigrator>()
+            .MigrateAsync("test host", CancellationToken.None);
+
+        if (outcome is not (MigrationOutcome.Applied or MigrationOutcome.UpToDate))
+        {
+            throw new InvalidOperationException($"The test database could not be migrated: {outcome}.");
+        }
     }
 
     /// <inheritdoc/>

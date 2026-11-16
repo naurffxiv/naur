@@ -11,7 +11,7 @@ using Naur.Authingway.Tests.Testing;
 namespace Naur.Authingway.Tests.Data;
 
 /// <summary>
-/// Contains tests that verify migrations are serialized by the advisory lock.
+/// Contains tests that verify database migrations run one at a time and report their outcome.
 /// </summary>
 /// <param name="serviceProvider">The service provider used to resolve registered services for testing.</param>
 [AuthingwayDataSource]
@@ -19,58 +19,52 @@ namespace Naur.Authingway.Tests.Data;
 public class DatabaseMigratorTests(IServiceProvider serviceProvider)
 {
     /// <summary>
-    /// Verifies that migrations are applied when no other caller holds the lock.
+    /// Verifies that a migration reports the database as up to date once the test host has migrated it.
     /// </summary>
     /// <returns>A task that represents the asynchronous test operation.</returns>
     [Test]
-    public async Task AppliesMigrationsWhenLockIsFree()
+    public async Task ReportsUpToDateWhenNothingIsPending()
     {
         using var scope = serviceProvider.CreateScope();
 
         var migrator = scope.ServiceProvider.GetRequiredService<DatabaseMigrator>();
 
-        var outcome = await migrator.MigrateAsync(CancellationToken.None);
+        var outcome = await migrator.MigrateAsync("test", CancellationToken.None);
 
         await Assert.That(outcome)
-            .IsEqualTo(MigrationOutcome.Applied);
+            .IsEqualTo(MigrationOutcome.UpToDate);
     }
 
     /// <summary>
-    /// Verifies that a caller reports the migration as already running when the lock is held elsewhere.
+    /// Verifies that a migration reports another migration as running while the gate is held.
     /// </summary>
     /// <returns>A task that represents the asynchronous test operation.</returns>
     [Test]
-    public async Task ReportsAlreadyRunningWhenLockIsHeld()
+    public async Task ReportsAlreadyRunningWhileTheGateIsHeld()
     {
-        var cancellationToken = CancellationToken.None;
+        var gate = serviceProvider.GetRequiredService<MigrationGate>();
 
-        using var holderScope = serviceProvider.CreateScope();
-
-        var holderContext = holderScope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var holderConnection = holderContext.Database.GetDbConnection();
-
-        await holderConnection.OpenAsync(cancellationToken);
-        await ExecuteLockFunctionAsync(holderContext, "pg_advisory_lock", cancellationToken);
+        await Assert.That(gate.TryEnter()).IsTrue();
 
         try
         {
-            using var callerScope = serviceProvider.CreateScope();
+            using var scope = serviceProvider.CreateScope();
 
-            var migrator = callerScope.ServiceProvider.GetRequiredService<DatabaseMigrator>();
+            var migrator = scope.ServiceProvider.GetRequiredService<DatabaseMigrator>();
 
-            var outcome = await migrator.MigrateAsync(cancellationToken);
+            var outcome = await migrator.MigrateAsync("test", CancellationToken.None);
 
             await Assert.That(outcome)
                 .IsEqualTo(MigrationOutcome.AlreadyRunning);
         }
         finally
         {
-            await ExecuteLockFunctionAsync(holderContext, "pg_advisory_unlock", cancellationToken);
+            gate.Exit();
         }
     }
 
     /// <summary>
-    /// Verifies that a migration attempt that cannot reach the database reports failure instead of throwing.
+    /// Verifies that a migration that cannot reach the database reports failure and releases the gate.
     /// </summary>
     /// <returns>A task that represents the asynchronous test operation.</returns>
     [Test]
@@ -81,21 +75,35 @@ public class DatabaseMigratorTests(IServiceProvider serviceProvider)
             .Options;
 
         await using var dbContext = new AppDbContext(options);
+        using var gate = new MigrationGate();
 
-        var migrator = new DatabaseMigrator(dbContext, NullLogger<DatabaseMigrator>.Instance);
+        var migrator = new DatabaseMigrator(dbContext, gate, NullLogger<DatabaseMigrator>.Instance);
 
-        var outcome = await migrator.MigrateAsync(CancellationToken.None);
+        var outcome = await migrator.MigrateAsync("test", CancellationToken.None);
 
-        await Assert.That(outcome)
-            .IsEqualTo(MigrationOutcome.Failed);
+        await Assert.That(outcome).IsEqualTo(MigrationOutcome.Failed);
+        await Assert.That(gate.TryEnter()).IsTrue();
     }
 
-    private static async Task ExecuteLockFunctionAsync(AppDbContext dbContext, string function, CancellationToken cancellationToken)
+    /// <summary>
+    /// Verifies that a canceled migration throws and still releases the gate.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
+    [Test]
+    public async Task ReleasesTheGateWhenCanceled()
     {
-        await using var command = dbContext.Database.GetDbConnection().CreateCommand();
+        using var scope = serviceProvider.CreateScope();
 
-        command.CommandText = $"SELECT {function}({DatabaseMigrator.AdvisoryLockKey})";
+        var migrator = scope.ServiceProvider.GetRequiredService<DatabaseMigrator>();
+        var gate = serviceProvider.GetRequiredService<MigrationGate>();
 
-        await command.ExecuteScalarAsync(cancellationToken);
+        using var canceled = new CancellationTokenSource();
+        await canceled.CancelAsync();
+
+        await Assert.That(() => migrator.MigrateAsync("test", canceled.Token))
+            .Throws<OperationCanceledException>();
+
+        await Assert.That(gate.TryEnter()).IsTrue();
+        gate.Exit();
     }
 }

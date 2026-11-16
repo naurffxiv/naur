@@ -3,8 +3,8 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.EntityFrameworkCore;
-using System.Data;
-using System.Data.Common;
+using Naur.Authingway.Data.Loggers;
+using System.Diagnostics;
 
 namespace Naur.Authingway.Data;
 
@@ -14,12 +14,17 @@ namespace Naur.Authingway.Data;
 public enum MigrationOutcome
 {
     /// <summary>
-    /// Migrations were applied.
+    /// Pending migrations were applied.
     /// </summary>
     Applied,
 
     /// <summary>
-    /// Another caller held the migration lock, so no migrations were attempted.
+    /// There were no pending migrations to apply.
+    /// </summary>
+    UpToDate,
+
+    /// <summary>
+    /// Another migration was running in this process, so no migrations were attempted.
     /// </summary>
     AlreadyRunning,
 
@@ -30,96 +35,72 @@ public enum MigrationOutcome
 }
 
 /// <summary>
-/// Applies database migrations under an advisory lock so that only one caller migrates at a time.
+/// Applies pending database migrations, one run at a time.
 /// </summary>
 /// <param name="dbContext">The database context whose migrations are applied. Cannot be null.</param>
-/// <param name="logger">Records failed migration attempts. Cannot be null.</param>
-public sealed partial class DatabaseMigrator(AppDbContext dbContext, ILogger<DatabaseMigrator> logger)
+/// <param name="gate">Admits one migration at a time within this process. Cannot be null.</param>
+/// <param name="logger">Records each migration run. Cannot be null.</param>
+public sealed class DatabaseMigrator(AppDbContext dbContext, MigrationGate gate, ILogger<DatabaseMigrator> logger)
 {
-    /// <summary>
-    /// The PostgreSQL advisory lock key that serializes migration runs.
-    /// </summary>
-    public const long AdvisoryLockKey = 4861710;
+    private static readonly ActivitySource s_activitySource = new("Naur.Authingway.Data");
 
     /// <summary>
-    /// Applies any pending migrations, unless another caller currently holds the migration lock.
+    /// Applies any pending migrations, unless another migration is already running in this process.
     /// </summary>
+    /// <param name="executor">Who started the migration, recorded in logs and traces. Cannot be null.</param>
     /// <param name="cancellationToken">A token that cancels the operation.</param>
-    /// <returns>
-    /// <see cref="MigrationOutcome.Applied"/> when migrations ran, <see cref="MigrationOutcome.AlreadyRunning"/>
-    /// when the lock was already held, or <see cref="MigrationOutcome.Failed"/> when connecting, locking or migrating
-    /// raised an error.
-    /// </returns>
+    /// <returns>The outcome of the attempt.</returns>
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was canceled.</exception>
     /// <remarks>
-    /// The lock is a PostgreSQL session advisory lock held on this context's connection, so it excludes callers in
-    /// other processes as well as other threads. Acquisition does not wait: a caller that cannot take the lock returns
-    /// <see cref="MigrationOutcome.AlreadyRunning"/> immediately. Errors other than cancellation are logged rather
-    /// than thrown.
+    /// EF Core takes its own database lock while migrating, which serializes migrations across processes. Errors
+    /// other than cancellation are logged and reported as <see cref="MigrationOutcome.Failed"/>.
     /// </remarks>
-    public async Task<MigrationOutcome> MigrateAsync(CancellationToken cancellationToken)
+    public async Task<MigrationOutcome> MigrateAsync(string executor, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(executor);
+
+        if (!gate.TryEnter())
+        {
+            logger.LogDatabaseMigrationAlreadyRunning(executor);
+
+            return MigrationOutcome.AlreadyRunning;
+        }
+
         try
         {
-            var connection = dbContext.Database.GetDbConnection();
+            using var activity = s_activitySource.StartActivity("Migrating data", ActivityKind.Client);
+            activity?.SetTag("migration.executor", executor);
 
-            if (connection.State != ConnectionState.Open)
-            {
-                await connection.OpenAsync(cancellationToken);
-            }
-
-            if (!await TryAcquireLockAsync(connection, cancellationToken))
-            {
-                return MigrationOutcome.AlreadyRunning;
-            }
+            logger.LogDatabaseMigrationStarting(executor);
 
             try
             {
+                var pending = (await dbContext.Database.GetPendingMigrationsAsync(cancellationToken)).Count();
+
+                if (pending == 0)
+                {
+                    logger.LogDatabaseMigrationUpToDate(executor);
+
+                    return MigrationOutcome.UpToDate;
+                }
+
                 await dbContext.Database.MigrateAsync(cancellationToken);
+
+                logger.LogDatabaseMigrationComplete(executor, pending);
+
+                return MigrationOutcome.Applied;
             }
-            finally
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                await ReleaseLockAsync(connection, cancellationToken);
+                activity?.AddException(ex);
+                logger.LogDatabaseMigrationFailed(executor, ex);
+
+                return MigrationOutcome.Failed;
             }
-
-            return MigrationOutcome.Applied;
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        finally
         {
-            LogMigrationFailed(logger, ex);
-
-            return MigrationOutcome.Failed;
+            gate.Exit();
         }
-    }
-
-    [LoggerMessage(1, LogLevel.Error, "Database migration failed.")]
-    private static partial void LogMigrationFailed(ILogger logger, Exception exception);
-
-    private static async Task<bool> TryAcquireLockAsync(DbConnection connection, CancellationToken cancellationToken)
-    {
-        var acquired = await ExecuteLockFunctionAsync(connection, "pg_try_advisory_lock", cancellationToken);
-
-        return acquired;
-    }
-
-    private static async Task ReleaseLockAsync(DbConnection connection, CancellationToken cancellationToken)
-    {
-        await ExecuteLockFunctionAsync(connection, "pg_advisory_unlock", cancellationToken);
-    }
-
-    private static async Task<bool> ExecuteLockFunctionAsync(DbConnection connection, string function, CancellationToken cancellationToken)
-    {
-        await using var command = connection.CreateCommand();
-
-        command.CommandText = $"SELECT {function}(@key)";
-
-        var parameter = command.CreateParameter();
-        parameter.ParameterName = "key";
-        parameter.Value = AdvisoryLockKey;
-        command.Parameters.Add(parameter);
-
-        var result = await command.ExecuteScalarAsync(cancellationToken);
-
-        return result is true;
     }
 }

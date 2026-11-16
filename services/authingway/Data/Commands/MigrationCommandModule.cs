@@ -2,6 +2,7 @@
 // The NAUR Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Naur.Authingway.Configuration;
 using Naur.Authingway.Discord;
 using NetCord.Rest;
 using NetCord.Services.ApplicationCommands;
@@ -15,9 +16,10 @@ namespace Naur.Authingway.Data.Commands;
 public class MigrationCommandModule(DatabaseMigrator migrator) : ApplicationCommandModule<ApplicationCommandContext>
 {
     /// <summary>
-    /// The name of the channel and role restriction that guards the migration command.
+    /// The longest a migration may run before it is canceled, kept inside Discord's 15 minute window for editing a
+    /// deferred response.
     /// </summary>
-    public const string Restriction = "Migration";
+    public static readonly TimeSpan Timeout = TimeSpan.FromMinutes(10);
 
     /// <summary>
     /// Applies any pending database migrations.
@@ -25,23 +27,37 @@ public class MigrationCommandModule(DatabaseMigrator migrator) : ApplicationComm
     /// <returns>A task that represents the asynchronous command execution.</returns>
     /// <remarks>
     /// Invocations are acknowledged immediately and the acknowledgement is replaced with the outcome once the
-    /// migration finishes.
+    /// migration finishes or <see cref="Timeout"/> elapses.
     /// </remarks>
     [SlashCommand("migrate", "Applies pending database migrations.")]
-    [RequireChannelRole<ApplicationCommandContext>(Restriction)]
+    [RequireDiscordRoles<ApplicationCommandContext>(
+        Roles = [DiscordRole.Admin, DiscordRole.Developer],
+        Channels = [DiscordChannelGroup.Admin, DiscordChannelGroup.Developer])]
     public async Task MigrateAsync()
     {
         await RespondAsync(InteractionCallback.DeferredMessage());
 
-        var outcome = await migrator.MigrateAsync(CancellationToken.None);
+        var executor = $"{Context.User.Username} ({Context.User.Id})";
 
-        var content = outcome switch
+        string content;
+
+        try
         {
-            MigrationOutcome.Applied => "Database migrations applied.",
-            MigrationOutcome.AlreadyRunning => "A migration is already running.",
-            MigrationOutcome.Failed => "Database migrations failed; check the authingway logs.",
-            _ => "The migration finished in an unrecognised state."
-        };
+            using var timeout = new CancellationTokenSource(Timeout);
+
+            content = await migrator.MigrateAsync(executor, timeout.Token) switch
+            {
+                MigrationOutcome.Applied => "Database migrations applied.",
+                MigrationOutcome.UpToDate => "Database is already up to date.",
+                MigrationOutcome.AlreadyRunning => "A migration is already running.",
+                MigrationOutcome.Failed => "Database migrations failed; check the authingway logs.",
+                _ => "The migration finished in an unrecognised state."
+            };
+        }
+        catch (OperationCanceledException)
+        {
+            content = "Database migration timed out; check the authingway logs.";
+        }
 
         await ModifyResponseAsync(message => message.Content = content);
     }
