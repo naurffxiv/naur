@@ -214,7 +214,7 @@ jobs:
   security-scan:
     name: Vulnerability Scanning (Trivy - ${{ matrix.service }})
     needs: detect-changes
-    if: needs.detect-changes.outputs.services != '[]' && github.event_name != 'pull_request'
+    if: needs.detect-changes.outputs.services != '[]'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -253,7 +253,7 @@ jobs:
 
       - name: Upload Trivy results to GitHub Security
         uses: github/codeql-action/upload-sarif@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
-        if: always()
+        if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
         with:
           sarif_file: "trivy-results-${{ strategy.job-index }}.sarif"
           category: "trivy-${{ matrix.service }}"

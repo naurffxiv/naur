@@ -47,11 +47,34 @@ public static class IdentityExtensions
             .AddServer(options =>
             {
                 options.SetConfigurationEndpointUris("/.well-known/openid-configuration");
+                options.SetJsonWebKeySetEndpointUris("/.well-known/jwks");
+                options.SetAuthorizationEndpointUris("/authorize");
+                options.SetEndSessionEndpointUris("/logout");
+                options.SetTokenEndpointUris("/token");
+                options.SetUserInfoEndpointUris("/userinfo");
 
-                options.AddDevelopmentEncryptionCertificate()
-                    .AddDevelopmentSigningCertificate();
+                options.AllowAuthorizationCodeFlow();
+                options.AllowRefreshTokenFlow();
+
+                var certificates = builder.Configuration.GetSection(TokenCertificateOptions.SectionName)
+                    .Get<TokenCertificateOptions>() ?? new TokenCertificateOptions();
+
+                if (certificates.IsEmpty && builder.Environment.IsDevelopment())
+                {
+                    options.AddDevelopmentEncryptionCertificate()
+                        .AddDevelopmentSigningCertificate();
+                }
+                else
+                {
+                    options.AddSigningCertificate(certificates.LoadSigningCertificate())
+                        .AddEncryptionCertificate(certificates.LoadEncryptionCertificate());
+                }
 
                 options.UseAspNetCore()
+                    .EnableAuthorizationEndpointPassthrough()
+                    .EnableEndSessionEndpointPassthrough()
+                    .EnableTokenEndpointPassthrough()
+                    .EnableUserInfoEndpointPassthrough()
                     .EnableStatusCodePagesIntegration();
 
                 options.UseDataProtection();
