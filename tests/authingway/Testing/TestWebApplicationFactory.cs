@@ -7,6 +7,8 @@ using Aspire.Hosting.ApplicationModel;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Naur.Authingway.Data;
 using TUnit.Core.Interfaces;
 
 namespace Naur.Authingway.Tests.Testing;
@@ -46,6 +48,16 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncD
         }
 
         StartServer();
+
+        await using var scope = Services.CreateAsyncScope();
+
+        var outcome = await scope.ServiceProvider.GetRequiredService<DatabaseMigrator>()
+            .MigrateAsync("test host", CancellationToken.None);
+
+        if (outcome is not (MigrationOutcome.Applied or MigrationOutcome.UpToDate))
+        {
+            throw new InvalidOperationException($"The test database could not be migrated: {outcome}.");
+        }
     }
 
     /// <inheritdoc/>

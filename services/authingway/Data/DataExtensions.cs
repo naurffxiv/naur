@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Naur.Authingway.Data.Entities;
 using Naur.Authingway.Data.Extensions;
-using Naur.Authingway.Data.Workers;
 
 namespace Naur.Authingway.Data;
 
@@ -23,7 +22,15 @@ public static class DataExtensions
     public static IHostApplicationBuilder ConfigureData(this IHostApplicationBuilder builder)
     {
         return builder.ConfigureDbContext()
-            .ConfigureMigrationWorker();
+            .ConfigureMigrations();
+    }
+
+    private static IHostApplicationBuilder ConfigureMigrations(this IHostApplicationBuilder builder)
+    {
+        builder.Services.AddSingleton<MigrationGate>();
+        builder.Services.AddScoped<DatabaseMigrator>();
+
+        return builder;
     }
 
     private static IHostApplicationBuilder ConfigureDbContext(this IHostApplicationBuilder builder)
@@ -47,13 +54,6 @@ public static class DataExtensions
                 }
             });
         });
-
-        return builder;
-    }
-
-    private static IHostApplicationBuilder ConfigureMigrationWorker(this IHostApplicationBuilder builder)
-    {
-        builder.Services.AddHostedService<DataMigrationWorker>();
 
         return builder;
     }
