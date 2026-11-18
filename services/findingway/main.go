@@ -10,6 +10,7 @@ import (
 
 	"github.com/Veraticus/findingway/internal/board"
 	"github.com/Veraticus/findingway/internal/discord"
+	"github.com/Veraticus/findingway/internal/ffxiv"
 	"github.com/Veraticus/findingway/internal/scraper"
 	"github.com/Veraticus/findingway/internal/tokenizer"
 
@@ -20,7 +21,6 @@ const (
 	lookback       = 2
 	redisTimeout   = 10 * time.Second
 	tokenChannelID = "1510722864851189981"
-	loopInterval   = 3 * time.Minute
 )
 
 // config is the shape of ./config.yaml.
@@ -78,51 +78,31 @@ func main() {
 	scraper := &scraper.Scraper{Url: "https://xivpf.com"}
 	listingBoard := board.New(d)
 
-	fmt.Printf("Starting findingway...\n")
-	loopCount := 0
-	for {
-		totalWait := loopInterval
-		fmt.Printf("Scraping source...\n")
-		listings, err := scraper.Scrape()
-		if err != nil {
-			fmt.Printf("Scraper error: %v\n", err)
-			continue
-		}
-		fmt.Printf("Got %v listings.\n", len(listings.Listings))
-		fmt.Printf("Sending to %v channels...\n", len(cfg.Channels))
-
-		for _, c := range cfg.Channels {
-			startTime := time.Now()
-			fmt.Printf("Refreshing Discord for %v (%v)...\n", c.Name, c.Duty)
-			if err := listingBoard.Refresh(c, listings, startTime); err != nil {
-				fmt.Printf("Discord error refreshing %v: %v\n", c.Name, err)
-			}
-			totalWait -= time.Since(startTime)
-		}
-
-		err = withRedisTimeout(func(ctx context.Context) error {
-			return tok.TokenizeListings(ctx, listings)
-		})
-		if err != nil {
-			fmt.Printf("Error storing tokens: %v\n", err)
-		}
-
-		// Output values every 1 hours
-		if loopCount%20 == 0 {
-			fmt.Println("Sending tokens to discord")
-			if err := postTokens(d, tok); err != nil {
-				fmt.Printf("Error posting tokens: %v\n", err)
-			}
-		}
-
-		if once != "false" {
-			os.Exit(0)
-		}
-		fmt.Printf("Sleeping for %v...\n", totalWait)
-		loopCount += 1
-		time.Sleep(totalWait)
+	c := &cycle{
+		scrape:   scraper.Scrape,
+		channels: cfg.Channels,
+		refresh:  listingBoard.Refresh,
+		record: func(listings *ffxiv.Listings, _ time.Time) error {
+			return withRedisTimeout(func(ctx context.Context) error {
+				return tok.TokenizeListings(ctx, listings)
+			})
+		},
+		postTokens: func(now time.Time) error {
+			return postTokens(d, tok, now)
+		},
+		now:  time.Now,
+		once: once != "false",
 	}
 
+	fmt.Printf("Starting findingway...\n")
+	for {
+		wait, done := c.run()
+		if done {
+			return
+		}
+		fmt.Printf("Sleeping for %v...\n", wait)
+		time.Sleep(wait)
+	}
 }
 
 func withRedisTimeout(operation func(ctx context.Context) error) error {
@@ -150,7 +130,7 @@ func printTokens(tok *tokenizer.Tokenizer) error {
 	})
 }
 
-func postTokens(d *discord.Discord, tok *tokenizer.Tokenizer) error {
+func postTokens(d *discord.Discord, tok *tokenizer.Tokenizer, now time.Time) error {
 	var tokens []tokenizer.Token
 	var listingCount int64
 	var buf bytes.Buffer
@@ -168,7 +148,6 @@ func postTokens(d *discord.Discord, tok *tokenizer.Tokenizer) error {
 		return err
 	}
 
-	now := time.Now()
 	if err := d.Clean(tokenChannelID); err != nil {
 		fmt.Printf("Error cleaning token channel: %s\n", err)
 	}
