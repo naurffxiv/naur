@@ -39,10 +39,10 @@ authingway.AddEFMigrations("authingway-migrations")
 if (builder.ExecutionContext.IsPublishMode)
 {
     authingway.WithHttpEndpoint(targetPort: 8080)
-        .WithEnvironment("OpenIddict__SigningCertificate", builder.AddParameter("SigningCertificate", secret: true))
-        .WithEnvironment("OpenIddict__SigningCertificatePassword", builder.AddParameter("SigningCertificatePassword", secret: true))
-        .WithEnvironment("OpenIddict__EncryptionCertificate", builder.AddParameter("EncryptionCertificate", secret: true))
-        .WithEnvironment("OpenIddict__EncryptionCertificatePassword", builder.AddParameter("EncryptionCertificatePassword", secret: true));
+        .WithEnvironment("Identity__SigningCertificate", builder.AddParameter("SigningCertificate", secret: true))
+        .WithEnvironment("Identity__SigningCertificatePassword", builder.AddParameter("SigningCertificatePassword", secret: true))
+        .WithEnvironment("Identity__EncryptionCertificate", builder.AddParameter("EncryptionCertificate", secret: true))
+        .WithEnvironment("Identity__EncryptionCertificatePassword", builder.AddParameter("EncryptionCertificatePassword", secret: true));
 
     builder.AddContainer("cloudflared", "cloudflare/cloudflared", "2026.10.7")
         .WithArgs("tunnel", "--no-autoupdate", "run")

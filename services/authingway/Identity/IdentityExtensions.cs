@@ -4,6 +4,7 @@
 
 using Naur.Authingway.Data;
 using Naur.Authingway.Data.Entities;
+using Naur.Authingway.Configuration.Identity;
 
 namespace Naur.Authingway.Identity;
 
@@ -45,8 +46,8 @@ public static class IdentityExtensions
                 options.AllowAuthorizationCodeFlow();
                 options.AllowRefreshTokenFlow();
 
-                var certificates = builder.Configuration.GetSection(TokenCertificateOptions.SectionName)
-                    .Get<TokenCertificateOptions>() ?? new TokenCertificateOptions();
+                var certificates = builder.Configuration.GetSection("Identity")
+                    .Get<IdentityConfig>() ?? new IdentityConfig();
 
                 if (certificates.IsEmpty && builder.Environment.IsDevelopment())
                 {
