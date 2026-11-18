@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using Naur.Authingway.Configuration.Discord;
+using Naur.Authingway.Configuration.Identity;
 
 namespace Naur.Authingway.Configuration;
 
@@ -23,6 +24,11 @@ public static class ConfigurationExtensions
     {
         builder.Services.AddOptions<DiscordConfig>()
             .BindConfiguration("Discord", options => options.ErrorOnUnknownConfiguration = true)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        builder.Services.AddOptions<IdentityConfig>()
+            .BindConfiguration("Identity")
             .ValidateDataAnnotations()
             .ValidateOnStart();
 

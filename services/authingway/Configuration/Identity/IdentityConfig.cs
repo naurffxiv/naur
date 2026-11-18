@@ -4,47 +4,39 @@
 
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using Naur.Authingway.Configuration.Validators;
 
-namespace Naur.Authingway.Identity;
+namespace Naur.Authingway.Configuration.Identity;
 
 /// <summary>
-/// Holds the base64-encoded PKCS#12 certificates OpenIddict uses to sign and encrypt tokens.
+/// The certificate configuration used by OpenIddict.
 /// </summary>
-public sealed class TokenCertificateOptions
+[ValidTokenCertificates]
+public sealed class IdentityConfig
 {
-    /// <summary>
-    /// The configuration section these options bind from.
-    /// </summary>
-    public const string SectionName = "OpenIddict";
-
     /// <summary>
     /// Gets or sets the base64-encoded PKCS#12 signing certificate.
     /// </summary>
-    /// <value>The encoded certificate, or <see langword="null"/> or blank when none is configured.</value>
     public string? SigningCertificate { get; set; }
 
     /// <summary>
     /// Gets or sets the password protecting <see cref="SigningCertificate"/>.
     /// </summary>
-    /// <value>The password, or <see langword="null"/> when the certificate is not password protected.</value>
     public string? SigningCertificatePassword { get; set; }
 
     /// <summary>
     /// Gets or sets the base64-encoded PKCS#12 encryption certificate.
     /// </summary>
-    /// <value>The encoded certificate, or <see langword="null"/> or blank when none is configured.</value>
     public string? EncryptionCertificate { get; set; }
 
     /// <summary>
     /// Gets or sets the password protecting <see cref="EncryptionCertificate"/>.
     /// </summary>
-    /// <value>The password, or <see langword="null"/> when the certificate is not password protected.</value>
     public string? EncryptionCertificatePassword { get; set; }
 
     /// <summary>
     /// Gets a value indicating whether neither certificate is configured.
     /// </summary>
-    /// <value><see langword="true"/> when both certificates are absent or blank; otherwise, <see langword="false"/>.</value>
     public bool IsEmpty => string.IsNullOrWhiteSpace(SigningCertificate) && string.IsNullOrWhiteSpace(EncryptionCertificate);
 
     /// <summary>
@@ -71,11 +63,40 @@ public sealed class TokenCertificateOptions
         return Load(EncryptionCertificate, EncryptionCertificatePassword, nameof(EncryptionCertificate));
     }
 
+    internal bool HasValidCertificates()
+    {
+        if (IsEmpty)
+        {
+            return true;
+        }
+
+        if (string.IsNullOrWhiteSpace(SigningCertificate) || string.IsNullOrWhiteSpace(EncryptionCertificate))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var signingCertificate = LoadSigningCertificate();
+            using var encryptionCertificate = LoadEncryptionCertificate();
+
+            return signingCertificate.HasPrivateKey && encryptionCertificate.HasPrivateKey;
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
+        catch (CryptographicException)
+        {
+            return false;
+        }
+    }
+
     private static X509Certificate2 Load(string? encoded, string? password, string name)
     {
         if (string.IsNullOrWhiteSpace(encoded))
         {
-            throw new InvalidOperationException($"{SectionName}:{name} is not configured.");
+            throw new InvalidOperationException($"Identity:{name} is not configured.");
         }
 
         return X509CertificateLoader.LoadPkcs12(
