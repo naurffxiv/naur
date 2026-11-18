@@ -6,6 +6,8 @@ from discord.ext.commands import Bot
 
 from moddingway.constants import Role
 from moddingway.database import users_database
+from moddingway.services import exiles
+from moddingway.services.exile_service import log_exile_result
 from moddingway.settings import get_settings
 from moddingway.util import (
     create_interaction_embed_context,
@@ -23,12 +25,26 @@ def register_events(bot: Bot):
     async def on_member_join(member):
         """
         Event handler for when a new member joins the server.
-        Automatically assigns the NON_VERIFIED role and logs the action.
+        Members rejoining during an active Exile are given the EXILED role,
+        everyone else the NON_VERIFIED role. The action is logged.
         """
-        # First find and assign the role - this happens regardless of logging ability
-        is_role_assigned, message, _role = await find_and_assign_role(
-            member, Role.NON_VERIFIED
-        )
+        # First re-apply any running exile, then find and assign the role - this
+        # happens regardless of logging ability
+        try:
+            exile_result = await exiles.reapply_on_rejoin(member)
+        except Exception:
+            logger.exception(f"Failed to check {member.id} for an active exile")
+            exile_result = exiles.ExileResult(
+                exiles.ExileOutcome.NO_ACTIVE_EXILE, member.id, member
+            )
+
+        # Never hand out Non-Verified while an exile is running, even when the
+        # Exiled role could not be re-applied
+        is_role_assigned, message = False, ""
+        if exile_result.outcome == exiles.ExileOutcome.NO_ACTIVE_EXILE:
+            is_role_assigned, message, _role = await find_and_assign_role(
+                member, Role.NON_VERIFIED
+            )
 
         logger.debug(f"Member joined: {member.display_name} ({member.id})")
 
@@ -45,7 +61,9 @@ def register_events(bot: Bot):
                 timestamp=datetime.now(UTC),
                 footer="Member Joined",
             ) as embed:
-                if is_role_assigned:
+                if exile_result.outcome != exiles.ExileOutcome.NO_ACTIVE_EXILE:
+                    log_exile_result(embed, exile_result)
+                elif is_role_assigned:
                     log_info_and_add_field(embed, logger, "Result", message)
                     account_age = datetime.now(UTC) - member.created_at.replace(
                         tzinfo=UTC

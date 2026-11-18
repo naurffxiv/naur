@@ -1,9 +1,11 @@
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
+from typing import Any
 
 import discord
 
 from moddingway.constants import ExileStatus, Role, StrikeSeverity
+from moddingway.events.member_events import register_events
 from moddingway.services import exile_service, exiles, strike_service
 from moddingway.services.exile_service import (
     MISSING_USER_RECORD_MESSAGE,
@@ -38,6 +40,21 @@ def as_utc(timestamp: datetime) -> datetime:
 
 def after_end_of_exile() -> datetime:
     return datetime.now(UTC) + timedelta(days=30)
+
+
+class FakeBot:
+    def __init__(self):
+        self.events: dict[str, Any] = {}
+
+    def event(self, handler):
+        self.events[handler.__name__] = handler
+        return handler
+
+
+async def member_joins(member) -> None:
+    bot: Any = FakeBot()
+    register_events(bot)
+    await bot.events["on_member_join"](member)
 
 
 # Exile
@@ -303,6 +320,82 @@ async def test_autounexile_worker__releases_due_exiles(guild, make_member, query
     [(_, _, status, _)] = exile_rows(query)
     assert status == ExileStatus.UNEXILED
     assert member.role_ids() == {VERIFIED_ROLE_ID}
+
+
+# Rejoin
+
+
+async def test_rejoin_during_exile__member_gets_exiled_not_non_verified(
+    guild, make_member, query
+):
+    member = make_member(role_ids=[STICKY_ROLE])
+    exiled = await exiles.exile(member, timedelta(days=1), "reason")
+    rejoined = make_member(member_id=member.id, roles=[])
+
+    await member_joins(rejoined)
+
+    assert rejoined.role_names() == {Role.EXILED.value}
+    [(exile_id, _, status, _)] = exile_rows(query)
+    assert exile_id == exiled.exile_id
+    assert status == ExileStatus.TIMED_EXILED
+    # Still saved for when the exile ends
+    assert sticky_rows(query) == [str(STICKY_ROLE)]
+
+
+async def test_rejoin_during_exile__failure_is_reported_without_non_verified(
+    make_member,
+):
+    member = make_member()
+    await exiles.exile(member, timedelta(days=1), "reason")
+    rejoined = make_member(member_id=member.id, roles=[])
+    rejoined.failing_role_ids.add(EXILED_ROLE_ID)
+
+    result = await exiles.reapply_on_rejoin(rejoined)
+    await member_joins(rejoined)
+
+    assert result.outcome == ExileOutcome.FAILED
+    assert rejoined.roles == []
+
+
+async def test_rejoin_after_exile_ended__non_verified_and_sticky_rows_deleted(
+    guild, make_member, query
+):
+    member = make_member(role_ids=[STICKY_ROLE])
+    await exiles.exile(member, timedelta(days=1), "reason")
+    del guild.members[member.id]
+    await exiles.release_due(guild, after_end_of_exile())
+    rejoined = make_member(member_id=member.id, roles=[])
+    assert sticky_rows(query) == [str(STICKY_ROLE)]
+
+    result = await exiles.reapply_on_rejoin(rejoined)
+
+    assert result.outcome == ExileOutcome.NO_ACTIVE_EXILE
+    assert sticky_rows(query) == []
+
+    await member_joins(rejoined)
+    assert rejoined.role_names() == {Role.NON_VERIFIED.value}
+
+
+async def test_rejoin_after_end_before_release__non_verified(make_member, query):
+    member = make_member()
+    await exiles.exile(member, timedelta(seconds=-1), "already over")
+    rejoined = make_member(member_id=member.id, roles=[])
+
+    await member_joins(rejoined)
+
+    assert rejoined.role_names() == {Role.NON_VERIFIED.value}
+    # Still left for the worker to mark as ended
+    [(_, _, status, _)] = exile_rows(query)
+    assert status == ExileStatus.TIMED_EXILED
+
+
+async def test_rejoin_of_unknown_member__non_verified(make_member, query):
+    member = make_member(roles=[])
+
+    await member_joins(member)
+
+    assert member.role_names() == {Role.NON_VERIFIED.value}
+    assert query("SELECT * FROM users") == []
 
 
 # Strike escalation

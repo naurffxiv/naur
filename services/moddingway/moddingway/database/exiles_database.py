@@ -98,12 +98,13 @@ def get_pending_unexiles(now: datetime) -> list[PendingExile]:
 
 
 def get_user_and_active_exile(
-    discord_user_id: int,
+    discord_user_id: int, now: datetime | None = None
 ) -> tuple[int | None, PendingExile | None]:
     """
     Return the user ID of a Discord user and their active Exile, if any.
 
-    The user ID is None when the user has no record.
+    The user ID is None when the user has no record. With ``now``, an Exile whose
+    end time has already passed does not count as active.
     """
     conn = DatabaseConnection()
 
@@ -113,11 +114,17 @@ def get_user_and_active_exile(
         FROM users u
         LEFT JOIN exiles e ON e.userID = u.userID
             AND e.exileStatus = %s
+            AND (%s::timestamp IS NULL OR e.endTimestamp > %s)
         WHERE u.discordUserID = %s
         LIMIT 1;
         """
 
-        params = (ExileStatus.TIMED_EXILED, str(discord_user_id))
+        params = (
+            ExileStatus.TIMED_EXILED,
+            now,
+            now,
+            str(discord_user_id),
+        )
 
         cursor.execute(query, params)
         res = cursor.fetchone()

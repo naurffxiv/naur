@@ -1,11 +1,12 @@
 """
 Exiles: the single owner of the Exile lifecycle.
 
-Every way an Exile starts or ends goes through this module:
+Every way an Exile starts, ends or is re-applied goes through this module:
 
 * ``exile`` - /exile, /roulette and strike escalation
 * ``unexile`` - the manual /unexile command
 * ``release_due`` - the autounexile worker
+* ``reapply_on_rejoin`` - a member joining the server
 
 Each call returns an ``ExileResult`` describing what happened. Callers build
 their own logging embed from it (see ``exile_service.log_exile_result``); this
@@ -35,6 +36,7 @@ from moddingway.database.models import Exile, PendingExile
 from moddingway.settings import get_settings
 from moddingway.util import (
     add_and_remove_role,
+    find_and_assign_role,
     timestamp_to_epoch,
     try_send_dm,
     user_has_role,
@@ -54,6 +56,9 @@ class ExileOutcome(StrEnum):
     NOT_EXILED = "not_exiled"
     MEMBER_GONE = "member_gone"
     ALREADY_RELEASED = "already_released"
+    # Rejoin
+    REAPPLIED = "reapplied"
+    NO_ACTIVE_EXILE = "no_active_exile"
     # Any operation: nothing was saved
     FAILED = "failed"
 
@@ -209,6 +214,42 @@ async def release_due(guild: discord.Guild, now: datetime) -> list[ExileResult]:
                 )
             )
     return results
+
+
+async def reapply_on_rejoin(member: discord.Member) -> ExileResult:
+    """
+    Give a rejoining member the Exiled role if their Exile is still running.
+
+    When there is no running Exile, any sticky roles still saved from an earlier
+    Exile are discarded and the caller should continue with the normal join flow.
+    """
+    user_id, active_exile = exiles_database.get_user_and_active_exile(
+        member.id, now=datetime.now(UTC)
+    )
+    if user_id is None:
+        return ExileResult(ExileOutcome.NO_ACTIVE_EXILE, member.id, member)
+
+    if active_exile is None:
+        result = ExileResult(ExileOutcome.NO_ACTIVE_EXILE, member.id, member)
+        try:
+            roles_database.remove_sticky_roles(user_id)
+        except Exception as e:
+            logger.exception("Failed to clear stale sticky roles")
+            result.problems.append(f"Stale sticky roles could not be cleared, {e}")
+        return result
+
+    is_role_assigned, message, _role = await find_and_assign_role(member, Role.EXILED)
+    if not is_role_assigned:
+        logger.error(f"Failed to re-apply exile {active_exile.exile_id}")
+        return _result(
+            ExileOutcome.FAILED,
+            member.id,
+            member,
+            active_exile,
+            error=f"Member has an active exile but the Exiled role could not be assigned: {message}",
+        )
+
+    return _result(ExileOutcome.REAPPLIED, member.id, member, active_exile)
 
 
 async def _release(guild: discord.Guild, pending_exile: PendingExile) -> ExileResult:

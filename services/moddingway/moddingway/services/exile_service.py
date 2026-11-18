@@ -69,6 +69,16 @@ def _outcome_text(result: ExileResult) -> _OutcomeText:
                 ),
             )
         ),
+        ExileOutcome.REAPPLIED: _OutcomeText(
+            fields=(
+                (
+                    "Result",
+                    f"{mention} rejoined during an active exile and was given the {Role.EXILED.value} role instead of {Role.NON_VERIFIED.value}",
+                ),
+                expiration,
+            )
+        ),
+        ExileOutcome.NO_ACTIVE_EXILE: _OutcomeText(),
         ExileOutcome.FAILED: _OutcomeText(
             error=result.error or "Unknown error",
             reply=result.error or "An error occurred while processing the command.",
