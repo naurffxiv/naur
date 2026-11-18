@@ -24,11 +24,10 @@ var postgres = builder.AddPostgres("postgres")
 
 var authingwayDb = postgres.AddDatabase("authingwaydb", databaseName: "authingway");
 
-var discordToken = builder.AddParameter("DiscordToken", secret: true);
 var authingway = builder.AddProject<Projects.Naur_Authingway>("authingway")
     .WithReference(authingwayDb)
     .WaitFor(authingwayDb)
-    .WithEnvironment("Discord__Token", discordToken)
+    .WithEnvironment("Discord__Token", builder.AddParameter("DiscordToken", secret: true))
     .WithHttpHealthCheck("/health");
 
 if (builder.ExecutionContext.IsPublishMode)
@@ -39,11 +38,9 @@ if (builder.ExecutionContext.IsPublishMode)
         .WithEnvironment("OpenIddict__EncryptionCertificate", builder.AddParameter("EncryptionCertificate", secret: true))
         .WithEnvironment("OpenIddict__EncryptionCertificatePassword", builder.AddParameter("EncryptionCertificatePassword", secret: true));
 
-    var cloudflareToken = builder.AddParameter("CloudflareToken", secret: true);
-
     builder.AddContainer("cloudflared", "cloudflare/cloudflared", "2026.10.7")
         .WithArgs("tunnel", "--no-autoupdate", "run")
-        .WithEnvironment("TUNNEL_TOKEN", cloudflareToken)
+        .WithEnvironment("TUNNEL_TOKEN", builder.AddParameter("CloudflareToken", secret: true))
         .WaitFor(authingway);
 }
 
