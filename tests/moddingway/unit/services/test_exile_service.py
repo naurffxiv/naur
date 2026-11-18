@@ -19,7 +19,10 @@ def test_format_time_string(duration, expected):
     assert exile_service.format_time_string(duration) == expected
 
 
-@pytest.mark.parametrize("outcome", [ExileOutcome.FAILED])
+@pytest.mark.parametrize(
+    "outcome",
+    [ExileOutcome.MEMBER_GONE, ExileOutcome.ALREADY_RELEASED, ExileOutcome.FAILED],
+)
 def test_log_exile_result__release_outcomes_have_a_message(outcome):
     embed = discord.Embed()
 

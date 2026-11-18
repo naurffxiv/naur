@@ -15,6 +15,7 @@ class Role(StrEnum):
 class ExileStatus(IntEnum):
     TIMED_EXILED = 1
     UNEXILED = 2
+    # Legacy: kept because old rows may hold it, but the bot no longer writes it
     UNKNOWN = 3
 
 

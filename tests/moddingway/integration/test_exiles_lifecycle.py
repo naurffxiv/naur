@@ -240,32 +240,43 @@ async def test_release_due__releases_only_finished_exiles(guild, make_member, qu
     assert running.role_ids() == {EXILED_ROLE_ID}
 
 
-async def test_release_due__member_gone_is_marked_unknown(guild, make_member, query):
-    member = make_member()
+async def test_release_due__member_gone_is_marked_unexiled(guild, make_member, query):
+    member = make_member(role_ids=[STICKY_ROLE])
     await exiles.exile(member, timedelta(days=1), "reason")
     del guild.members[member.id]
 
     [result] = await exiles.release_due(guild, after_end_of_exile())
 
-    assert result.outcome == ExileOutcome.FAILED
+    assert result.outcome == ExileOutcome.MEMBER_GONE
     assert result.member is None
     [(_, _, status, _)] = exile_rows(query)
-    assert status == ExileStatus.UNKNOWN
+    assert status == ExileStatus.UNEXILED
+    # Left for the rejoin flow to clean up
+    assert sticky_rows(query) == [str(STICKY_ROLE)]
 
 
-async def test_release_due__failed_unexile_is_marked_unknown(guild, make_member, query):
+async def test_release_due__failed_unexile_stays_active_and_is_retried(
+    guild, make_member, query
+):
     member = make_member()
     await exiles.exile(member, timedelta(days=1), "reason")
     member.failing_role_ids.add(VERIFIED_ROLE_ID)
 
-    [result] = await exiles.release_due(guild, after_end_of_exile())
+    [failed] = await exiles.release_due(guild, after_end_of_exile())
 
-    assert result.outcome == ExileOutcome.FAILED
+    assert failed.outcome == ExileOutcome.FAILED
     [(_, _, status, _)] = exile_rows(query)
-    assert status == ExileStatus.UNKNOWN
+    assert status == ExileStatus.TIMED_EXILED
     assert member.role_ids() == {EXILED_ROLE_ID}
-    # Not picked up again
-    assert await exiles.release_due(guild, after_end_of_exile()) == []
+
+    # Next run of the worker, once Discord accepts the change
+    member.failing_role_ids.clear()
+    [retried] = await exiles.release_due(guild, after_end_of_exile())
+
+    assert retried.outcome == ExileOutcome.UNEXILED
+    [(_, _, status, _)] = exile_rows(query)
+    assert status == ExileStatus.UNEXILED
+    assert member.role_ids() == {VERIFIED_ROLE_ID}
 
 
 async def test_release_due__member_already_without_exiled_role(
@@ -277,9 +288,9 @@ async def test_release_due__member_already_without_exiled_role(
 
     [result] = await exiles.release_due(guild, after_end_of_exile())
 
-    assert result.outcome == ExileOutcome.FAILED
+    assert result.outcome == ExileOutcome.ALREADY_RELEASED
     [(_, _, status, _)] = exile_rows(query)
-    assert status == ExileStatus.UNKNOWN
+    assert status == ExileStatus.UNEXILED
 
 
 async def test_autounexile_worker__releases_due_exiles(guild, make_member, query):

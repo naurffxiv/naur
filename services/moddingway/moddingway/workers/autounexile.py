@@ -30,8 +30,8 @@ async def autounexile_users(self):
     for result in results:
         if result.outcome == exiles.ExileOutcome.FAILED:
             logger.info(
-                f"Auto Unexile failed, updating exile status of exile "
-                f"{result.exile_id}, user {result.discord_id} to unknown"
+                f"Auto Unexile failed for exile {result.exile_id}, user "
+                f"{result.discord_id}; it stays active and will be retried."
             )
         try:
             async with create_autounexile_embed(

@@ -52,6 +52,8 @@ class ExileOutcome(StrEnum):
     # Unexile
     UNEXILED = "unexiled"
     NOT_EXILED = "not_exiled"
+    MEMBER_GONE = "member_gone"
+    ALREADY_RELEASED = "already_released"
     # Any operation: nothing was saved
     FAILED = "failed"
 
@@ -186,48 +188,45 @@ async def release_due(guild: discord.Guild, now: datetime) -> list[ExileResult]:
     """
     End every Exile whose end time is before ``now``.
 
-    An Exile that cannot be ended (the member left the server, no longer has the
-    Exiled role, or the Unexile failed) is marked UNKNOWN, so it is not picked up
-    again.
+    A member who left the server, or who no longer has the Exiled role, has their
+    Exile marked as ended without any role changes. A failed Unexile is rolled
+    back and stays TIMED_EXILED, so it is retried on the next run.
     """
     results: list[ExileResult] = []
     for pending_exile in exiles_database.get_pending_unexiles(now):
         logger.info(f"Releasing exile {pending_exile.exile_id}.")
         try:
-            result = await _release(guild, pending_exile)
+            results.append(await _release(guild, pending_exile))
         except Exception as e:
             logger.exception(f"Failed to release exile {pending_exile.exile_id}")
-            result = _result(
-                ExileOutcome.FAILED,
-                pending_exile.discord_id,
-                None,
-                pending_exile,
-                error=f"Unexile failed and no changes were saved: {e}",
+            results.append(
+                _result(
+                    ExileOutcome.FAILED,
+                    pending_exile.discord_id,
+                    None,
+                    pending_exile,
+                    error=f"Unexile failed and no changes were saved: {e}",
+                )
             )
-        if result.outcome == ExileOutcome.FAILED:
-            exiles_database.update_exile_status(
-                pending_exile.exile_id, ExileStatus.UNKNOWN
-            )
-        results.append(result)
     return results
 
 
 async def _release(guild: discord.Guild, pending_exile: PendingExile) -> ExileResult:
     member = guild.get_member(pending_exile.discord_id)
-    if member is None:
-        error = f"<@{pending_exile.discord_id}> was not found in the server."
-    elif not user_has_role(member, Role.EXILED):
-        error = "User is not currently exiled, no action will be taken"
-    else:
-        return await _unexile_member(member, pending_exile.user_id, pending_exile)
+    if member is None or not user_has_role(member, Role.EXILED):
+        exiles_database.update_exile_status(
+            pending_exile.exile_id, ExileStatus.UNEXILED
+        )
+        return _result(
+            ExileOutcome.MEMBER_GONE
+            if member is None
+            else ExileOutcome.ALREADY_RELEASED,
+            pending_exile.discord_id,
+            member,
+            pending_exile,
+        )
 
-    return _result(
-        ExileOutcome.FAILED,
-        pending_exile.discord_id,
-        member,
-        pending_exile,
-        error=error,
-    )
+    return await _unexile_member(member, pending_exile.user_id, pending_exile)
 
 
 async def _unexile_member(

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 import discord
 
-from moddingway.constants import ExileStatus
+from moddingway.constants import ExileStatus, Role
 from moddingway.database import exiles_database, users_database
 from moddingway.settings import get_settings
 from moddingway.util import (
@@ -53,6 +53,22 @@ def _outcome_text(result: ExileResult) -> _OutcomeText:
             fields=(("Result", f"{mention} was successfully unexiled"),)
         ),
         ExileOutcome.NOT_EXILED: _OutcomeText(error=NOT_EXILED_MESSAGE),
+        ExileOutcome.MEMBER_GONE: _OutcomeText(
+            fields=(
+                (
+                    "Result",
+                    f"{mention} was not found in the server, exile marked as ended without role changes",
+                ),
+            )
+        ),
+        ExileOutcome.ALREADY_RELEASED: _OutcomeText(
+            fields=(
+                (
+                    "Result",
+                    f"{mention} no longer had the {Role.EXILED.value} role, exile marked as ended without role changes",
+                ),
+            )
+        ),
         ExileOutcome.FAILED: _OutcomeText(
             error=result.error or "Unknown error",
             reply=result.error or "An error occurred while processing the command.",
