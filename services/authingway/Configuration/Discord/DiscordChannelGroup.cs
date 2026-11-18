@@ -2,10 +2,10 @@
 // The NAUR Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace Naur.Authingway.Configuration;
+namespace Naur.Authingway.Configuration.Discord;
 
 /// <summary>
-/// Names the groups of Discord channels that commands can be restricted to; each maps to channel identifiers in <see cref="DiscordConfig.Channels"/>.
+/// Names the groups of Discord channels that are relevant to this service.
 /// </summary>
 public enum DiscordChannelGroup
 {
