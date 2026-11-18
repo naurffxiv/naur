@@ -30,6 +30,12 @@ var authingway = builder.AddProject<Projects.Naur_Authingway>("authingway")
     .WithEnvironment("Discord__Token", builder.AddParameter("DiscordToken", secret: true))
     .WithHttpHealthCheck("/health");
 
+authingway.AddEFMigrations("authingway-migrations")
+    .RunDatabaseUpdateOnStart()
+    .WithReference(authingwayDb)
+    .WaitFor(authingwayDb)
+    .PublishAsMigrationBundle(publishContainer: true);
+
 if (builder.ExecutionContext.IsPublishMode)
 {
     authingway.WithHttpEndpoint(targetPort: 8080)
