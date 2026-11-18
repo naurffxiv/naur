@@ -28,6 +28,8 @@ var authingway = builder.AddProject<Projects.Naur_Authingway>("authingway")
     .WithReference(authingwayDb)
     .WaitFor(authingwayDb)
     .WithEnvironment("Discord__Token", builder.AddParameter("DiscordToken", secret: true))
+    .WithEnvironment("Discord__ClientId", builder.AddParameter("DiscordClientId", secret: true))
+    .WithEnvironment("Discord__ClientSecret", builder.AddParameter("DiscordClientSecret", secret: true))
     .WithHttpHealthCheck("/health");
 
 authingway.AddEFMigrations("authingway-migrations")

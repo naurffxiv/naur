@@ -141,7 +141,9 @@ public static class CoreExtensions
             options.KnownProxies.Clear();
         });
 
-        builder.Services.AddAuthentication();
+        builder.Services.AddAuthentication()
+            .AddCookie();
+
         builder.Services.AddAuthorization();
 
         return builder;

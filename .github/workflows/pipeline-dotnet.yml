@@ -110,6 +110,8 @@ jobs:
         uses: ./.github/actions/run-command-with-report
         env:
           Parameters__DiscordToken: ${{ secrets.AUTHINGWAY_TEST_DISCORD_TOKEN }}
+          Parameters__DiscordClientId: ${{ secrets.AUTHINGWAY_TEST_DISCORD_CLIENT_ID }}
+          Parameters__DiscordClientSecret: ${{ secrets.AUTHINGWAY_TEST_DISCORD_CLIENT_SECRET }}
         with:
           service: ${{ inputs.service }}
           step-number: 30

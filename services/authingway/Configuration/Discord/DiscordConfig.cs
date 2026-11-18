@@ -18,6 +18,18 @@ public class DiscordConfig
     public string? Token { get; set; }
 
     /// <summary>
+    /// Gets or sets the Discord OAuth client identifier.
+    /// </summary>
+    [Range(1, ulong.MaxValue, ErrorMessage = "A valid Discord client id must be set.")]
+    public ulong ClientId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the Discord OAuth client secret.
+    /// </summary>
+    [StringLength(32, MinimumLength = 32, ErrorMessage = "The Discord client secret must be 32 characters.")]
+    public string ClientSecret { get; set; } = string.Empty;
+
+    /// <summary>
     /// The guild this authingway instance is configured for.
     /// </summary>
     [Range(1, ulong.MaxValue, ErrorMessage = "A valid guild id must be set.")]

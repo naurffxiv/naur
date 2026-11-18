@@ -97,6 +97,8 @@ jobs:
         env:
           Parameters__PostgresPassword: ${{ secrets.AUTHINGWAY_POSTGRES_PASSWORD }}
           Parameters__DiscordToken: ${{ secrets.AUTHINGWAY_DISCORD_TOKEN }}
+          Parameters__DiscordClientId: ${{ secrets.AUTHINGWAY_DISCORD_CLIENT_ID }}
+          Parameters__DiscordClientSecret: ${{ secrets.AUTHINGWAY_DISCORD_CLIENT_SECRET }}
           Parameters__CloudflareToken: ${{ secrets.AUTHINGWAY_CLOUDFLARE_TOKEN }}
           Parameters__SigningCertificate: ${{ secrets.AUTHINGWAY_SIGNING_CERTIFICATE }}
           Parameters__SigningCertificatePassword: ${{ secrets.AUTHINGWAY_SIGNING_CERTIFICATE_PASSWORD }}
