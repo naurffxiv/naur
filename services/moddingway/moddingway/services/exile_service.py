@@ -1,6 +1,5 @@
 import datetime
 import logging
-import re
 
 import discord
 
@@ -13,6 +12,7 @@ from moddingway.util import (
     add_and_remove_role,
     log_info_and_add_field,
     log_info_and_embed,
+    parse_duration,
     send_dm,
     timestamp_to_epoch,
 )
@@ -304,24 +304,9 @@ async def get_active_exiles() -> str:
 
 
 def format_time_string(duration_string: str):
-    if not duration_string:
+    parsed = parse_duration(duration_string)
+    if parsed is None:
         return None
-    regex = r"^(\d\d?)(sec|min|min|hour|day)"  # Matches (digit, digit?)(option of [sec, min, hour, day])
-    result = re.search(regex, duration_string)
-    if result:
-        duration = int(result.group(1))
-        unit = result.group(2)
-        p_unit = None
 
-        if unit == "sec":
-            p_unit = "second"
-        elif unit == "min":
-            p_unit = "minute"
-        else:
-            p_unit = unit
-
-        if duration != 1:
-            p_unit += "s"
-
-        return result.group(1) + " " + p_unit
-    return None
+    amount, unit = parsed
+    return f"{amount} {unit}{'' if amount == 1 else 's'}"

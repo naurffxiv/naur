@@ -25,6 +25,7 @@ def create_role(mocker: MockerFixture):
         # name is used specifically in the Mock constructor
         # we need to configure it outside the constructor
         mocked_role.name = name.value
+        mocked_role.is_default.return_value = False
 
         return mocked_role
 

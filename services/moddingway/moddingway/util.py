@@ -126,60 +126,77 @@ async def send_chunked_message(channel: discord.abc.GuildChannel, message_conten
             await channel.send(chunk)
 
 
+def _dm_failure_message(
+    member: discord.User | discord.Member, context: str, error: Exception
+) -> str:
+    """Describe why a DM could not be delivered, for the logging channel."""
+    # Check if error has a code
+    code = getattr(error, "code", None)
+    if isinstance(code, int):
+        # Check if Error Code is present in constants.py
+        error_template_msg = ERROR_MESSAGES.get(code)
+        if error_template_msg:
+            return error_template_msg.format(
+                user=getattr(member, "id", member), context=context
+            )
+
+    # Fallback to base error message
+    return f"Failed to send DM to <@{member.id}> for {context}, {error!s}"
+
+
+async def try_send_dm(
+    member: discord.User | discord.Member, message_content: str, context: str
+) -> str | None:
+    """Send a DM, returning a failure description instead of raising."""
+    try:
+        channel = await member.create_dm()
+        await channel.send(content=message_content)
+    except Exception as e:
+        return _dm_failure_message(member, context, e)
+    return None
+
+
 async def send_dm(
     logging_embed: discord.Embed,
     member: discord.User | discord.Member,
     messageContent: str,
     context: str,
 ):
-    try:
-        channel = await member.create_dm()
-        await channel.send(content=messageContent)
-    except Exception as e:
-        # Check if error has a code
-        if hasattr(e, "code") and isinstance(e.code, int):
-            code = e.code
-            error_template_msg = ERROR_MESSAGES.get(
-                code
-            )  # Check if Error Code is present in constants.py
-            if error_template_msg:
-                formatted = error_template_msg.format(
-                    user=getattr(member, "id", member), context=context
-                )
-                log_info_and_add_field(logging_embed, logger, "DM Status", formatted)
-                return
+    failure = await try_send_dm(member, messageContent, context)
+    if failure is not None:
+        log_info_and_add_field(logging_embed, logger, "DM Status", failure)
 
-        # Fallback to base error logging
-        log_info_and_add_field(
-            logging_embed,
-            logger,
-            "DM Status",
-            f"Failed to send DM to <@{member.id}> for {context}, {e!s}",
-        )
+
+def get_guild_role(guild: discord.Guild, role: Role) -> discord.Role | None:
+    return discord.utils.get(guild.roles, name=role.value)
 
 
 async def add_and_remove_role(
     member: discord.Member, role_to_add: Role, role_to_remove: Role
 ):
-    discord_role_to_add = None
-    discord_role_to_remove = None
-
-    for role in member.guild.roles:
-        if role.name == role_to_add.value:
-            discord_role_to_add = role
-        if role.name == role_to_remove.value:
-            discord_role_to_remove = role
-
+    """
+    Swap one role for another in a single Discord call, so the change is either
+    fully applied or not at all. Every other role the member has is kept.
+    """
+    discord_role_to_add = get_guild_role(member.guild, role_to_add)
     if discord_role_to_add is None:
         # This role does not exist, likely a misconfiguration of the server
         raise Exception(f"Role {role_to_add.value} not found in server")
 
+    discord_role_to_remove = get_guild_role(member.guild, role_to_remove)
     if discord_role_to_remove is None:
         # This role does not exist, likely a misconfiguration of the server
         raise Exception(f"Role {role_to_remove.value} not found in server")
 
-    await member.remove_roles(discord_role_to_remove)
-    await member.add_roles(discord_role_to_add)
+    # @everyone is implicit and cannot be part of the new role list
+    new_roles = [
+        role
+        for role in member.roles
+        if role != discord_role_to_remove and not role.is_default()
+    ]
+    if discord_role_to_add not in new_roles:
+        new_roles.append(discord_role_to_add)
+    await member.edit(roles=new_roles)
 
 
 def user_has_role(user: discord.Member, role: Role) -> bool:
@@ -188,32 +205,31 @@ def user_has_role(user: discord.Member, role: Role) -> bool:
     )
 
 
+# Matches (digit, digit?)(option of [sec, min, hour, day])
+DURATION_REGEX = re.compile(r"^(\d\d?)(sec|min|hour|day)")
+_DURATION_UNITS = {"sec": "second", "min": "minute", "hour": "hour", "day": "day"}
+
+
+def parse_duration(duration_string: str | None) -> tuple[int, str] | None:
+    """Split a duration such as "12hour" into its amount and unit (12, "hour").
+
+    The unit is returned as a full word: second, minute, hour or day.
+    """
+    if not duration_string:
+        return None
+    result = DURATION_REGEX.search(duration_string)
+    if result is None:
+        return None
+    return int(result.group(1)), _DURATION_UNITS[result.group(2)]
+
+
 def calculate_time_delta(delta_string: str | None) -> timedelta | None:
-    if not delta_string:
+    parsed = parse_duration(delta_string)
+    if parsed is None:
         return None
 
-    regex = r"^(\d\d?)(sec|min|min|hour|day)"  # Matches (digit, digit?)(option of [sec, min, hour, day])
-
-    result = re.search(regex, delta_string)
-
-    if result:
-        duration = int(result.group(1))
-        unit = result.group(2)
-
-        delta = None
-
-        if unit == "sec":
-            delta = timedelta(seconds=duration)
-        elif unit == "min":
-            delta = timedelta(minutes=duration)
-        elif unit == "hour":
-            delta = timedelta(hours=duration)
-        elif unit == "day":
-            delta = timedelta(days=duration)
-
-        return delta
-
-    return None
+    amount, unit = parsed
+    return timedelta(**{f"{unit}s": amount})
 
 
 async def is_user_moderator(interaction: discord.Interaction):
@@ -283,8 +299,7 @@ async def find_and_assign_role(
             - role: The role object if found, None otherwise
     """
     try:
-        # Find the role by name using the enum value
-        role = discord.utils.get(member.guild.roles, name=role_enum.value)
+        role = get_guild_role(member.guild, role_enum)
 
         if role is None:
             error_msg = f"Role '{role_enum.value}' not found in the server."

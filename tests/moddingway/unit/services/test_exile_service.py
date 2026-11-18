@@ -89,3 +89,17 @@ async def test_exile_user__verified_existing_user_dm_failed(
         call[1].get("name", "") == "DM Status"
         for call in mocked_logging_embed.add_field.call_args_list
     )
+
+
+@pytest.mark.parametrize(
+    "duration,expected",
+    [
+        ("1sec", "1 second"),
+        ("30min", "30 minutes"),
+        ("1hour", "1 hour"),
+        ("7day", "7 days"),
+        ("bad", None),
+    ],
+)
+def test_format_time_string(duration, expected):
+    assert exile_service.format_time_string(duration) == expected

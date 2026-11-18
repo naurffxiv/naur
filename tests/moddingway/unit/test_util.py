@@ -75,22 +75,40 @@ def test_user_has_role(
 
 
 @pytest.mark.asyncio
-async def test_add_and_remove_role(create_member):
-    role_to_add = constants.Role.EXILED
-    role_to_remove = constants.Role.VERIFIED
+async def test_add_and_remove_role__swaps_in_one_edit(
+    mocker, create_member, naur_guild
+):
+    verified, exiled = (
+        util.get_guild_role(naur_guild, role)
+        for role in (constants.Role.VERIFIED, constants.Role.EXILED)
+    )
+    mocked_member = create_member(roles=[constants.Role.MOD])
+    mocked_member.edit = mocker.AsyncMock()
+    other_role = mocked_member.roles[0]
+    mocked_member.roles.append(verified)
 
-    mocked_member = create_member(roles=[constants.Role.VERIFIED])
+    await util.add_and_remove_role(
+        mocked_member, constants.Role.EXILED, constants.Role.VERIFIED
+    )
 
-    await util.add_and_remove_role(mocked_member, role_to_add, role_to_remove)
+    mocked_member.edit.assert_awaited_once_with(roles=[other_role, exiled])
+    mocked_member.add_roles.assert_not_called()
+    mocked_member.remove_roles.assert_not_called()
 
-    mocked_member.add_roles.assert_called_once()
-    mocked_member.remove_roles.assert_called_once()
 
-    added_role = mocked_member.add_roles.call_args[0][0]
-    assert added_role.name == role_to_add.value
-
-    removed_role = mocked_member.remove_roles.call_args[0][0]
-    assert removed_role.name == role_to_remove.value
+@pytest.mark.parametrize(
+    "duration,expected",
+    [
+        (None, None),
+        ("1h", None),
+        ("5sec", (5, "second")),
+        ("12min", (12, "minute")),
+        ("05hour", (5, "hour")),
+        ("3day", (3, "day")),
+    ],
+)
+def test_parse_duration(duration, expected):
+    assert util.parse_duration(duration) == expected
 
 
 @pytest.mark.parametrize(
