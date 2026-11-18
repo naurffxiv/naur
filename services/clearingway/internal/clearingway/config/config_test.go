@@ -3,19 +3,14 @@ package config
 import (
 	"encoding/json"
 	"os"
+	"path/filepath"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-/**
- * As a general note, we do not mock any file system interactions here due to the complexity
- * of doing so in Go. Instead, we focus on testing the logic of the configuration parsing
- * and retrieval methods directly.
- *
- * If you decide you want to try, please increment this counter of hours wasted: 2
- */
+// Loading is tested through InitBotConfig against real folders: the committed configs/ and t.TempDir() trees.
 
 func TestBotConfig_GetEncounters(t *testing.T) {
 	cfg := &BotConfig{
@@ -128,88 +123,126 @@ func TestBotConfig_GetEncounterByName_NilEncounters(t *testing.T) {
 	assert.Nil(t, result)
 }
 
-func TestParseEncounterConfig(t *testing.T) {
-	cfg := &BotConfig{}
-	data := []byte(`{
-		"ids": [1, 2, 3],
-		"name": "Test Raid",
-		"difficulty": "Savage",
-		"roles": [
-			{"name": "DPS", "type": "Prog", "color": "#FF0000"}
-		]
-	}`)
+func TestInitBotConfig_LoadsEveryCommittedEncounter(t *testing.T) {
+	configsDir := filepath.Join("..", "..", "..", "configs")
+	cfg, err := InitBotConfig(configsDir)
+	require.NoError(t, err)
 
-	err := cfg.parseEncounterConfig("test.json", data)
+	files, err := filepath.Glob(filepath.Join(configsDir, "*", "*.json"))
+	require.NoError(t, err)
+	assert.Len(t, cfg.GetEncounters(), len(files), "every committed encounter file loads")
 
-	assert.NoError(t, err)
-	assert.NotNil(t, cfg.Encounters)
-	assert.Equal(t, 1, len(cfg.Encounters))
-
-	encounter, ok := cfg.Encounters["Test Raid"]
-	assert.True(t, ok)
-	assert.Equal(t, []int{1, 2, 3}, encounter.IDs)
-	assert.Equal(t, DifficultySavage, encounter.Difficulty)
-	assert.Len(t, encounter.Roles, 1)
-	assert.Equal(t, "DPS", encounter.Roles[0].Name)
+	// One of each Difficulty, so a loader that drops a whole tier fails here.
+	want := map[string]Difficulty{
+		"The Omega Protocol (Ultimate)": DifficultyUltimate,
+		"M8S":                           DifficultySavage,
+		"The Windward Wilds (Extreme)":  DifficultyExtreme,
+	}
+	for name, difficulty := range want {
+		encounter := cfg.GetEncounterByName(name)
+		if assert.NotNil(t, encounter, "encounter %q was not loaded", name) {
+			assert.Equal(t, difficulty, encounter.Difficulty, "difficulty of %q", name)
+		}
+	}
 }
 
-func TestParseEncounterConfig_InvalidJSON(t *testing.T) {
-	cfg := &BotConfig{}
-	data := []byte(`{invalid json}`)
-
-	err := cfg.parseEncounterConfig("test.json", data)
-
-	assert.Error(t, err)
-
-	//goland:noinspection GoMaybeNil
-	assert.Contains(t, err.Error(), "error unmarshaling encounter config file")
+// writeConfig - Writes contents to dir/relPath, creating any folders on the way.
+func writeConfig(t *testing.T, dir, relPath, contents string) {
+	t.Helper()
+	path := filepath.Join(dir, relPath)
+	require.NoError(t, os.MkdirAll(filepath.Dir(path), 0o755))
+	require.NoError(t, os.WriteFile(path, []byte(contents), 0o600))
 }
 
-func TestParseEncounterConfig_InitializesNilMap(t *testing.T) {
-	cfg := &BotConfig{}
-	data := []byte(`{
-		"ids": [1],
-		"name": "Test",
-		"difficulty": "Extreme",
-		"roles": []
-	}`)
+func TestInitBotConfig_DifficultyComesFromTheFileNotTheFolder(t *testing.T) {
+	dir := t.TempDir()
+	writeConfig(t, dir, "savages/misfiled.json", `{"ids": [1], "name": "Misfiled", "difficulty": "Ultimate", "roles": []}`)
+	writeConfig(t, dir, "anything/nested/deeper.json", `{"ids": [2], "name": "Deeper", "difficulty": "Extreme", "roles": []}`)
 
-	assert.Nil(t, cfg.Encounters)
+	cfg, err := InitBotConfig(dir)
 
-	err := cfg.parseEncounterConfig("test.json", data)
-
-	assert.NoError(t, err)
-	assert.NotNil(t, cfg.Encounters)
+	require.NoError(t, err)
+	assert.Equal(t, DifficultyUltimate, cfg.GetEncounterByName("Misfiled").Difficulty)
+	assert.Equal(t, DifficultyExtreme, cfg.GetEncounterByName("Deeper").Difficulty)
+	assert.Equal(t, "Deeper", cfg.GetEncounterByID(2).Name)
 }
 
-func TestParseConfigFile_Directory(t *testing.T) {
-	cfg := &BotConfig{}
-	info := &mockFileInfo{isDir: true}
+func TestInitBotConfig_SkipsNonJSONFiles(t *testing.T) {
+	dir := t.TempDir()
+	writeConfig(t, dir, "examples/encounter.json.example", `{invalid`)
+	writeConfig(t, dir, "notes.yaml", `not: json`)
 
-	err := cfg.parseConfigFile("/path/to/dir", info, nil)
+	cfg, err := InitBotConfig(dir)
 
-	assert.NoError(t, err)
-	assert.Nil(t, cfg.Encounters)
+	require.NoError(t, err)
+	assert.Empty(t, cfg.GetEncounters())
 }
 
-func TestParseConfigFile_NonJSONFile(t *testing.T) {
-	cfg := &BotConfig{}
-	info := &mockFileInfo{isDir: false, ext: ".yaml"}
+func TestInitBotConfig_Rejects(t *testing.T) {
+	tests := []struct {
+		name    string
+		files   map[string]string
+		wantErr string
+	}{
+		{
+			name:    "invalid JSON",
+			files:   map[string]string{"a.json": `{invalid json}`},
+			wantErr: "error unmarshaling encounter config file",
+		},
+		{
+			name:    "missing difficulty",
+			files:   map[string]string{"a.json": `{"ids": [1], "name": "A", "roles": []}`},
+			wantErr: `has difficulty ""`,
+		},
+		{
+			name:    "unknown difficulty",
+			files:   map[string]string{"a.json": `{"ids": [1], "name": "A", "difficulty": "Normal", "roles": []}`},
+			wantErr: `has difficulty "Normal"`,
+		},
+		{
+			name:    "missing name",
+			files:   map[string]string{"a.json": `{"ids": [1], "difficulty": "Savage", "roles": []}`},
+			wantErr: "has no name",
+		},
+		{
+			name: "duplicate name",
+			files: map[string]string{
+				"a.json": `{"ids": [1], "name": "Same", "difficulty": "Savage", "roles": []}`,
+				"b.json": `{"ids": [2], "name": "Same", "difficulty": "Savage", "roles": []}`,
+			},
+			wantErr: `reuses the encounter name "Same"`,
+		},
+		{
+			name: "duplicate FFLogs ID",
+			files: map[string]string{
+				"a.json": `{"ids": [1, 7], "name": "A", "difficulty": "Savage", "roles": []}`,
+				"b.json": `{"ids": [7], "name": "B", "difficulty": "Savage", "roles": []}`,
+			},
+			wantErr: "reuses FFLogs encounter ID 7",
+		},
+	}
 
-	err := cfg.parseConfigFile("/path/to/config.yaml", info, nil)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dir := t.TempDir()
+			for path, contents := range tt.files {
+				writeConfig(t, dir, path, contents)
+			}
 
-	assert.NoError(t, err)
-	assert.Nil(t, cfg.Encounters)
+			cfg, err := InitBotConfig(dir)
+
+			assert.Nil(t, cfg)
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), tt.wantErr)
+		})
+	}
 }
 
-func TestParseConfigFile_ReadError(t *testing.T) {
-	cfg := &BotConfig{}
-	info := &mockFileInfo{isDir: false, ext: ".json"}
+func TestInitBotConfig_MissingDirectory(t *testing.T) {
+	cfg, err := InitBotConfig(filepath.Join(t.TempDir(), "does-not-exist"))
 
-	err := cfg.parseConfigFile("/path/to/file.json", info, os.ErrPermission)
-
-	assert.Error(t, err)
-	assert.Equal(t, os.ErrPermission, err)
+	assert.Nil(t, cfg)
+	assert.ErrorIs(t, err, os.ErrNotExist)
 }
 
 func TestDifficulty_Values(t *testing.T) {
@@ -258,15 +291,3 @@ func TestEncounterRole_JSON(t *testing.T) {
 	assert.Equal(t, RoleTypeRecleared, role.Type)
 	assert.Equal(t, "#FFFFFF", role.Color)
 }
-
-type mockFileInfo struct {
-	isDir bool
-	ext   string
-}
-
-func (m *mockFileInfo) IsDir() bool        { return m.isDir }
-func (m *mockFileInfo) Mode() os.FileMode  { return 0 }
-func (m *mockFileInfo) Name() string       { return "test" + m.ext }
-func (m *mockFileInfo) Size() int64        { return 0 }
-func (m *mockFileInfo) ModTime() time.Time { return time.Time{} }
-func (m *mockFileInfo) Sys() interface{}   { return nil }

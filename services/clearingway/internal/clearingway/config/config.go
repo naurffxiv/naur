@@ -36,19 +36,47 @@ func (cfg *BotConfig) GetEncounterByName(name string) *EncounterConfig {
 	return nil
 }
 
-// parseEncounterConfig - Parses an encounter config file and adds it to the BotConfig
+// parseEncounterConfig - Parses an encounter config file and adds it to the BotConfig.
+// The encounter's own "difficulty" field decides its Difficulty; the folder it sits in does not matter.
 func (cfg *BotConfig) parseEncounterConfig(path string, data []byte) error {
-	// Unmarshal encounter config
 	var encounterConfig EncounterConfig
 	if err := json.Unmarshal(data, &encounterConfig); err != nil {
 		return fmt.Errorf("error unmarshaling encounter config file %s: %w", path, err)
 	}
 
-	// Init map if nil and add encounter config
+	if err := cfg.validateEncounter(path, &encounterConfig); err != nil {
+		return err
+	}
+
 	if cfg.Encounters == nil {
 		cfg.Encounters = make(map[string]*EncounterConfig)
 	}
 	cfg.Encounters[encounterConfig.Name] = &encounterConfig
+	return nil
+}
+
+// validateEncounter - Rejects an encounter with no name, an unknown difficulty, or a name or FFLogs ID
+// that an already loaded encounter uses.
+func (cfg *BotConfig) validateEncounter(path string, encounter *EncounterConfig) error {
+	if encounter.Name == "" {
+		return fmt.Errorf("encounter config file %s has no name", path)
+	}
+
+	if !encounter.Difficulty.Valid() {
+		return fmt.Errorf("encounter config file %s has difficulty %q, want one of %q",
+			path, encounter.Difficulty, difficulties)
+	}
+
+	if _, ok := cfg.Encounters[encounter.Name]; ok {
+		return fmt.Errorf("encounter config file %s reuses the encounter name %q", path, encounter.Name)
+	}
+
+	for _, id := range encounter.IDs {
+		if existing := cfg.GetEncounterByID(id); existing != nil {
+			return fmt.Errorf("encounter config file %s reuses FFLogs encounter ID %d from %q", path, id, existing.Name)
+		}
+	}
+
 	return nil
 }
 
@@ -63,26 +91,12 @@ func (cfg *BotConfig) parseConfigFile(path string, info os.FileInfo, err error) 
 		return nil
 	}
 
-	// Read config file
 	file, err := os.ReadFile(filepath.Clean(path))
 	if err != nil {
 		return fmt.Errorf("error reading config file %s: %s", path, err)
 	}
 
-	// Determine config type based on directory structure
-	lastDirInPath := filepath.Base(filepath.Dir(path))
-	switch lastDirInPath {
-	case "ultimates":
-	case "savages":
-	case "extremes":
-		if err := cfg.parseEncounterConfig(path, file); err != nil {
-			return err
-		}
-	default:
-		return fmt.Errorf("unknown config file type for file %s", path)
-	}
-
-	return nil
+	return cfg.parseEncounterConfig(path, file)
 }
 
 // InitBotConfig - Initializes the bot configuration by loading all config files from the specified directory

@@ -1,5 +1,7 @@
 package config
 
+import "slices"
+
 type Difficulty string
 
 const (
@@ -7,6 +9,14 @@ const (
 	DifficultyExtreme  Difficulty = "Extreme"
 	DifficultyUltimate Difficulty = "Ultimate"
 )
+
+// difficulties lists every known Difficulty.
+var difficulties = []Difficulty{DifficultySavage, DifficultyExtreme, DifficultyUltimate}
+
+// Valid reports whether d is a known Difficulty.
+func (d Difficulty) Valid() bool {
+	return slices.Contains(difficulties, d)
+}
 
 type RoleType string
 
