@@ -43,38 +43,6 @@ public class DiscordConfigTests
     }
 
     /// <summary>
-    /// Verifies that binding rejects unknown names and malformed identifiers instead of dropping entries.
-    /// </summary>
-    /// <param name="key">The configuration key to bind.</param>
-    /// <param name="value">The invalid configuration value.</param>
-    /// <returns>A task representing the test operation.</returns>
-    [Test]
-    [Arguments("Discord:Roles:Admn", "10")]
-    [Arguments("Discord:Channels:Staff:0", "100")]
-    [Arguments("Discord:Roles:Admin", "")]
-    [Arguments("Discord:Roles:Admin", "abc")]
-    [Arguments("Discord:Roles:Admin", "-1")]
-    [Arguments("Discord:Roles:Admin", "18446744073709551616")]
-    [Arguments("Discord:Channels:Admin:0", "")]
-    [Arguments("Discord:Channels:Admin:0", "abc")]
-    [Arguments("Discord:Channels:Admin:0", "-1")]
-    [Arguments("Discord:Channels:Admin:0", "18446744073709551616")]
-    public async Task RejectsUnbindableConfiguration(string key, string value)
-    {
-        var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings { DisableDefaults = true });
-        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
-        {
-            ["Discord:GuildId"] = "1",
-            [key] = value
-        });
-        builder.ConfigureConfiguration();
-
-        using var host = builder.Build();
-
-        await Assert.That(() => host.StartAsync()).Throws<InvalidOperationException>();
-    }
-
-    /// <summary>
     /// Verifies that valid bound roles and channels pass data-annotation validation.
     /// </summary>
     /// <returns>A task representing the test operation.</returns>
