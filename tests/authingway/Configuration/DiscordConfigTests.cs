@@ -17,7 +17,7 @@ namespace Naur.Authingway.Tests.Configuration;
 public class DiscordConfigTests
 {
     /// <summary>
-    /// Verifies that both attributes reject invalid bound identifiers during startup.
+    /// Verifies that invalid bound Discord settings are rejected during startup.
     /// </summary>
     /// <param name="key">The configuration key holding a zero identifier.</param>
     /// <param name="property">The property expected in the validation error.</param>
@@ -25,12 +25,16 @@ public class DiscordConfigTests
     [Test]
     [Arguments("Discord:Roles:Admin", "Roles")]
     [Arguments("Discord:Channels:Developer:0", "Channels")]
-    public async Task RejectsInvalidIdentifiersOnStartup(string key, string property)
+    [Arguments("Discord:ClientId", "ClientId")]
+    [Arguments("Discord:ClientSecret", "ClientSecret")]
+    public async Task RejectsInvalidConfigurationOnStartup(string key, string property)
     {
         var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings { DisableDefaults = true });
         builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
         {
             ["Discord:GuildId"] = "1",
+            ["Discord:ClientId"] = "123456789",
+            ["Discord:ClientSecret"] = "01234567890123456789012345678901",
             [key] = "0"
         });
         builder.ConfigureConfiguration();
@@ -53,6 +57,8 @@ public class DiscordConfigTests
         builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
         {
             ["Discord:GuildId"] = "1",
+            ["Discord:ClientId"] = "123456789",
+            ["Discord:ClientSecret"] = "01234567890123456789012345678901",
             ["Discord:Token"] = "test-token",
             ["Discord:Roles:Admin"] = "10",
             ["Discord:Roles:developer"] = "20",
@@ -82,7 +88,12 @@ public class DiscordConfigTests
         var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings { DisableDefaults = true });
         builder.Configuration
             .AddJsonFile(FindAppSettings("appsettings.json"))
-            .AddJsonFile(FindAppSettings($"appsettings.{environment}.json"));
+            .AddJsonFile(FindAppSettings($"appsettings.{environment}.json"))
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Discord:ClientId"] = "123456789",
+                ["Discord:ClientSecret"] = "01234567890123456789012345678901"
+            });
         builder.ConfigureConfiguration();
 
         using var host = builder.Build();

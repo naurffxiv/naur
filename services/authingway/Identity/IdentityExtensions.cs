@@ -5,6 +5,8 @@
 using Naur.Authingway.Data;
 using Naur.Authingway.Data.Entities;
 using Naur.Authingway.Configuration.Identity;
+using Naur.Authingway.Configuration.Discord;
+using OpenIddict.Abstractions;
 
 namespace Naur.Authingway.Identity;
 
@@ -25,6 +27,12 @@ public static class IdentityExtensions
 
     private static IHostApplicationBuilder ConfigureOpenIddict(this IHostApplicationBuilder builder)
     {
+        var identityConfig = builder.Configuration.GetSection("Identity")
+            .Get<IdentityConfig>() ?? new IdentityConfig();
+
+        var discordConfig = builder.Configuration.GetSection("Discord")
+            .Get<DiscordConfig>() ?? new DiscordConfig();
+
         builder.Services.AddOpenIddict()
             .AddCore(options =>
             {
@@ -34,46 +42,68 @@ public static class IdentityExtensions
 
                 options.UseQuartz();
             })
-            .AddServer(options =>
+            .AddClient(options =>
             {
-                options.SetConfigurationEndpointUris("/.well-known/openid-configuration");
-                options.SetJsonWebKeySetEndpointUris("/.well-known/jwks");
-                options.SetAuthorizationEndpointUris("/authorize");
-                options.SetEndSessionEndpointUris("/logout");
-                options.SetTokenEndpointUris("/token");
-                options.SetUserInfoEndpointUris("/userinfo");
+                options.AllowAuthorizationCodeFlow()
+                    .AllowRefreshTokenFlow();
 
-                options.AllowAuthorizationCodeFlow();
-                options.AllowRefreshTokenFlow();
-
-                var certificates = builder.Configuration.GetSection("Identity")
-                    .Get<IdentityConfig>() ?? new IdentityConfig();
-
-                if (certificates.IsEmpty && builder.Environment.IsDevelopment())
+                if (identityConfig.IsEmpty && builder.Environment.IsDevelopment())
                 {
                     options.AddDevelopmentEncryptionCertificate()
                         .AddDevelopmentSigningCertificate();
                 }
                 else
                 {
-                    options.AddSigningCertificate(certificates.LoadSigningCertificate())
-                        .AddEncryptionCertificate(certificates.LoadEncryptionCertificate());
+                    options.AddSigningCertificate(identityConfig.LoadSigningCertificate())
+                        .AddEncryptionCertificate(identityConfig.LoadEncryptionCertificate());
                 }
 
                 options.UseAspNetCore()
-                    .EnableAuthorizationEndpointPassthrough()
-                    .EnableEndSessionEndpointPassthrough()
-                    .EnableTokenEndpointPassthrough()
-                    .EnableUserInfoEndpointPassthrough()
-                    .EnableStatusCodePagesIntegration();
+                    .EnableRedirectionEndpointPassthrough();
 
-                options.UseDataProtection();
+                options.UseSystemNetHttp()
+                    .SetProductInformation(typeof(IdentityExtensions).Assembly);
+
+                options.UseWebProviders()
+                    .AddDiscord(options =>
+                    {
+                        options.SetClientId($"{discordConfig.ClientId}")
+                            .SetClientSecret($"{discordConfig.ClientSecret}")
+                            .SetRedirectUri("callback/login/discord");
+                    });
+            })
+            .AddServer(options =>
+            {
+                options.SetConfigurationEndpointUris("/.well-known/openid-configuration")
+                    .SetJsonWebKeySetEndpointUris("/.well-known/jwks")
+                    .SetAuthorizationEndpointUris("/authorize")
+                    .SetEndSessionEndpointUris("/logout")
+                    .SetTokenEndpointUris("/token")
+                    .SetUserInfoEndpointUris("/userinfo");
+
+                options.AllowAuthorizationCodeFlow()
+                    .AllowRefreshTokenFlow();
+
+                options.RegisterScopes(OpenIddictConstants.Scopes.Roles);
+
+                if (identityConfig.IsEmpty && builder.Environment.IsDevelopment())
+                {
+                    options.AddDevelopmentEncryptionCertificate()
+                        .AddDevelopmentSigningCertificate();
+                }
+                else
+                {
+                    options.AddSigningCertificate(identityConfig.LoadSigningCertificate())
+                        .AddEncryptionCertificate(identityConfig.LoadEncryptionCertificate());
+                }
+
+                options.UseAspNetCore()
+                    .EnableAuthorizationEndpointPassthrough();
             })
             .AddValidation(options =>
             {
                 options.UseLocalServer();
                 options.UseAspNetCore();
-                options.UseDataProtection();
             });
 
         return builder;

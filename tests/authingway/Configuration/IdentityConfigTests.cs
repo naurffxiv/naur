@@ -103,6 +103,8 @@ public class IdentityConfigTests
     {
         var settings = new HostApplicationBuilderSettings { DisableDefaults = true };
         var builder = Host.CreateApplicationBuilder(settings);
+        identityConfiguration["Discord:ClientId"] = "123456789";
+        identityConfiguration["Discord:ClientSecret"] = "01234567890123456789012345678901";
         identityConfiguration["Discord:GuildId"] = "1";
         builder.Configuration.AddInMemoryCollection(identityConfiguration);
         builder.ConfigureConfiguration();
