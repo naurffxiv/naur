@@ -1,12 +1,11 @@
+// Package discord is the adapter between findingway and the Discord API.
 package discord
 
 import (
 	"bytes"
 	"fmt"
-	"strings"
 	"time"
 
-	"github.com/Veraticus/findingway/internal/ffxiv"
 	"github.com/Veraticus/findingway/internal/tokenizer"
 
 	"github.com/bwmarrin/discordgo"
@@ -15,15 +14,7 @@ import (
 type Discord struct {
 	Token string
 
-	Session  *discordgo.Session
-	Channels []*Channel `yaml:"channels"`
-}
-
-type Channel struct {
-	Name        string   `yaml:"name"`
-	ID          string   `yaml:"id"`
-	Duty        string   `yaml:"duty"`
-	DataCentres []string `yaml:"dataCentres"`
+	Session *discordgo.Session
 }
 
 func (d *Discord) Start() error {
@@ -42,22 +33,23 @@ func (d *Discord) Start() error {
 	return nil
 }
 
-func (d *Discord) CleanChannel(channelId string) error {
-	messages, err := d.Session.ChannelMessages(channelId, 100, "", "", "")
+// Clean bulk-deletes the bot's own messages among the channel's latest 100.
+func (d *Discord) Clean(channelID string) error {
+	messages, err := d.Session.ChannelMessages(channelID, 100, "", "", "")
 	if err != nil {
 		return fmt.Errorf("could not list messages: %w", err)
 	}
-	messageIds := []string{}
-	botId := d.Session.State.User.ID
+	messageIDs := []string{}
+	botID := d.Session.State.User.ID
 	for _, message := range messages {
-		if message.Author.ID == botId {
-			messageIds = append(messageIds, message.ID)
+		if message.Author.ID == botID {
+			messageIDs = append(messageIDs, message.ID)
 		}
 	}
-	if len(messageIds) == 0 {
+	if len(messageIDs) == 0 {
 		return nil
 	}
-	err = d.Session.ChannelMessagesBulkDelete(channelId, messageIds)
+	err = d.Session.ChannelMessagesBulkDelete(channelID, messageIDs)
 	if err != nil {
 		return fmt.Errorf("could not bulk delete messages: %w", err)
 	}
@@ -65,148 +57,39 @@ func (d *Discord) CleanChannel(channelId string) error {
 	return nil
 }
 
-func (d *Discord) PostListings(channelId string, listings *ffxiv.Listings, duty string, dataCentre string) error {
-	scopedListings := listings.ForDutyAndDataCentre(duty, dataCentre)
-	now := time.Now()
-
-	mostRecent, err := scopedListings.MostRecentUpdated(now)
-	if err != nil {
-		return fmt.Errorf("could not find most recently updated duty: %w", err)
-	}
-	if mostRecent != nil {
-		mostRecentUpdated, err := mostRecent.UpdatedAt(now)
-		if err != nil {
-			return fmt.Errorf("could not find most recently updatedAt: %w", err)
-		}
-		if mostRecentUpdated.After(now.Add(-4 * time.Minute)) {
-			scopedListings, err = scopedListings.UpdatedWithinLast(4*time.Minute, now)
-			if err != nil {
-				return fmt.Errorf("could not find most recently listings: %w", err)
-			}
-		}
-	}
-
-	headerEmbed := &discordgo.MessageEmbed{
-		Title: fmt.Sprintf("%s PFs (%v)", duty, dataCentre),
-		Type:  discordgo.EmbedTypeRich,
-		Color: 0x6600ff,
-		Description: fmt.Sprintf(
-			"Found %v listings %v",
-			len(scopedListings.Listings),
-			fmt.Sprintf("<t:%v:R>", now.Unix()),
-		),
-		Footer: &discordgo.MessageEmbedFooter{
-			Text: strings.Repeat("\u3000", 20),
-		},
-	}
-	headerMessageSend := &discordgo.MessageSend{
-		Embeds: []*discordgo.MessageEmbed{headerEmbed},
-	}
-	_, err = d.Session.ChannelMessageSendComplex(channelId, headerMessageSend)
-	if err != nil {
-		return fmt.Errorf("could not send header: %w", err)
-	}
-
-	fields := []*discordgo.MessageEmbedField{}
-	for i, listing := range scopedListings.Listings {
-		fields = append(fields, &discordgo.MessageEmbedField{
-			Name:   listing.Creator,
-			Value:  listing.PartyDisplay(),
-			Inline: true,
-		})
-		fields = append(fields, &discordgo.MessageEmbedField{
-			Name:   listing.GetTags(),
-			Value:  listing.GetDescription(),
-			Inline: true,
-		})
-		fields = append(fields, &discordgo.MessageEmbedField{
-			Name:   listing.GetExpires(),
-			Value:  listing.GetUpdated(),
-			Inline: true,
-		})
-
-		// Send a message every 5 listings
-		if (i+1)%5 == 0 {
-			err = d.sendMessage(channelId, fields)
-			if err != nil {
-				return fmt.Errorf("could not send message: %w", err)
-			}
-			fields = []*discordgo.MessageEmbedField{}
-		}
-	}
-
-	// Ensure we send any remaining messages
-	if len(fields) != 0 {
-		err = d.sendMessage(channelId, fields)
-		if err != nil {
-			return fmt.Errorf("could not send message: %w", err)
-		}
-	}
-
-	return nil
-}
-
-func (d *Discord) sendMessage(channelId string, fields []*discordgo.MessageEmbedField) error {
-	embed := &discordgo.MessageEmbed{
-		Type:   discordgo.EmbedTypeRich,
-		Color:  0x6600ff,
-		Fields: fields,
-		Footer: &discordgo.MessageEmbedFooter{
-			Text: strings.Repeat("\u3000", 20),
-		},
-	}
-	messageSend := &discordgo.MessageSend{
-		Embeds: []*discordgo.MessageEmbed{embed},
-	}
-	_, err := d.Session.ChannelMessageSendComplex(channelId, messageSend)
-	if err != nil {
-		return err
-	}
-
-	return nil
+// Send posts one message to the channel.
+func (d *Discord) Send(channelID string, message *discordgo.MessageSend) error {
+	_, err := d.Session.ChannelMessageSendComplex(channelID, message)
+	return err
 }
 
 func tokensHeader(lookback int, listingCount int64, at time.Time) string {
 	return fmt.Sprintf("**Last %d days of Tokens (%d listings scanned) as of %s\n**", lookback, listingCount, at.Format(time.DateTime))
 }
 
-func (d *Discord) PostTokens(channelId string, tokens []tokenizer.Token, lookback int, listingCount int64) error {
-
-	tokenString := tokensHeader(lookback, listingCount, time.Now())
+// TokensMessage lists the top 75 tokens seen over the lookback days.
+func TokensMessage(tokens []tokenizer.Token, lookback int, listingCount int64, at time.Time) *discordgo.MessageSend {
+	tokenString := tokensHeader(lookback, listingCount, at)
 	tokenSlice := tokens[:min(75, len(tokens))]
 	for _, token := range tokenSlice {
 		tokenString = tokenString + fmt.Sprintf("`%s` %d\n", token.String, token.Count)
 	}
 
-	messageSend := &discordgo.MessageSend{
+	return &discordgo.MessageSend{
 		Content: tokenString,
 	}
-	_, err := d.Session.ChannelMessageSendComplex(channelId, messageSend)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
-func (d *Discord) PostDescriptionCsv(channelId string, buf *bytes.Buffer) error {
-
-	reader := bytes.NewReader(buf.Bytes())
+// DescriptionCsvMessage attaches the description CSV.
+func DescriptionCsvMessage(buf *bytes.Buffer, at time.Time) *discordgo.MessageSend {
 	file := discordgo.File{
-		Name:        fmt.Sprintf("pf_descriptions_%s.csv", time.Now().Format(time.DateTime)),
+		Name:        fmt.Sprintf("pf_descriptions_%s.csv", at.Format(time.DateTime)),
 		ContentType: "csv",
-		Reader:      reader,
+		Reader:      bytes.NewReader(buf.Bytes()),
 	}
 
-	messageSend := &discordgo.MessageSend{
-		Content: fmt.Sprintf("**Description List %s**", time.Now().Format(time.DateTime)),
+	return &discordgo.MessageSend{
+		Content: fmt.Sprintf("**Description List %s**", at.Format(time.DateTime)),
 		File:    &file,
 	}
-
-	_, err := d.Session.ChannelMessageSendComplex(channelId, messageSend)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

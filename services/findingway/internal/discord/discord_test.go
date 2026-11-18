@@ -1,13 +1,16 @@
 package discord
 
 import (
+	"bytes"
+	"io"
+	"os"
+	"strings"
 	"testing"
 	"time"
 
-	"os"
+	"github.com/Veraticus/findingway/internal/tokenizer"
 
-	"github.com/Veraticus/findingway/internal/ffxiv"
-
+	"github.com/bwmarrin/discordgo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -26,54 +29,20 @@ func TestStartDiscord(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestPostListings(t *testing.T) {
+func TestSend(t *testing.T) {
 	token := os.Getenv("DISCORD_TOKEN")
 	if token == "" {
 		t.Skip("DISCORD_TOKEN not set, skipping integration test")
 	}
 
 	disc := &Discord{Token: token}
-	err := disc.Start()
-	require.NoError(t, err)
+	require.NoError(t, disc.Start())
+	defer func() { _ = disc.Session.Close() }()
 
-	now := time.Now()
-	listings := []struct {
-		listing *ffxiv.Listing
-		wants   time.Time
-	}{
-		{
-			listing: &ffxiv.Listing{Updated: "a second ago"},
-			wants:   now.Add(time.Duration(-1) * time.Second),
-		},
-		{
-			listing: &ffxiv.Listing{Updated: "a minute ago"},
-			wants:   now.Add(time.Duration(-1) * time.Minute),
-		},
-		{
-			listing: &ffxiv.Listing{Updated: "an hour ago"},
-			wants:   now.Add(time.Duration(-1) * time.Hour),
-		},
-		{
-			listing: &ffxiv.Listing{Updated: "37 seconds ago"},
-			wants:   now.Add(time.Duration(-37) * time.Second),
-		},
-		{
-			listing: &ffxiv.Listing{Updated: "22 minutes ago"},
-			wants:   now.Add(time.Duration(-22) * time.Minute),
-		},
-		{
-			listing: &ffxiv.Listing{Updated: "2 hours ago"},
-			wants:   now.Add(time.Duration(-2) * time.Hour),
-		},
-	}
-
-	var ffxivListings ffxiv.Listings
-	for _, item := range listings {
-		ffxivListings.Listings = append(ffxivListings.Listings, item.listing)
-	}
-
-	listErr := disc.PostListings(unitTestChannelID, &ffxivListings, "Dragonsong's Reprise (Ultimate)", "Aether")
-	assert.NoError(t, listErr)
+	err := disc.Send(unitTestChannelID, &discordgo.MessageSend{
+		Content: "findingway smoke test " + time.Now().Format(time.DateTime),
+	})
+	assert.NoError(t, err)
 }
 
 func TestTokensHeader(t *testing.T) {
@@ -82,4 +51,30 @@ func TestTokensHeader(t *testing.T) {
 	got := tokensHeader(5, 42, at)
 
 	assert.Equal(t, "**Last 5 days of Tokens (42 listings scanned) as of 2026-09-25 12:30:00\n**", got)
+}
+
+func TestTokensMessageListsAtMost75Tokens(t *testing.T) {
+	at := time.Date(2026, 9, 25, 12, 30, 0, 0, time.UTC)
+	tokens := make([]tokenizer.Token, 80)
+	for i := range tokens {
+		tokens[i] = tokenizer.Token{String: "tok", Count: i}
+	}
+
+	msg := TokensMessage(tokens, 2, 7, at)
+
+	assert.True(t, strings.HasPrefix(msg.Content, tokensHeader(2, 7, at)))
+	assert.Equal(t, 75, strings.Count(msg.Content, "`tok`"))
+}
+
+func TestDescriptionCsvMessageAttachesCsv(t *testing.T) {
+	at := time.Date(2026, 9, 25, 12, 30, 0, 0, time.UTC)
+
+	msg := DescriptionCsvMessage(bytes.NewBufferString("Timestamp,Description\n"), at)
+
+	assert.Equal(t, "**Description List 2026-09-25 12:30:00**", msg.Content)
+	require.NotNil(t, msg.File)
+	assert.Equal(t, "pf_descriptions_2026-09-25 12:30:00.csv", msg.File.Name)
+	body, err := io.ReadAll(msg.File.Reader)
+	require.NoError(t, err)
+	assert.Equal(t, "Timestamp,Description\n", string(body))
 }

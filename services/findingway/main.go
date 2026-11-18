@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Veraticus/findingway/internal/board"
 	"github.com/Veraticus/findingway/internal/discord"
 	"github.com/Veraticus/findingway/internal/scraper"
 	"github.com/Veraticus/findingway/internal/tokenizer"
@@ -18,8 +19,14 @@ import (
 const (
 	lookback       = 2
 	redisTimeout   = 10 * time.Second
-	tokenChannelId = "1510722864851189981"
+	tokenChannelID = "1510722864851189981"
+	loopInterval   = 3 * time.Minute
 )
+
+// config is the shape of ./config.yaml.
+type config struct {
+	Channels []*board.Channel `yaml:"channels"`
+}
 
 func main() {
 	tok := &tokenizer.Tokenizer{}
@@ -53,11 +60,12 @@ func main() {
 		Token: discordToken,
 	}
 
-	config, err := os.ReadFile("./config.yaml")
+	configFile, err := os.ReadFile("./config.yaml")
 	if err != nil {
 		panic(fmt.Errorf("could not read config.yaml: %w", err))
 	}
-	if err := yaml.Unmarshal(config, &d); err != nil {
+	var cfg config
+	if err := yaml.Unmarshal(configFile, &cfg); err != nil {
 		panic(err)
 	}
 
@@ -68,11 +76,12 @@ func main() {
 	}
 
 	scraper := &scraper.Scraper{Url: "https://xivpf.com"}
+	listingBoard := board.New(d)
 
 	fmt.Printf("Starting findingway...\n")
 	loopCount := 0
 	for {
-		totalWait := 3 * time.Minute
+		totalWait := loopInterval
 		fmt.Printf("Scraping source...\n")
 		listings, err := scraper.Scrape()
 		if err != nil {
@@ -80,26 +89,15 @@ func main() {
 			continue
 		}
 		fmt.Printf("Got %v listings.\n", len(listings.Listings))
-		fmt.Printf("Sending to %v channels...\n", len(d.Channels))
+		fmt.Printf("Sending to %v channels...\n", len(cfg.Channels))
 
-		for _, c := range d.Channels {
+		for _, c := range cfg.Channels {
 			startTime := time.Now()
-			fmt.Printf("Cleaning Discord for %v (%v)...\n", c.Name, c.Duty)
-			err = d.CleanChannel(c.ID)
-			if err != nil {
-				fmt.Printf("Discord error cleaning channel: %v\n", err)
+			fmt.Printf("Refreshing Discord for %v (%v)...\n", c.Name, c.Duty)
+			if err := listingBoard.Refresh(c, listings, startTime); err != nil {
+				fmt.Printf("Discord error refreshing %v: %v\n", c.Name, err)
 			}
-
-			fmt.Printf("Updating Discord for %v (%v)...\n", c.Name, c.Duty)
-			for _, dataCentre := range c.DataCentres {
-				err = d.PostListings(c.ID, listings, c.Duty, dataCentre)
-			}
-			if err != nil {
-				fmt.Printf("Discord error updating messages: %v\n", err)
-			}
-			endTime := time.Now()
-			duration := endTime.Sub(startTime)
-			totalWait -= duration
+			totalWait -= time.Since(startTime)
 		}
 
 		err = withRedisTimeout(func(ctx context.Context) error {
@@ -170,13 +168,14 @@ func postTokens(d *discord.Discord, tok *tokenizer.Tokenizer) error {
 		return err
 	}
 
-	if err := d.CleanChannel(tokenChannelId); err != nil {
+	now := time.Now()
+	if err := d.Clean(tokenChannelID); err != nil {
 		fmt.Printf("Error cleaning token channel: %s\n", err)
 	}
-	if err := d.PostTokens(tokenChannelId, tokens, lookback, listingCount); err != nil {
+	if err := d.Send(tokenChannelID, discord.TokensMessage(tokens, lookback, listingCount, now)); err != nil {
 		return err
 	}
-	if err := d.PostDescriptionCsv(tokenChannelId, &buf); err != nil {
+	if err := d.Send(tokenChannelID, discord.DescriptionCsvMessage(&buf, now)); err != nil {
 		return fmt.Errorf("could not post csv: %w", err)
 	}
 	return nil

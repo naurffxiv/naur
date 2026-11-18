@@ -49,23 +49,6 @@ func TestUpdatedAt(t *testing.T) {
 	}
 }
 
-func TestMostRecentUpdateTime(t *testing.T) {
-	expected := &Listing{Updated: "a second ago"}
-
-	listings := &Listings{
-		Listings: []*Listing{
-			{Updated: "20 seconds ago"},
-			{Updated: "43 minutes ago"},
-			expected,
-			{Updated: "an hour ago"},
-		},
-	}
-
-	mostRecent, err := listings.MostRecentUpdated(fixedNow)
-	assert.Nil(t, err)
-	assert.Equal(t, expected, mostRecent)
-}
-
 func TestUpdatedWithinLast(t *testing.T) {
 	expected1 := &Listing{Updated: "a second ago"}
 	expected2 := &Listing{Updated: "40 seconds ago"}

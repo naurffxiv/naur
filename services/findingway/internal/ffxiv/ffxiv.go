@@ -69,25 +69,6 @@ func (ls *Listings) ForDutiesAndDataCentres(duties []string, dataCentres []strin
 	return listings
 }
 
-// MostRecentUpdated returns the Listing updated most recently before now.
-func (ls *Listings) MostRecentUpdated(now time.Time) (*Listing, error) {
-	var mostRecentUpdated time.Time
-	var mostRecent *Listing
-
-	for _, l := range ls.Listings {
-		updatedAt, err := l.UpdatedAt(now)
-		if err != nil {
-			return nil, fmt.Errorf("could not find most recent update time: %w", err)
-		}
-		if updatedAt.After(mostRecentUpdated) {
-			mostRecentUpdated = updatedAt
-			mostRecent = l
-		}
-	}
-
-	return mostRecent, nil
-}
-
 // UpdatedWithinLast returns the Listings updated within duration before now.
 func (ls *Listings) UpdatedWithinLast(duration time.Duration, now time.Time) (*Listings, error) {
 	listings := &Listings{Listings: []*Listing{}}
