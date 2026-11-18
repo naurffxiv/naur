@@ -21,16 +21,7 @@ public static class DataExtensions
     /// <returns>The same instance of <see cref="IHostApplicationBuilder"/> with data services configured.</returns>
     public static IHostApplicationBuilder ConfigureData(this IHostApplicationBuilder builder)
     {
-        return builder.ConfigureDbContext()
-            .ConfigureMigrations();
-    }
-
-    private static IHostApplicationBuilder ConfigureMigrations(this IHostApplicationBuilder builder)
-    {
-        builder.Services.AddSingleton<MigrationGate>();
-        builder.Services.AddScoped<DatabaseMigrator>();
-
-        return builder;
+        return builder.ConfigureDbContext();
     }
 
     private static IHostApplicationBuilder ConfigureDbContext(this IHostApplicationBuilder builder)
