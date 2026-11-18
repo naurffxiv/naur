@@ -2,11 +2,7 @@
 package discord
 
 import (
-	"bytes"
 	"fmt"
-	"time"
-
-	"github.com/Veraticus/findingway/internal/tokenizer"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -61,35 +57,4 @@ func (d *Discord) Clean(channelID string) error {
 func (d *Discord) Send(channelID string, message *discordgo.MessageSend) error {
 	_, err := d.Session.ChannelMessageSendComplex(channelID, message)
 	return err
-}
-
-func tokensHeader(lookback int, listingCount int64, at time.Time) string {
-	return fmt.Sprintf("**Last %d days of Tokens (%d listings scanned) as of %s\n**", lookback, listingCount, at.Format(time.DateTime))
-}
-
-// TokensMessage lists the top 75 tokens seen over the lookback days.
-func TokensMessage(tokens []tokenizer.Token, lookback int, listingCount int64, at time.Time) *discordgo.MessageSend {
-	tokenString := tokensHeader(lookback, listingCount, at)
-	tokenSlice := tokens[:min(75, len(tokens))]
-	for _, token := range tokenSlice {
-		tokenString = tokenString + fmt.Sprintf("`%s` %d\n", token.String, token.Count)
-	}
-
-	return &discordgo.MessageSend{
-		Content: tokenString,
-	}
-}
-
-// DescriptionCsvMessage attaches the description CSV.
-func DescriptionCsvMessage(buf *bytes.Buffer, at time.Time) *discordgo.MessageSend {
-	file := discordgo.File{
-		Name:        fmt.Sprintf("pf_descriptions_%s.csv", at.Format(time.DateTime)),
-		ContentType: "csv",
-		Reader:      bytes.NewReader(buf.Bytes()),
-	}
-
-	return &discordgo.MessageSend{
-		Content: fmt.Sprintf("**Description List %s**", at.Format(time.DateTime)),
-		File:    &file,
-	}
 }

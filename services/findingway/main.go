@@ -1,9 +1,9 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"time"
@@ -14,6 +14,7 @@ import (
 	"github.com/Veraticus/findingway/internal/scraper"
 	"github.com/Veraticus/findingway/internal/tokenizer"
 
+	"github.com/bwmarrin/discordgo"
 	"gopkg.in/yaml.v2"
 )
 
@@ -28,21 +29,29 @@ type config struct {
 	Channels []*board.Channel `yaml:"channels"`
 }
 
+// The Listings whose descriptions the description log records.
+var (
+	trackedDuties      = []string{"Dancing Mad (Ultimate)"}
+	trackedDataCentres = []string{"Aether", "Crystal", "Dynamis", "Primal"}
+)
+
 func main() {
-	tok := &tokenizer.Tokenizer{}
-	if err := tok.Init(); err != nil {
-		panic(fmt.Errorf("could not configure the tokenizer: %w", err))
+	rdb, err := newRedisClient()
+	if err != nil {
+		panic(fmt.Errorf("could not configure Redis: %w", err))
 	}
+	defer func() { _ = rdb.Close() }()
+	descriptionLog := tokenizer.NewDescriptionLog(rdb, trackedDuties, trackedDataCentres)
 
 	if _, ok := os.LookupEnv("TOKENS_ONLY"); ok {
-		if err := printTokens(tok); err != nil {
+		if err := printTokens(os.Stdout, descriptionLog, time.Now()); err != nil {
 			fmt.Printf("Error reading tokens: %v\n", err)
 			os.Exit(1)
 		}
 		return
 	}
 
-	if err := withRedisTimeout(tok.Ping); err != nil {
+	if err := withRedisTimeout(func(ctx context.Context) error { return rdb.Ping(ctx).Err() }); err != nil {
 		fmt.Printf("Redis unreachable at startup, continuing without it: %v\n", err)
 	}
 
@@ -82,13 +91,13 @@ func main() {
 		scrape:   scraper.Scrape,
 		channels: cfg.Channels,
 		refresh:  listingBoard.Refresh,
-		record: func(listings *ffxiv.Listings, _ time.Time) error {
+		record: func(listings *ffxiv.Listings, now time.Time) error {
 			return withRedisTimeout(func(ctx context.Context) error {
-				return tok.TokenizeListings(ctx, listings)
+				return descriptionLog.Record(ctx, listings, now)
 			})
 		},
 		postTokens: func(now time.Time) error {
-			return postTokens(d, tok, now)
+			return postTokens(d, descriptionLog, now)
 		},
 		now:  time.Now,
 		once: once != "false",
@@ -111,38 +120,40 @@ func withRedisTimeout(operation func(ctx context.Context) error) error {
 	return operation(ctx)
 }
 
-func printTokens(tok *tokenizer.Tokenizer) error {
+// reporter reads the description log's Report.
+type reporter interface {
+	Report(ctx context.Context, lookback int, now time.Time) (*tokenizer.Report, error)
+}
+
+// messenger posts to a Discord channel.
+type messenger interface {
+	Clean(channelID string) error
+	Send(channelID string, message *discordgo.MessageSend) error
+}
+
+func printTokens(w io.Writer, descriptionLog reporter, now time.Time) error {
 	return withRedisTimeout(func(ctx context.Context) error {
-		tokens, err := tok.GatherTokens(ctx, lookback)
-		if err != nil {
-			return err
-		}
-		count, err := tok.GatherListingCount(ctx, lookback)
+		report, err := descriptionLog.Report(ctx, lookback, now)
 		if err != nil {
 			return err
 		}
 
-		fmt.Printf("%d listings scanned over last %d days\n\n", count, lookback)
-		for _, t := range tokens {
-			fmt.Printf("%-30s %d\n", t.String, t.Count)
+		var out strings.Builder
+		fmt.Fprintf(&out, "%d listings scanned over last %d days\n\n", report.ListingCount, report.Lookback)
+		for _, t := range report.Tokens {
+			fmt.Fprintf(&out, "%-30s %d\n", t.String, t.Count)
 		}
-		return nil
+		_, err = io.WriteString(w, out.String())
+		return err
 	})
 }
 
-func postTokens(d *discord.Discord, tok *tokenizer.Tokenizer, now time.Time) error {
-	var tokens []tokenizer.Token
-	var listingCount int64
-	var buf bytes.Buffer
+func postTokens(d messenger, descriptionLog reporter, now time.Time) error {
+	var report *tokenizer.Report
 	err := withRedisTimeout(func(ctx context.Context) error {
 		var err error
-		if tokens, err = tok.GatherTokens(ctx, lookback); err != nil {
-			return err
-		}
-		if listingCount, err = tok.GatherListingCount(ctx, lookback); err != nil {
-			return err
-		}
-		return tok.CreateCsv(ctx, lookback, &buf)
+		report, err = descriptionLog.Report(ctx, lookback, now)
+		return err
 	})
 	if err != nil {
 		return err
@@ -151,10 +162,10 @@ func postTokens(d *discord.Discord, tok *tokenizer.Tokenizer, now time.Time) err
 	if err := d.Clean(tokenChannelID); err != nil {
 		fmt.Printf("Error cleaning token channel: %s\n", err)
 	}
-	if err := d.Send(tokenChannelID, discord.TokensMessage(tokens, lookback, listingCount, now)); err != nil {
+	if err := d.Send(tokenChannelID, tokensMessage(report, now)); err != nil {
 		return err
 	}
-	if err := d.Send(tokenChannelID, discord.DescriptionCsvMessage(&buf, now)); err != nil {
+	if err := d.Send(tokenChannelID, descriptionCsvMessage(report.CSV, now)); err != nil {
 		return fmt.Errorf("could not post csv: %w", err)
 	}
 	return nil

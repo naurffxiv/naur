@@ -1,14 +1,12 @@
+// Package tokenizer keeps the description log: the descriptions of tracked
+// Listings stored per day in Redis, and the tokens reported from them.
 package tokenizer
 
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
-	"crypto/x509"
 	"encoding/csv"
-	"errors"
 	"fmt"
-	"os"
 	"regexp"
 	"sort"
 	"strconv"
@@ -18,10 +16,6 @@ import (
 	"github.com/Veraticus/findingway/internal/ffxiv"
 	"github.com/redis/go-redis/v9"
 )
-
-type Tokenizer struct {
-	rdb *redis.Client
-}
 
 type Token struct {
 	String string
@@ -123,9 +117,12 @@ func parseEntry(entry string, fallbackDayNumber int) (timestamp string, descript
 	return day.Format(time.DateOnly), entry
 }
 
-func NowToInt() int {
+// dayOf numbers the day containing now, counted from the same 1900 epoch as
+// the stored keys (seen:<day>, descriptions:<day>). Days roll over at UTC
+// midnight.
+func dayOf(now time.Time) int {
 	startDate := time.Date(1900, 0, 0, 0, 0, 0, 0, time.UTC)
-	dayCount := time.Since(startDate).Hours() / 24
+	dayCount := now.Sub(startDate).Hours() / 24
 	return int(dayCount)
 }
 
@@ -152,195 +149,157 @@ func splitListingIntoTokens(listing string) ([]string, error) {
 	return resTokens, nil
 }
 
-func newRedisClient(opts *redis.Options) *redis.Client {
-	opts.ContextTimeoutEnabled = true
-	return redis.NewClient(opts)
+// keyExpiry is how long each day's keys are kept.
+const keyExpiry = 24 * 32 * time.Hour
+
+func seenKey(day int) string         { return fmt.Sprintf("seen:%d", day) }
+func descriptionsKey(day int) string { return fmt.Sprintf("descriptions:%d", day) }
+
+// DescriptionLog records the descriptions of newly seen Listings for the
+// tracked duties and DataCentres, one Redis set and list per day, and
+// reports on them.
+type DescriptionLog struct {
+	rdb         redis.UniversalClient
+	duties      []string
+	dataCentres []string
 }
 
-func (t *Tokenizer) Init() error {
-	redisPw, ok := os.LookupEnv("REDIS_PASSWORD")
-	redisUser, userOk := os.LookupEnv("REDIS_USER")
+// NewDescriptionLog returns a DescriptionLog over rdb that records Listings
+// for duties in dataCentres.
+func NewDescriptionLog(rdb redis.UniversalClient, duties []string, dataCentres []string) *DescriptionLog {
+	return &DescriptionLog{rdb: rdb, duties: duties, dataCentres: dataCentres}
+}
 
-	if !userOk {
-		return errors.New("REDIS_USER is not set")
-	}
-	if !ok {
-		return errors.New("REDIS_PASSWORD is not set")
+// Report is what the DescriptionLog holds over a lookback window.
+type Report struct {
+	// Lookback is how many days, ending with the day reported on, the
+	// Report covers.
+	Lookback int
+	// Tokens counts each token across the window's descriptions, most
+	// frequent first.
+	Tokens []Token
+	// ListingCount is how many Listings were seen in the window.
+	ListingCount int64
+	// CSV lists each description with its timestamp.
+	CSV []byte
+}
+
+// Record stores the description of each tracked Listing not already seen
+// today or yesterday, as of now. It makes three Redis round trips however
+// many Listings there are.
+func (l *DescriptionLog) Record(ctx context.Context, listings *ffxiv.Listings, now time.Time) error {
+	today := dayOf(now)
+	todaySeenKey := seenKey(today)
+	prevSeenKey := seenKey(today - 1)
+	descriptionKey := descriptionsKey(today)
+	scoped := listings.ForDutiesAndDataCentres(l.duties, l.dataCentres).Listings
+
+	// Whether today's keys exist yet, and which Listings were seen yesterday.
+	var seenExists, descriptionsExist *redis.IntCmd
+	seenYesterday := make([]*redis.BoolCmd, len(scoped))
+	if _, err := l.rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+		seenExists = pipe.Exists(ctx, todaySeenKey)
+		descriptionsExist = pipe.Exists(ctx, descriptionKey)
+		for i, item := range scoped {
+			seenYesterday[i] = pipe.SIsMember(ctx, prevSeenKey, item.Id)
+		}
+		return nil
+	}); err != nil {
+		return err
 	}
 
-	cert, err := tls.LoadX509KeyPair("naur.crt", "naur.key")
-	if err != nil {
-		return fmt.Errorf("error loading certificates: %w", err)
+	// Mark the rest seen today; SAdd adds nothing for a Listing already
+	// counted today.
+	var unseen []*ffxiv.Listing
+	var added []*redis.IntCmd
+	if _, err := l.rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+		for i, item := range scoped {
+			if seenYesterday[i].Val() {
+				continue
+			}
+			unseen = append(unseen, item)
+			added = append(added, pipe.SAdd(ctx, todaySeenKey, item.Id))
+		}
+		if seenExists.Val() == 0 {
+			pipe.Expire(ctx, todaySeenKey, keyExpiry)
+		}
+		return nil
+	}); err != nil {
+		return err
 	}
 
-	caCert, err := os.ReadFile("hyddwn-ca.crt")
-	if err != nil {
-		return fmt.Errorf("error loading CA certificate: %w", err)
-	}
-	caPool := x509.NewCertPool()
-	if !caPool.AppendCertsFromPEM(caCert) {
-		return errors.New("failed to append CA certificate")
-	}
-
-	t.rdb = newRedisClient(&redis.Options{
-		Addr:     "redis.hyddwn.net:6380",
-		Username: redisUser,
-		Password: redisPw,
-		TLSConfig: &tls.Config{
-			Certificates: []tls.Certificate{cert},
-			RootCAs:      caPool,
-		},
+	// Store the new Listings' descriptions.
+	_, err := l.rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+		for i, item := range unseen {
+			if added[i].Val() == 0 {
+				continue
+			}
+			pipe.RPush(ctx, descriptionKey, fmt.Sprintf("%d\t%s", now.Unix(), item.Description))
+		}
+		if descriptionsExist.Val() == 0 {
+			pipe.Expire(ctx, descriptionKey, keyExpiry)
+		}
+		return nil
 	})
-	return nil
+	return err
 }
 
-func (t *Tokenizer) Ping(ctx context.Context) error {
-	return t.rdb.Ping(ctx).Err()
-}
-
-func (t *Tokenizer) TokenizeListings(ctx context.Context, listings *ffxiv.Listings) error {
-	currentDayNumber := NowToInt()
-
-	pfDescriptions := []string{}
-
-	scopedListings := listings.ForDutiesAndDataCentres(
-		[]string{"Dancing Mad (Ultimate)"},
-		[]string{"Aether", "Crystal", "Dynamis", "Primal"})
-
-	seenKey := fmt.Sprintf("seen:%d", currentDayNumber)
-	prevSeenKey := fmt.Sprintf("seen:%d", currentDayNumber-1)
-	seenExists, err := t.rdb.Exists(ctx, seenKey).Result()
-	if err != nil {
-		return err
-	}
-
-	var added int64
-	for _, item := range scopedListings.Listings {
-		seenYesterday, err := t.rdb.SIsMember(ctx, prevSeenKey, item.Id).Result()
-		if err != nil {
-			return err
-		}
-		if seenYesterday {
-			continue
-		}
-
-		added, err = t.rdb.SAdd(ctx, seenKey, item.Id).Result()
-		if err != nil {
-			return err
-		}
-		if added == 0 {
-			continue // already counted today
-		}
-
-		pfDescriptions = append(pfDescriptions, item.Description)
-	}
-
-	if seenExists == 0 {
-		if err := t.rdb.Expire(ctx, seenKey, 24*32*time.Hour).Err(); err != nil {
-			return err
-		}
-	}
-
-	// Store description list into redis
-	descriptionKey := fmt.Sprintf("descriptions:%d", currentDayNumber)
-	todayExists, err := t.rdb.Exists(ctx, descriptionKey).Result()
-	if err != nil {
-		return err
-	}
-
-	for _, description := range pfDescriptions {
-		entry := fmt.Sprintf("%d\t%s", time.Now().Unix(), description)
-		err = t.rdb.RPush(ctx, descriptionKey, entry).Err()
-		if err != nil {
-			return err
-		}
-	}
-
-	if todayExists == 0 {
-		if err := t.rdb.Expire(ctx, descriptionKey, 24*32*time.Hour).Err(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (t *Tokenizer) GatherTokens(ctx context.Context, lookback int) ([]Token, error) {
-
+// Report gathers the tokens, Listing count and CSV for the lookback days
+// ending with the day containing now, reading every day in one round trip.
+func (l *DescriptionLog) Report(ctx context.Context, lookback int, now time.Time) (*Report, error) {
+	today := dayOf(now)
+	report := &Report{Lookback: lookback}
 	tokenSum := make(map[string]int)
 
-	todayDayNumber := NowToInt()
+	var buf bytes.Buffer
+	csvwriter := csv.NewWriter(&buf)
+	if err := csvwriter.Write([]string{"Timestamp", "Description"}); err != nil {
+		return nil, err
+	}
+
+	// Each day's seen count and descriptions, in one round trip.
+	counts := make([]*redis.IntCmd, lookback)
+	descriptions := make([]*redis.StringSliceCmd, lookback)
+	if _, err := l.rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+		for i := range lookback {
+			counts[i] = pipe.SCard(ctx, seenKey(today-i))
+			descriptions[i] = pipe.LRange(ctx, descriptionsKey(today-i), 0, -1)
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
 
 	for i := range lookback {
-		prevDayNumber := todayDayNumber - i
+		day := today - i
+		report.ListingCount += counts[i].Val()
 
-		descriptions, err := t.rdb.LRange(ctx, fmt.Sprintf("descriptions:%d", prevDayNumber), 0, -1).Result()
-		if err != nil {
-			return nil, err
-		}
+		for _, entry := range descriptions[i].Val() {
+			timestamp, description := parseEntry(entry, day)
 
-		for _, entry := range descriptions {
-			_, description := parseEntry(entry, prevDayNumber)
 			tokens, _ := splitListingIntoTokens(description)
 			for _, token := range tokens {
 				tokenSum[token] += 1
 			}
-		}
-	}
 
-	var res []Token
-
-	for k, v := range tokenSum {
-		res = append(res, Token{k, v})
-	}
-
-	sort.Slice(res, func(i, j int) bool {
-		return res[i].Count > res[j].Count
-	})
-
-	return res, nil
-}
-
-func (t *Tokenizer) GatherListingCount(ctx context.Context, lookback int) (int64, error) {
-	todayDayNumber := NowToInt()
-	var total int64
-	for i := range lookback {
-		count, err := t.rdb.SCard(ctx, fmt.Sprintf("seen:%d", todayDayNumber-i)).Result()
-		if err != nil {
-			return 0, err
-		}
-		total += count
-	}
-	return total, nil
-}
-
-func (t *Tokenizer) CreateCsv(ctx context.Context, lookback int, buf *bytes.Buffer) error {
-
-	todayDayNumber := NowToInt()
-	csvwriter := csv.NewWriter(buf)
-
-	err := csvwriter.Write([]string{"Timestamp", "Description"})
-	if err != nil {
-		return err
-	}
-
-	for i := range lookback {
-		prevDayNumber := todayDayNumber - i
-
-		getResult, err := t.rdb.LRange(ctx, fmt.Sprintf("descriptions:%d", prevDayNumber), 0, -1).Result()
-
-		if err != nil {
-			return err
-		}
-
-		for _, entry := range getResult {
-			timestampStr, description := parseEntry(entry, prevDayNumber)
-			err = csvwriter.Write([]string{timestampStr, strings.ReplaceAll(description, "\n", "")})
-			if err != nil {
-				return err
+			if err := csvwriter.Write([]string{timestamp, strings.ReplaceAll(description, "\n", "")}); err != nil {
+				return nil, err
 			}
 		}
 	}
 
 	csvwriter.Flush()
-	return csvwriter.Error()
+	if err := csvwriter.Error(); err != nil {
+		return nil, err
+	}
+	report.CSV = buf.Bytes()
+
+	for k, v := range tokenSum {
+		report.Tokens = append(report.Tokens, Token{k, v})
+	}
+	sort.Slice(report.Tokens, func(i, j int) bool {
+		return report.Tokens[i].Count > report.Tokens[j].Count
+	})
+
+	return report, nil
 }
