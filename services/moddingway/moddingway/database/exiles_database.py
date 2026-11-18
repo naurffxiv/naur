@@ -1,5 +1,5 @@
 import logging
-from datetime import UTC, datetime
+from datetime import datetime
 
 from moddingway.constants import ExileStatus
 
@@ -75,7 +75,7 @@ def remove_user_exiles(user_id):
             return None
 
 
-def get_pending_unexiles() -> list[PendingExile]:
+def get_pending_unexiles(now: datetime) -> list[PendingExile]:
     conn = DatabaseConnection()
 
     with conn.get_cursor() as cursor:
@@ -88,7 +88,7 @@ def get_pending_unexiles() -> list[PendingExile]:
 
         params = (
             ExileStatus.TIMED_EXILED,
-            datetime.now(UTC),
+            now,
         )
 
         cursor.execute(query, params)
@@ -97,27 +97,37 @@ def get_pending_unexiles() -> list[PendingExile]:
         return [PendingExile(*x) for x in res]
 
 
-def get_user_active_exile(user_id) -> PendingExile | None:
+def get_user_and_active_exile(
+    discord_user_id: int,
+) -> tuple[int | None, PendingExile | None]:
+    """
+    Return the user ID of a Discord user and their active Exile, if any.
+
+    The user ID is None when the user has no record.
+    """
     conn = DatabaseConnection()
 
     with conn.get_cursor() as cursor:
         query = """
-        SELECT e.exileID, u.userID, u.discordUserID, e.endTimestamp
-        FROM exiles e
-        JOIN users u ON e.userID = u.userID
-        WHERE u.userID = %s AND  e.exileStatus = %s
+        SELECT u.userID, e.exileID, u.discordUserID, e.endTimestamp
+        FROM users u
+        LEFT JOIN exiles e ON e.userID = u.userID
+            AND e.exileStatus = %s
+        WHERE u.discordUserID = %s
         LIMIT 1;
         """
 
-        params = (user_id, ExileStatus.TIMED_EXILED)
+        params = (ExileStatus.TIMED_EXILED, str(discord_user_id))
 
         cursor.execute(query, params)
         res = cursor.fetchone()
 
-        if res is not None:
-            return PendingExile(*res)
-        else:
-            return None
+        if res is None:
+            return None, None
+        user_id, exile_id, discord_id, end_timestamp = res
+        if exile_id is None:
+            return user_id, None
+        return user_id, PendingExile(exile_id, user_id, discord_id, end_timestamp)
 
 
 def update_exile_end(exile_id, end_timestamp):

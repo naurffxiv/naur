@@ -20,7 +20,7 @@ from moddingway.util import (
     timestamp_to_epoch,
 )
 
-from . import ban_service, exile_service
+from . import ban_service, exile_service, exiles
 
 logger = logging.getLogger(__name__)
 
@@ -207,7 +207,6 @@ async def _apply_punishment(
         punishment = "Nothing"
     else:
         punishment = f"{punishment_days} day exile"
-        await exile_service.exile_user(
-            logging_embed, user, timedelta(days=punishment_days), exile_reason
-        )
+        result = await exiles.exile(user, timedelta(days=punishment_days), exile_reason)
+        exile_service.log_exile_result(logging_embed, result)
     return punishment

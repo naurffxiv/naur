@@ -5,13 +5,14 @@ import discord
 from discord.ext.commands import Bot
 
 from moddingway.constants import Role
+from moddingway.services import exiles
 from moddingway.services.exile_service import (
     delete_exile_by_id,
-    exile_user,
+    exile_command_response,
     format_time_string,
     get_active_exiles,
     get_user_exiles,
-    unexile_user,
+    log_exile_result,
 )
 from moddingway.settings import get_settings
 from moddingway.util import (
@@ -80,12 +81,13 @@ class RouletteDeleteView(discord.ui.View):
                 if exile_duration is None:
                     response_message.set_string("Invalid exile duration.")
                     return
-                error_message = await exile_user(
-                    logging_embed, interaction.user, exile_duration, reason
-                )
+                result = await exiles.exile(interaction.user, exile_duration, reason)
+                log_exile_result(logging_embed, result)
 
-                if error_message:
-                    logger.error(f"An error occurred: {error_message}")
+                if result.outcome != exiles.ExileOutcome.EXILED:
+                    logger.error(
+                        f"Roulette exile of {interaction.user.id} did not happen: {result.error or result.outcome}"
+                    )
                     response_message.set_string(
                         "An error occurred while processing the command."
                     )
@@ -114,10 +116,13 @@ def create_exile_commands(bot: Bot) -> None:
 
         async with create_response_context(interaction) as response_message:
             async with create_logging_embed(interaction, user=user) as logging_embed:
-                error_message = await unexile_user(logging_embed, user)
+                result = await exiles.unexile(user)
+                log_exile_result(logging_embed, result)
 
                 response_message.set_string(
-                    error_message or f"Successfully unexiled {user.mention}"
+                    exile_command_response(
+                        result, f"Successfully unexiled {user.mention}"
+                    )
                 )
 
     @bot.tree.command()
@@ -160,12 +165,13 @@ def create_exile_commands(bot: Bot) -> None:
                 if exile_duration is None:
                     response_message.set_string("Invalid exile duration.")
                     return
-                error_message = await exile_user(
-                    logging_embed, user, exile_duration, reason
-                )
+                result = await exiles.exile(user, exile_duration, reason)
+                log_exile_result(logging_embed, result)
 
                 response_message.set_string(
-                    error_message or f"Successfully exiled {user.mention}"
+                    exile_command_response(
+                        result, f"Successfully exiled {user.mention}"
+                    )
                 )
 
     @bot.tree.command()

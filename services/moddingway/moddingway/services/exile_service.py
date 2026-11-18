@@ -1,133 +1,104 @@
-import datetime
 import logging
+from dataclasses import dataclass
 
 import discord
 
-from moddingway import util
-from moddingway.constants import ExileStatus, Role
-from moddingway.database import exiles_database, roles_database, users_database
-from moddingway.database.models import Exile
+from moddingway.constants import ExileStatus
+from moddingway.database import exiles_database, users_database
 from moddingway.settings import get_settings
 from moddingway.util import (
-    add_and_remove_role,
     log_info_and_add_field,
     log_info_and_embed,
     parse_duration,
-    send_dm,
     timestamp_to_epoch,
 )
+
+from .exiles import ExileOutcome, ExileResult
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
 
+NOT_VERIFIED_MESSAGE = "User is not currently verified, no action will be taken"
+NOT_EXILED_MESSAGE = "User is not currently exiled, no action will be taken"
+MISSING_USER_RECORD_MESSAGE = (
+    "User has been unexiled, but no user record was found in the database"
+)
 
-async def exile_user(
-    logging_embed: discord.Embed,
-    user: discord.Member,
-    duration: datetime.timedelta,
-    reason: str,
-) -> str | None:
-    db_user = users_database.get_user(user.id)
-    if db_user:
-        currentExile = exiles_database.get_user_active_exile(db_user.user_id)
-        if not util.user_has_role(user, Role.VERIFIED) and currentExile:
-            new_endTimestamp = currentExile.end_timestamp + duration
-            exiles_database.update_exile_end(currentExile.exile_id, new_endTimestamp)
-            log_info_and_add_field(
-                logging_embed,
-                logger,
-                "Result",
-                f"Exile extended until <t:{timestamp_to_epoch(new_endTimestamp)}>",
-            )
-            return "User exile extended"
 
-    if not util.user_has_role(user, Role.VERIFIED):
-        error_message = "User is not currently verified, no action will be taken"
-        log_info_and_add_field(
-            logging_embed,
-            logger,
-            "Error",
-            error_message,
-        )
-        return error_message
-    if db_user is None:
+@dataclass(frozen=True)
+class _OutcomeText:
+    # "Error" field, logged before any other problem
+    error: str | None = None
+    # Fields logged last, in order
+    fields: tuple[tuple[str, str], ...] = ()
+    # Reply to the moderator; defaults to ``error``, then the success message
+    reply: str | None = None
+
+
+def _outcome_text(result: ExileResult) -> _OutcomeText:
+    """Every message the bot shows for each Exiles outcome."""
+    mention = f"<@{result.discord_id}>"
+    end_epoch = timestamp_to_epoch(result.end_timestamp)
+    expiration = ("Expiration", f"<t:{end_epoch}:R>")
+    table = {
+        ExileOutcome.EXILED: _OutcomeText(
+            fields=(expiration, ("Result", f"{mention} was successfully exiled"))
+        ),
+        ExileOutcome.EXTENDED: _OutcomeText(
+            fields=(("Result", f"Exile extended until <t:{end_epoch}>"),),
+            reply="User exile extended",
+        ),
+        ExileOutcome.NOT_VERIFIED: _OutcomeText(error=NOT_VERIFIED_MESSAGE),
+        ExileOutcome.UNEXILED: _OutcomeText(
+            fields=(("Result", f"{mention} was successfully unexiled"),)
+        ),
+        ExileOutcome.NOT_EXILED: _OutcomeText(error=NOT_EXILED_MESSAGE),
+        ExileOutcome.FAILED: _OutcomeText(
+            error=result.error or "Unknown error",
+            reply=result.error or "An error occurred while processing the command.",
+        ),
+    }
+    return table[result.outcome]
+
+
+def log_exile_result(logging_embed: discord.Embed, result: ExileResult):
+    """Describe an Exiles result on a logging embed, as the bot has always done."""
+    if result.created_user_record:
         log_info_and_embed(
             logging_embed,
             logger,
             "User not found in database, creating new record",
         )
-        db_user = users_database.add_user(user.id)
 
-    # add exile entry into DB
-    start_timestamp = datetime.datetime.now(datetime.UTC)
-    end_timestamp = start_timestamp + duration
-    exile_status = ExileStatus.TIMED_EXILED
+    # Extensions have never shown the exile ID
+    if result.exile_id is not None and result.outcome != ExileOutcome.EXTENDED:
+        logging_embed.set_footer(text=f"Exile ID: {result.exile_id}")
 
-    # create utc timestamp for exile end
-    timestamp = timestamp_to_epoch(end_timestamp)
-
-    exile = Exile(
-        exile_id=None,
-        user_id=db_user.user_id,
-        discord_id=user.id,
-        reason=reason,
-        exile_status=exile_status.value,
-        start_timestamp=start_timestamp,
-        end_timestamp=end_timestamp,
-    )
-    exile_id = exiles_database.add_exile(exile)
-
-    logger.info(f"Created exile with ID {exile_id}")
-    logging_embed.set_footer(text=f"Exile ID: {exile_id}")
-
-    roles_to_save: list[discord.Role] = []
-
-    # change user role
-    await add_and_remove_role(
-        user, role_to_add=Role.EXILED, role_to_remove=Role.VERIFIED
-    )
-
-    # check for any sticky roles to strip
-    try:
-        for role in user.roles:
-            if role.id in settings.sticky_roles:
-                discord_role = user.guild.get_role(role.id)
-                if discord_role is not None:
-                    roles_to_save.append(discord_role)
-
-        if len(roles_to_save) > 0:
-            await user.remove_roles(*roles_to_save)
-            roles_database.add_sticky_roles(
-                db_user.user_id, [role.id for role in roles_to_save]
-            )
-    except Exception as e:
+    text = _outcome_text(result)
+    if text.error is not None:
+        log_info_and_add_field(logging_embed, logger, "Error", text.error)
+    for problem in result.problems:
+        log_info_and_add_field(logging_embed, logger, "Error", problem)
+    if result.missing_user_record:
         log_info_and_add_field(
-            logging_embed,
-            logger,
-            "Error",
-            f"Sticky roles could not be completely removed, {e}",
+            logging_embed, logger, "Error", MISSING_USER_RECORD_MESSAGE
         )
+    if result.dm_error:
+        log_info_and_add_field(logging_embed, logger, "DM Status", result.dm_error)
+    for name, value in text.fields:
+        log_info_and_add_field(logging_embed, logger, name, value)
 
-    # message user
-    await send_dm(
-        logging_embed,
-        user,
-        f"You are being exiled from NA Ultimate Raiding - FFXIV.\n**Reason:** {reason}\nExile expiration: <t:{timestamp}:R>",
-        context="Exile",
-    )
 
-    log_info_and_add_field(
-        logging_embed,
-        logger,
-        "Expiration",
-        f"<t:{timestamp_to_epoch(end_timestamp)}:R>",
-    )
-    log_info_and_add_field(
-        logging_embed,
-        logger,
-        "Result",
-        f"<@{user.id}> was successfully exiled",
-    )
+def exile_command_response(result: ExileResult, success_message: str) -> str:
+    """The reply shown to the moderator who ran /exile or /unexile."""
+    text = _outcome_text(result)
+    if text.reply is not None:
+        return text.reply
+    if text.error is not None:
+        return text.error
+    if result.missing_user_record:
+        return MISSING_USER_RECORD_MESSAGE
+    return success_message
 
 
 async def delete_exile_by_id(logging_embed: discord.Embed, exile_id: int):
@@ -163,81 +134,6 @@ async def delete_exile_by_id(logging_embed: discord.Embed, exile_id: int):
             logging_embed, logger, "Result", f"Exile {exile_id} not found"
         )
         return f"Exile {exile_id} not found"
-
-
-async def unexile_user(
-    logging_embed: discord.Embed, user: discord.Member
-) -> str | None:
-    if not util.user_has_role(user, Role.EXILED):
-        error_message = "User is not currently exiled, no action will be taken"
-        log_info_and_add_field(
-            logging_embed,
-            logger,
-            "Error",
-            error_message,
-        )
-        return error_message
-
-    # unexile user
-    await add_and_remove_role(user, Role.VERIFIED, Role.EXILED)
-
-    # message user
-    await send_dm(
-        logging_embed,
-        user,
-        "You have been un-exiled from NA Ultimate Raiding - FFXIV.",
-        context="Un-Exile",
-    )
-
-    # update exile record
-    db_user = users_database.get_user(user.id)
-    if db_user is None:
-        error_message = (
-            "User has been unexiled, but no user record was found in the database"
-        )
-        log_info_and_add_field(
-            logging_embed,
-            logger,
-            "Error",
-            error_message,
-        )
-        return error_message
-
-    exile = exiles_database.get_user_active_exile(db_user.user_id)
-
-    if exile is None:
-        # This should only happen when someone was manually exiled then unexiled through the bot
-        logger.info(
-            f"No active exile associated with user ID {db_user.user_id} was found. Skipping DB actions..."
-        )
-    else:
-        exiles_database.update_exile_status(exile.exile_id, ExileStatus.UNEXILED)
-        logging_embed.set_footer(text=f"Exile ID: {exile.exile_id}")
-
-    # check for any sticky roles to restore
-    try:
-        roles_to_restore: list[discord.Role] = []
-        for role in roles_database.get_sticky_roles(db_user.user_id):
-            discord_role = user.guild.get_role(int(role))
-            if discord_role is not None:
-                roles_to_restore.append(discord_role)
-            else:
-                logger.error("Role %s was not found in the server, skipping...", role)
-
-        if len(roles_to_restore) > 0:
-            await user.add_roles(*roles_to_restore)
-            roles_database.remove_sticky_roles(db_user.user_id)
-    except Exception as e:
-        log_info_and_add_field(
-            logging_embed,
-            logger,
-            "Error",
-            f"Sticky roles could not be completely removed, {e}",
-        )
-
-    log_info_and_add_field(
-        logging_embed, logger, "Result", f"<@{user.id}> was successfully unexiled"
-    )
 
 
 TIME_FORMAT = "%Y-%m-%d %H:%M:%S"

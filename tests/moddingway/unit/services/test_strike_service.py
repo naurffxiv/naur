@@ -6,7 +6,7 @@ from pytest_mock.plugin import MockerFixture
 
 from moddingway import constants
 from moddingway.constants import PERMANENT_BAN_STRIKE_THRESHOLD
-from moddingway.services import strike_service
+from moddingway.services import exiles, strike_service
 
 
 @pytest.mark.parametrize(
@@ -40,7 +40,10 @@ async def test_apply_punishment(
 
     spy_calculate_punishment = mocker.spy(strike_service, "_calculate_punishment")
 
-    mocked_exile_user = mocker.patch("moddingway.services.exile_service.exile_user")
+    mocked_exile = mocker.patch(
+        "moddingway.services.exiles.exile",
+        return_value=exiles.ExileResult(exiles.ExileOutcome.EXILED, discord_id=1),
+    )
 
     res = await strike_service._apply_punishment(
         mocked_embed, mocked_user, mocked_db_user, previous_points
@@ -57,10 +60,9 @@ async def test_apply_punishment(
         spy_calculate_punishment.assert_called_once_with(previous_points, total_points)
         punishment_days = spy_calculate_punishment.spy_return
         if punishment_days == 0:
-            mocked_exile_user.assert_not_called()
+            mocked_exile.assert_not_called()
         else:
-            mocked_exile_user.assert_called_once_with(
-                mocked_embed,
+            mocked_exile.assert_called_once_with(
                 mocked_user,
                 timedelta(days=punishment_days),
                 mocker.ANY,

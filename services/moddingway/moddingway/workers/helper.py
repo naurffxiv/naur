@@ -20,7 +20,7 @@ def create_autounexile_embed(
     user: discord.Member | None,
     discord_id: int,
     exile_id: str,
-    end_timestamp: str,
+    end_timestamp: datetime | None,
 ):
     return create_interaction_embed_context(
         get_log_channel(self),

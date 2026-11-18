@@ -1,10 +1,10 @@
 import logging
+from datetime import UTC, datetime
 
 from discord.ext import tasks
 
-from moddingway.constants import ExileStatus
-from moddingway.database import exiles_database
-from moddingway.services.exile_service import unexile_user
+from moddingway.services import exiles
+from moddingway.services.exile_service import log_exile_result
 from moddingway.settings import get_settings
 
 from .helper import create_autounexile_embed
@@ -15,39 +15,37 @@ logger = logging.getLogger(__name__)
 
 @tasks.loop(minutes=1.0)
 async def autounexile_users(self):
+    guild = self.get_guild(settings.guild_id)
+    if guild is None:
+        logger.error(f"Guild {settings.guild_id} not found, skipping auto unexile.")
+        return
+
     try:
-        exiles = exiles_database.get_pending_unexiles()
+        results = await exiles.release_due(guild, datetime.now(UTC))
     except Exception:
-        logger.info("Failed to get pending exiles.")
+        logger.exception("Failed to get pending exiles.")
         logger.info("Ended auto unexile worker task with errors.")
         return
 
-    for exile in exiles:
-        logger.info(f"Auto Unexile running on user id {exile.user_id}.")
-        try:
-            error_message = None
-            member = self.get_guild(settings.guild_id).get_member(exile.discord_id)
-
-            async with create_autounexile_embed(
-                self, member, exile.discord_id, str(exile.exile_id), exile.end_timestamp
-            ) as autounexile_embed:
-                if member is None:
-                    error_message = (
-                        f"<@{exile.discord_id}> was not found in the server."
-                    )
-                    logger.error(f"{error_message}")
-                    raise Exception(error_message)
-
-                error_message = await unexile_user(autounexile_embed, member)
-            if error_message is not None:
-                raise Exception(error_message)
-        except Exception:
+    for result in results:
+        if result.outcome == exiles.ExileOutcome.FAILED:
             logger.info(
-                f"Auto Unexile failed, updating exile status of exile."
-                f"{exile.exile_id}, user {exile.discord_id} to unknown"
+                f"Auto Unexile failed, updating exile status of exile "
+                f"{result.exile_id}, user {result.discord_id} to unknown"
             )
-            logger.info("Ended auto unexile worker task with errors.")
-            exiles_database.update_exile_status(exile.exile_id, ExileStatus.UNKNOWN)
+        try:
+            async with create_autounexile_embed(
+                self,
+                result.member,
+                result.discord_id,
+                str(result.exile_id),
+                result.end_timestamp,
+            ) as autounexile_embed:
+                log_exile_result(autounexile_embed, result)
+        except Exception:
+            logger.exception(
+                f"Failed to log auto unexile of exile {result.exile_id} to Discord."
+            )
 
     return "Auto Unexile task completed."
 
