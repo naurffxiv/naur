@@ -67,18 +67,19 @@ func (d *Discord) CleanChannel(channelId string) error {
 
 func (d *Discord) PostListings(channelId string, listings *ffxiv.Listings, duty string, dataCentre string) error {
 	scopedListings := listings.ForDutyAndDataCentre(duty, dataCentre)
+	now := time.Now()
 
-	mostRecent, err := scopedListings.MostRecentUpdated()
+	mostRecent, err := scopedListings.MostRecentUpdated(now)
 	if err != nil {
 		return fmt.Errorf("could not find most recently updated duty: %w", err)
 	}
 	if mostRecent != nil {
-		mostRecentUpdated, err := mostRecent.UpdatedAt()
+		mostRecentUpdated, err := mostRecent.UpdatedAt(now)
 		if err != nil {
 			return fmt.Errorf("could not find most recently updatedAt: %w", err)
 		}
-		if mostRecentUpdated.After(time.Now().Add(-4 * time.Minute)) {
-			scopedListings, err = scopedListings.UpdatedWithinLast(4 * time.Minute)
+		if mostRecentUpdated.After(now.Add(-4 * time.Minute)) {
+			scopedListings, err = scopedListings.UpdatedWithinLast(4*time.Minute, now)
 			if err != nil {
 				return fmt.Errorf("could not find most recently listings: %w", err)
 			}
@@ -92,7 +93,7 @@ func (d *Discord) PostListings(channelId string, listings *ffxiv.Listings, duty 
 		Description: fmt.Sprintf(
 			"Found %v listings %v",
 			len(scopedListings.Listings),
-			fmt.Sprintf("<t:%v:R>", time.Now().Unix()),
+			fmt.Sprintf("<t:%v:R>", now.Unix()),
 		),
 		Footer: &discordgo.MessageEmbedFooter{
 			Text: strings.Repeat("\u3000", 20),

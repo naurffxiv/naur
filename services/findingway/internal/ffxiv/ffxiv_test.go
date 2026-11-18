@@ -7,48 +7,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestExpiresAt(t *testing.T) {
-	now := time.Now()
-
-	tests := []struct {
-		listing *Listing
-		wants   time.Time
-	}{
-		{
-			listing: &Listing{Expires: "in a second"},
-			wants:   now.Add(time.Duration(1) * time.Second),
-		},
-		{
-			listing: &Listing{Expires: "in a minute"},
-			wants:   now.Add(time.Duration(1) * time.Minute),
-		},
-		{
-			listing: &Listing{Expires: "in an hour"},
-			wants:   now.Add(time.Duration(1) * time.Hour),
-		},
-		{
-			listing: &Listing{Expires: "in 37 seconds"},
-			wants:   now.Add(time.Duration(37) * time.Second),
-		},
-		{
-			listing: &Listing{Expires: "in 22 minutes"},
-			wants:   now.Add(time.Duration(22) * time.Minute),
-		},
-		{
-			listing: &Listing{Expires: "in 2 hours"},
-			wants:   now.Add(time.Duration(2) * time.Hour),
-		},
-	}
-
-	for _, tt := range tests {
-		expiresAt, err := tt.listing.ExpiresAt()
-		assert.Nil(t, err)
-		assert.WithinDuration(t, tt.wants, expiresAt, 10*time.Millisecond)
-	}
-}
+var fixedNow = time.Date(2026, 11, 17, 12, 0, 0, 0, time.UTC)
 
 func TestUpdatedAt(t *testing.T) {
-	now := time.Now()
+	now := fixedNow
 
 	tests := []struct {
 		listing *Listing
@@ -81,9 +43,9 @@ func TestUpdatedAt(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		updatedAt, err := tt.listing.UpdatedAt()
+		updatedAt, err := tt.listing.UpdatedAt(now)
 		assert.Nil(t, err)
-		assert.WithinDuration(t, tt.wants, updatedAt, 10*time.Millisecond)
+		assert.Equal(t, tt.wants, updatedAt)
 	}
 }
 
@@ -99,7 +61,7 @@ func TestMostRecentUpdateTime(t *testing.T) {
 		},
 	}
 
-	mostRecent, err := listings.MostRecentUpdated()
+	mostRecent, err := listings.MostRecentUpdated(fixedNow)
 	assert.Nil(t, err)
 	assert.Equal(t, expected, mostRecent)
 }
@@ -127,7 +89,101 @@ func TestUpdatedWithinLast(t *testing.T) {
 		},
 	}
 
-	mostRecentListings, err := listings.UpdatedWithinLast(3 * time.Minute)
+	mostRecentListings, err := listings.UpdatedWithinLast(3*time.Minute, fixedNow)
 	assert.Nil(t, err)
 	assert.Equal(t, []*Listing{expected1, expected4, expected2, expected3}, mostRecentListings.Listings)
+}
+
+func TestUpdatedAtNowAndBlankMeanNow(t *testing.T) {
+	for _, updated := range []string{"", "now"} {
+		updatedAt, err := (&Listing{Updated: updated}).UpdatedAt(fixedNow)
+		assert.NoError(t, err)
+		assert.Equal(t, fixedNow, updatedAt, "updated %q", updated)
+	}
+}
+
+func TestUpdatedAtRejectsUnknownText(t *testing.T) {
+	_, err := (&Listing{Updated: "sometime"}).UpdatedAt(fixedNow)
+	assert.ErrorContains(t, err, "failed to parse time sometime")
+}
+
+func TestUpdatedWithinLastFailsOnUnparseableListing(t *testing.T) {
+	listings := &Listings{Listings: []*Listing{{Updated: "now"}, {Updated: "sometime"}}}
+
+	_, err := listings.UpdatedWithinLast(time.Minute, fixedNow)
+	assert.Error(t, err)
+}
+
+func TestForDutyAndDataCentreKeepsOnlyMatchingListings(t *testing.T) {
+	match := &Listing{Duty: "TOP", DataCentre: "Aether"}
+	listings := &Listings{Listings: []*Listing{
+		{Duty: "TOP", DataCentre: "Primal"},
+		match,
+		{Duty: "DSR", DataCentre: "Aether"},
+	}}
+
+	assert.Equal(t, []*Listing{match}, listings.ForDutyAndDataCentre("TOP", "Aether").Listings)
+	assert.Empty(t, listings.ForDutyAndDataCentre("FRU", "Aether").Listings)
+}
+
+func TestForDutiesAndDataCentresKeepsListingsInAnyPair(t *testing.T) {
+	topAether := &Listing{Duty: "TOP", DataCentre: "Aether"}
+	dsrPrimal := &Listing{Duty: "DSR", DataCentre: "Primal"}
+	listings := &Listings{Listings: []*Listing{
+		topAether,
+		{Duty: "FRU", DataCentre: "Aether"},
+		dsrPrimal,
+		{Duty: "TOP", DataCentre: "Chaos"},
+	}}
+
+	got := listings.ForDutiesAndDataCentres([]string{"TOP", "DSR"}, []string{"Aether", "Primal"})
+	assert.Equal(t, []*Listing{topAether, dsrPrimal}, got.Listings)
+}
+
+func TestAddIgnoresListingWithSeenId(t *testing.T) {
+	first := &Listing{Id: "1", Creator: "first"}
+	listings := &Listings{}
+
+	listings.Add(first)
+	listings.Add(&Listing{Id: "1", Creator: "duplicate"})
+	listings.Add(&Listing{Id: "2"})
+
+	assert.Len(t, listings.Listings, 2)
+	assert.Same(t, first, listings.Listings[0])
+}
+
+func TestPartyDisplayShowsJobsForFilledSlotsAndRolesForOpenOnes(t *testing.T) {
+	listing := &Listing{Party: []*Slot{
+		{Filled: true, Job: JobFromAbbreviation("AST")},
+		{Roles: Roles{Roles: []Role{Tank}}},
+		{Roles: Roles{Roles: []Role{DPS, Healer}}},
+		NewSlot(),
+	}}
+
+	assert.Equal(t,
+		AST.Emoji()+" "+
+			"<:tank:1312855995910848573> "+
+			"<:healerdps:1312855994971193384> "+
+			"<:AnyRole:1312855998981214268> ",
+		listing.PartyDisplay())
+}
+
+func TestDisplayFieldsDecorateListingText(t *testing.T) {
+	listing := &Listing{Expires: "in 5 minutes", Updated: "now", Description: "farm"}
+
+	assert.Equal(t, "<:hourglass:991379574187372655> in 5 minutes", listing.GetExpires())
+	assert.Equal(t, "<:stopwatch:991379573000388758> now", listing.GetUpdated())
+	assert.Equal(t, "```farm```", listing.GetDescription())
+	assert.Equal(t, "_ _", listing.GetTags())
+
+	listing.Tags = "[Practice]"
+	assert.Equal(t, "[Practice]", listing.GetTags())
+}
+
+func TestJobFromAbbreviation(t *testing.T) {
+	assert.Equal(t, AST, JobFromAbbreviation("AST"))
+	assert.Equal(t, "<:AST:1277726729695137936>", AST.Emoji())
+	assert.Equal(t, PCT, JobFromAbbreviation("PCT"))
+	assert.Equal(t, Unknown, JobFromAbbreviation("FSH"))
+	assert.Equal(t, "<:FSH:1317911119901233162>", Unknown.Emoji())
 }

@@ -69,12 +69,13 @@ func (ls *Listings) ForDutiesAndDataCentres(duties []string, dataCentres []strin
 	return listings
 }
 
-func (ls *Listings) MostRecentUpdated() (*Listing, error) {
+// MostRecentUpdated returns the Listing updated most recently before now.
+func (ls *Listings) MostRecentUpdated(now time.Time) (*Listing, error) {
 	var mostRecentUpdated time.Time
 	var mostRecent *Listing
 
 	for _, l := range ls.Listings {
-		updatedAt, err := l.UpdatedAt()
+		updatedAt, err := l.UpdatedAt(now)
 		if err != nil {
 			return nil, fmt.Errorf("could not find most recent update time: %w", err)
 		}
@@ -87,12 +88,12 @@ func (ls *Listings) MostRecentUpdated() (*Listing, error) {
 	return mostRecent, nil
 }
 
-func (ls *Listings) UpdatedWithinLast(duration time.Duration) (*Listings, error) {
+// UpdatedWithinLast returns the Listings updated within duration before now.
+func (ls *Listings) UpdatedWithinLast(duration time.Duration, now time.Time) (*Listings, error) {
 	listings := &Listings{Listings: []*Listing{}}
-	now := time.Now()
 
 	for _, l := range ls.Listings {
-		updatedAt, err := l.UpdatedAt()
+		updatedAt, err := l.UpdatedAt(now)
 		if err != nil {
 			return nil, fmt.Errorf("could not find most recent update time: %w", err)
 		}
@@ -148,70 +149,13 @@ func (l *Listing) GetDescription() string {
 	return "```" + l.Description + "```"
 }
 
-var expiresSecondsRegexp = regexp.MustCompile(`in (\d+) seconds`)
-var expiresMinutesRegexp = regexp.MustCompile(`in (\d+) minutes`)
-var expiresHoursRegexp = regexp.MustCompile(`in (\d+) hours`)
-
-func (l *Listing) ExpiresAt() (time.Time, error) {
-	now := time.Now()
-
-	if l.Expires == "" {
-		return now, nil
-	}
-
-	if l.Expires == "now" {
-		return now, nil
-	}
-
-	if l.Expires == "in a second" {
-		return now.Add(time.Duration(1) * time.Second), nil
-	}
-
-	if l.Expires == "in a minute" {
-		return now.Add(time.Duration(1) * time.Minute), nil
-	}
-
-	if l.Expires == "in an hour" {
-		return now.Add(time.Duration(1) * time.Hour), nil
-	}
-
-	match := expiresSecondsRegexp.FindStringSubmatch(l.Expires)
-	if len(match) != 0 {
-		seconds, err := strconv.Atoi(match[1])
-		if err != nil {
-			return now, fmt.Errorf("could not parse time %v: %w", l.Expires, err)
-		}
-		return now.Add(time.Duration(seconds) * time.Second), nil
-	}
-
-	match = expiresMinutesRegexp.FindStringSubmatch(l.Expires)
-	if len(match) != 0 {
-		minutes, err := strconv.Atoi(match[1])
-		if err != nil {
-			return now, fmt.Errorf("could not parse time %v: %w", l.Expires, err)
-		}
-		return now.Add(time.Duration(minutes) * time.Minute), nil
-	}
-
-	match = expiresHoursRegexp.FindStringSubmatch(l.Expires)
-	if len(match) != 0 {
-		hours, err := strconv.Atoi(match[1])
-		if err != nil {
-			return now, fmt.Errorf("could not parse time %v: %w", l.Expires, err)
-		}
-		return now.Add(time.Duration(hours) * time.Hour), nil
-	}
-
-	return now, fmt.Errorf("failed to parse time %v", l.Expires)
-}
-
 var updatedSecondsRegexp = regexp.MustCompile(`(\d+) seconds ago`)
 var updatedMinutesRegexp = regexp.MustCompile(`(\d+) minutes ago`)
 var updatedHoursRegexp = regexp.MustCompile(`(\d+) hours ago`)
 
-func (l *Listing) UpdatedAt() (time.Time, error) {
-	now := time.Now()
-
+// UpdatedAt converts the relative Updated text (e.g. "5 minutes ago") to an
+// absolute time measured from now.
+func (l *Listing) UpdatedAt(now time.Time) (time.Time, error) {
 	if l.Updated == "" {
 		return now, nil
 	}
