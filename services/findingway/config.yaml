@@ -43,3 +43,8 @@ channels:
     name: "naur dancing mad check"
     duty: "Dancing Mad (Ultimate)"
     dataCentres: [Aether, Crystal, Dynamis, Primal]
+
+# Duties and DataCentres whose descriptions the description log records.
+trackedDuties:
+  - "Dancing Mad (Ultimate)"
+trackedDataCentres: [Aether, Crystal, Dynamis, Primal]

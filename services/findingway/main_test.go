@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"os"
+	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -42,6 +44,66 @@ func TestNewRedisClientReturnsErrorWithoutPasswordOrCertificates(t *testing.T) {
 	t.Setenv("REDIS_PASSWORD", "secret")
 	_, err = newRedisClient()
 	assert.ErrorContains(t, err, "error loading certificates")
+}
+
+func TestConfigTracksTodaysDuties(t *testing.T) {
+	cfg, err := readConfig("config.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(cfg.TrackedDuties) != 1 || cfg.TrackedDuties[0] != "Dancing Mad (Ultimate)" {
+		t.Errorf("TrackedDuties = %v, want [Dancing Mad (Ultimate)]", cfg.TrackedDuties)
+	}
+	if want := []string{"Aether", "Crystal", "Dynamis", "Primal"}; !slices.Equal(cfg.TrackedDataCentres, want) {
+		t.Errorf("TrackedDataCentres = %v, want %v", cfg.TrackedDataCentres, want)
+	}
+	if len(cfg.Channels) == 0 {
+		t.Error("expected channels in config.yaml")
+	}
+}
+
+func writeConfig(t *testing.T, body string) string {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), "config.yaml")
+	if err := os.WriteFile(path, []byte(body), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	return path
+}
+
+func TestReadConfigRejectsEmptyTrackedLists(t *testing.T) {
+	tests := []struct {
+		name string
+		body string
+		want string
+	}{
+		{
+			name: "no tracked duties",
+			body: "trackedDataCentres: [Aether]\n",
+			want: "trackedDuties is empty",
+		},
+		{
+			name: "no tracked data centres",
+			body: "trackedDuties: [\"Dancing Mad (Ultimate)\"]\ntrackedDataCentres: []\n",
+			want: "trackedDataCentres is empty",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := readConfig(writeConfig(t, tt.body))
+			assert.ErrorContains(t, err, tt.want)
+		})
+	}
+}
+
+func TestReadConfigReportsUnreadableAndInvalidFiles(t *testing.T) {
+	_, err := readConfig(filepath.Join(t.TempDir(), "missing.yaml"))
+	assert.ErrorContains(t, err, "could not read")
+
+	_, err = readConfig(writeConfig(t, "channels: {not: a list"))
+	assert.ErrorContains(t, err, "could not parse")
 }
 
 type fakeReporter struct {

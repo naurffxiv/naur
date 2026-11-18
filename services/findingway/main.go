@@ -27,21 +27,43 @@ const (
 // config is the shape of ./config.yaml.
 type config struct {
 	Channels []*board.Channel `yaml:"channels"`
+	// TrackedDuties and TrackedDataCentres scope the Listings whose
+	// descriptions the description log records.
+	TrackedDuties      []string `yaml:"trackedDuties"`
+	TrackedDataCentres []string `yaml:"trackedDataCentres"`
 }
 
-// The Listings whose descriptions the description log records.
-var (
-	trackedDuties      = []string{"Dancing Mad (Ultimate)"}
-	trackedDataCentres = []string{"Aether", "Crystal", "Dynamis", "Primal"}
-)
+func readConfig(path string) (*config, error) {
+	configFile, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("could not read %s: %w", path, err)
+	}
+	var cfg config
+	if err := yaml.Unmarshal(configFile, &cfg); err != nil {
+		return nil, fmt.Errorf("could not parse %s: %w", path, err)
+	}
+	// An empty list would make the description log record nothing, silently.
+	if len(cfg.TrackedDuties) == 0 {
+		return nil, fmt.Errorf("%s: trackedDuties is empty; list the duties whose descriptions to record", path)
+	}
+	if len(cfg.TrackedDataCentres) == 0 {
+		return nil, fmt.Errorf("%s: trackedDataCentres is empty; list the DataCentres whose descriptions to record", path)
+	}
+	return &cfg, nil
+}
 
 func main() {
+	cfg, err := readConfig("./config.yaml")
+	if err != nil {
+		panic(err)
+	}
+
 	rdb, err := newRedisClient()
 	if err != nil {
 		panic(fmt.Errorf("could not configure Redis: %w", err))
 	}
 	defer func() { _ = rdb.Close() }()
-	descriptionLog := tokenizer.NewDescriptionLog(rdb, trackedDuties, trackedDataCentres)
+	descriptionLog := tokenizer.NewDescriptionLog(rdb, cfg.TrackedDuties, cfg.TrackedDataCentres)
 
 	if _, ok := os.LookupEnv("TOKENS_ONLY"); ok {
 		if err := printTokens(os.Stdout, descriptionLog, time.Now()); err != nil {
@@ -67,15 +89,6 @@ func main() {
 
 	d := &discord.Discord{
 		Token: discordToken,
-	}
-
-	configFile, err := os.ReadFile("./config.yaml")
-	if err != nil {
-		panic(fmt.Errorf("could not read config.yaml: %w", err))
-	}
-	var cfg config
-	if err := yaml.Unmarshal(configFile, &cfg); err != nil {
-		panic(err)
 	}
 
 	err = d.Start()
