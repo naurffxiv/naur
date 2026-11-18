@@ -38,4 +38,4 @@ COPY --chown=appuser:appuser tests/moddingway/ /opt/app/tests/moddingway/
 
 WORKDIR /opt/app/tests/moddingway
 ENTRYPOINT ["uv", "run", "--project", "/opt/app/services/moddingway", "pytest"]
-CMD ["unit"]
+CMD ["unit", "integration"]

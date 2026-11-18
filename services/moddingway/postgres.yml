@@ -37,5 +37,24 @@ services:
       timeout: 5s
       retries: 5
 
+  # Throwaway database for the integration tests (python-test). Fixed
+  # credentials so tests need no secrets; no host port is published.
+  postgres_test:
+    image: postgres:16
+    environment:
+      - POSTGRES_PASSWORD=moddingwayTestPassword
+      - POSTGRES_USER=moddingwayTest
+      - POSTGRES_DB=moddingway_test
+    tmpfs:
+      - /var/lib/postgresql/data
+    volumes:
+      - ./postgres/create_tables.sql:/docker-entrypoint-initdb.d/01_create_tables.sql:ro
+    healthcheck:
+      # -h forces TCP, which only comes up after the init scripts have run
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -d moddingway_test -U moddingwayTest"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
 volumes:
   pgdata:

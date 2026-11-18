@@ -69,22 +69,28 @@ api-reload: sync
 	@uv run uvicorn moddingway_api.main:app --port 8000 --reload
 
 TEST_REPORTS_DIR := ../../tests/moddingway
+TEST_CONTAINER := moddingway-test-container
+# Own compose project, so cleanup never touches postgres_local or the app
+TEST_COMPOSE := docker compose -p moddingway-test
 
+# Unit + integration tests (with their Postgres) in Docker
 test:
-	docker compose run --rm --build python-test
+	$(TEST_COMPOSE) run --rm --build python-test; status=$$?; \
+	$(TEST_COMPOSE) down --remove-orphans; \
+	exit $$status
 
 test-ci:
 	@echo "Running containerized tests..."
-	docker compose build python-test
-	-docker rm -f moddingway-test-container
-	docker create --name moddingway-test-container moddingway-python-test
+	$(TEST_COMPOSE) build python-test
+	-docker rm -f $(TEST_CONTAINER)
 	@python -c "import subprocess, sys; \
-		r = subprocess.run(['docker', 'start', '-a', 'moddingway-test-container']); \
+		r = subprocess.run('$(TEST_COMPOSE) run --name $(TEST_CONTAINER) python-test'.split()); \
 		exit_code = r.returncode; \
 		print('Exporting test artifacts...'); \
-		subprocess.run(['docker', 'cp', 'moddingway-test-container:/opt/app/tests/moddingway/coverage.xml', '$(TEST_REPORTS_DIR)/coverage.xml'], check=False); \
-		subprocess.run(['docker', 'cp', 'moddingway-test-container:/opt/app/tests/moddingway/htmlcov', '$(TEST_REPORTS_DIR)/htmlcov'], check=False); \
-		subprocess.run(['docker', 'rm', '-f', 'moddingway-test-container'], check=False); \
+		subprocess.run(['docker', 'cp', '$(TEST_CONTAINER):/opt/app/tests/moddingway/coverage.xml', '$(TEST_REPORTS_DIR)/coverage.xml'], check=False); \
+		subprocess.run(['docker', 'cp', '$(TEST_CONTAINER):/opt/app/tests/moddingway/htmlcov', '$(TEST_REPORTS_DIR)/htmlcov'], check=False); \
+		subprocess.run(['docker', 'rm', '-f', '$(TEST_CONTAINER)'], check=False); \
+		subprocess.run('$(TEST_COMPOSE) down --remove-orphans'.split(), check=False); \
 		sys.exit(exit_code)"
 
 ty: sync

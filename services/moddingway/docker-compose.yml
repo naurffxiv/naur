@@ -61,3 +61,13 @@ services:
     build:
       context: ../..
       dockerfile: services/moddingway/Dockerfile.tests
+    environment:
+      MODDINGWAY_ENVIRONMENT: local
+      POSTGRES_HOST: postgres_test
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: moddingwayTest
+      POSTGRES_PASSWORD: moddingwayTestPassword
+      POSTGRES_DB: moddingway_test
+    depends_on:
+      postgres_test:
+        condition: service_healthy

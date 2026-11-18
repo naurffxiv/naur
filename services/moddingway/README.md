@@ -71,7 +71,8 @@ We use a Makefile to simplify common development tasks.
 - `make format` - Runs `ruff format` and `ruff check --fix`. **Required before merging.**
 - `make lint` - Runs `format` then `ty check`. Full code quality pass.
 - `make ty` - Runs `ty check` for type safety.
-- `make test` - Runs automated unit tests inside the `python-test` Docker container.
+- `make test` - Runs the unit and integration tests inside the `python-test` Docker container, with a throwaway Postgres for the integration tests.
+- `make test-ci` - Same as `make test`, then exports the coverage reports to the host.
 
 ## Dependency Management
 
@@ -133,11 +134,14 @@ Visit `localhost:8000/docs` to view the API documentation.
 
 ## Testing
 
-This application uses `pytest` for automated unit testing.
+This application uses `pytest` for automated testing. Tests live in `tests/moddingway`:
 
-- Run `make test` to execute the full suite.
+- `unit/` - Fast tests with Discord and the database mocked.
+- `integration/` - Tests that run against a real Postgres, with Discord replaced by in-memory fakes.
 
-  Tests run inside a Docker container, but coverage reports are exported back to the host workspace for easy viewing:
+Run `make test` (or `make test-ci`) to execute both suites. No setup is needed: the integration tests use the `postgres_test` compose service, which is started automatically and removed afterwards. It has no host port, keeps its data in memory (tmpfs), uses fixed test-only credentials (`moddingwayTest` / `moddingwayTestPassword`, database `moddingway_test`) and creates its schema from `postgres/create_tables.sql`. It never touches your local database.
+
+`make test-ci` exports the coverage reports back to the host workspace for easy viewing:
   - **Coverage XML**: `tests/moddingway/coverage.xml`
   - **HTML Report**: `tests/moddingway/htmlcov/index.html`
 
