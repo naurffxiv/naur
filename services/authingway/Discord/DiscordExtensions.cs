@@ -2,7 +2,6 @@
 // The NAUR Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using NetCord;
 using NetCord.Hosting.Gateway;
 using NetCord.Hosting.Services;
 using NetCord.Hosting.Services.ApplicationCommands;
@@ -20,13 +19,13 @@ public static class DiscordExtensions
     /// </summary>
     /// <param name="builder">The host application builder to configure. Cannot be null.</param>
     /// <returns>The same <see cref="IHostApplicationBuilder"/> instance for chaining further configuration.</returns>
-    /// <remarks>
-    /// Failed command results, including precondition refusals, are reported only to the invoking user.
-    /// </remarks>
     public static IHostApplicationBuilder ConfigureDiscord(this IHostApplicationBuilder builder)
     {
-        builder.Services.AddDiscordGateway()
-            .AddApplicationCommands<ApplicationCommandInteraction, ApplicationCommandContext>(options =>
+        builder.Services.AddDiscordGateway(options =>
+            {
+                options.Intents = default;
+            })
+            .AddApplicationCommands(options =>
             {
                 options.ResultHandler = ApplicationCommandResultHandler<ApplicationCommandContext>.Ephemeral;
             });
