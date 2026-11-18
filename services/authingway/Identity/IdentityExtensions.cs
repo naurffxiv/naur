@@ -2,7 +2,6 @@
 // The NAUR Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Microsoft.AspNetCore.Identity;
 using Naur.Authingway.Data;
 using Naur.Authingway.Data.Entities;
 
@@ -20,17 +19,7 @@ public static class IdentityExtensions
     /// <returns>The same instance of <see cref="IHostApplicationBuilder"/> with identity services configured.</returns>
     public static IHostApplicationBuilder ConfigureIdentity(this IHostApplicationBuilder builder)
     {
-        return builder.ConfigureAspNetCoreIdentity()
-            .ConfigureOpenIddict();
-    }
-
-    private static IHostApplicationBuilder ConfigureAspNetCoreIdentity(this IHostApplicationBuilder builder)
-    {
-        builder.Services.AddIdentity<User, Role>(options => options.Stores.SchemaVersion = IdentitySchemaVersions.Version3)
-            .AddEntityFrameworkStores<AppDbContext>()
-            .AddDefaultTokenProviders();
-
-        return builder;
+        return builder.ConfigureOpenIddict();
     }
 
     private static IHostApplicationBuilder ConfigureOpenIddict(this IHostApplicationBuilder builder)
