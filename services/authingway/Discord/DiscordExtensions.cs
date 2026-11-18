@@ -15,12 +15,17 @@ namespace Naur.Authingway.Discord;
 public static class DiscordExtensions
 {
     /// <summary>
-    /// Configures the Discord gateway client and application commands for the application.
+    /// Configures the Discord gateway client and application commands when a token is configured.
     /// </summary>
     /// <param name="builder">The host application builder to configure. Cannot be null.</param>
     /// <returns>The same <see cref="IHostApplicationBuilder"/> instance for chaining further configuration.</returns>
     public static IHostApplicationBuilder ConfigureDiscord(this IHostApplicationBuilder builder)
     {
+        if (string.IsNullOrWhiteSpace(builder.Configuration["Discord:Token"]))
+        {
+            return builder;
+        }
+
         builder.Services.AddDiscordGateway(options =>
             {
                 options.Intents = default;
@@ -34,12 +39,17 @@ public static class DiscordExtensions
     }
 
     /// <summary>
-    /// Registers the Discord command modules for the application.
+    /// Registers the Discord command modules when a token is configured.
     /// </summary>
     /// <param name="app">The application to configure. Cannot be null.</param>
     /// <returns>The same <see cref="WebApplication"/> instance for chaining further configuration.</returns>
     public static WebApplication UseDiscord(this WebApplication app)
     {
+        if (string.IsNullOrWhiteSpace(app.Configuration["Discord:Token"]))
+        {
+            return app;
+        }
+
         app.AddModules(typeof(DiscordExtensions).Assembly);
 
         return app;

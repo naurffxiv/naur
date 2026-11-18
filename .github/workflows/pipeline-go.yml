@@ -114,8 +114,6 @@ jobs:
           command: cd services/${{ inputs.service }} && go test -v -coverprofile=coverage.out ./... 2>&1 | sed "s|^|services/${{ inputs.service }}/|"
           output-file: test.txt
           fail-on-error: false
-        env:
-          DISCORD_TOKEN: ${{ secrets.AUTHINGWAY_TEST_DISCORD_TOKEN }}
 
       - name: Upload Coverage
         if: always()
