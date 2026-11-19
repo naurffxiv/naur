@@ -22,7 +22,7 @@ public class ClientSettingsTests
     {
         var result = ClientSettings.Parse(
             "  My App  ",
-            "https://app.example/callback\r\n\r\nhttp://localhost:5000/cb\nhttps://app.example/callback",
+            "https://app.example/callback\r\n\r\nhttp://localhost:5000/cb\nhttp://127.0.0.1:5000/cb\nhttps://app.example/callback",
             [GrantTypes.AuthorizationCode, GrantTypes.RefreshToken],
             [Scopes.OpenId, Scopes.Roles],
             requirePkce: false);
@@ -30,7 +30,7 @@ public class ClientSettingsTests
         await Assert.That(result.Errors).IsEmpty();
         await Assert.That(result.Settings).IsNotNull();
         await Assert.That(result.Settings!.DisplayName).IsEqualTo("My App");
-        await Assert.That(result.Settings.RedirectUris.Count).IsEqualTo(2);
+        await Assert.That(result.Settings.RedirectUris.Count).IsEqualTo(3);
         await Assert.That(result.Settings.GrantTypes.Count).IsEqualTo(2);
         await Assert.That(result.Settings.Scopes.Count).IsEqualTo(2);
         await Assert.That(result.Settings.RequirePkce).IsFalse();
@@ -49,6 +49,7 @@ public class ClientSettingsTests
     [Arguments("App", "", GrantTypes.AuthorizationCode, Scopes.OpenId)]
     [Arguments("App", "/relative", GrantTypes.AuthorizationCode, Scopes.OpenId)]
     [Arguments("App", "ftp://app.example/cb", GrantTypes.AuthorizationCode, Scopes.OpenId)]
+    [Arguments("App", "http://app.example/cb", GrantTypes.AuthorizationCode, Scopes.OpenId)]
     [Arguments("App", "https://app.example/cb#frag", GrantTypes.AuthorizationCode, Scopes.OpenId)]
     [Arguments("App", "https://app.example/cb", GrantTypes.RefreshToken, Scopes.OpenId)]
     [Arguments("App", "https://app.example/cb", GrantTypes.ClientCredentials, Scopes.OpenId)]

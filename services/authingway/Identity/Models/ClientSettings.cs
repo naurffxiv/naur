@@ -119,11 +119,10 @@ public sealed record ClientSettings
         foreach (var line in (redirectUris ?? string.Empty).Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
         {
             if (!Uri.TryCreate(line, UriKind.Absolute, out var uri)
-                || (uri.Scheme != Uri.UriSchemeHttps && uri.Scheme != Uri.UriSchemeHttp)
-                || !string.IsNullOrEmpty(uri.Fragment))
+                || !IsValidRedirectUri(uri))
             {
                 invalidUris = true;
-                errors.Add($"`{line}` is not an absolute http(s) URI without a fragment.");
+                errors.Add($"`{line}` is not an absolute HTTPS URI, or an HTTP URI for localhost or 127.0.0.1, without a fragment.");
             }
             else if (!uris.Contains(uri))
             {
@@ -163,6 +162,23 @@ public sealed record ClientSettings
                 Scopes = scopeSet,
                 RequirePkce = requirePkce
             }, []);
+    }
+
+    private static bool IsValidRedirectUri(Uri uri)
+    {
+        if (!string.IsNullOrEmpty(uri.Fragment))
+        {
+            return false;
+        }
+
+        if (uri.Scheme == Uri.UriSchemeHttps)
+        {
+            return true;
+        }
+
+        return uri.Scheme == Uri.UriSchemeHttp
+            && (uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
+                || uri.Host.Equals("127.0.0.1", StringComparison.Ordinal));
     }
 
     /// <summary>
