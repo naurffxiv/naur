@@ -2,7 +2,7 @@
 // Discord role ID mappings – pulled from env vars
 //
 // These are safe for client-side use in:
-// - Middleware route protection
+// - Proxy route protection
 // - Conditional rendering in UI
 // - Auth validation in NextAuth callbacks
 //
