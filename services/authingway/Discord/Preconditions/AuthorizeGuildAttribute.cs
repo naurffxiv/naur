@@ -12,10 +12,17 @@ namespace Naur.Authingway.Discord.Preconditions;
 /// <summary>
 /// Allows an application command only in the guild configured by <see cref="DiscordConfig.GuildId"/>.
 /// </summary>
-public sealed class AuthorizeGuildAttribute : PreconditionAttribute<ApplicationCommandContext>
+public sealed class AuthorizeGuildAttribute : AuthorizeGuildAttribute<ApplicationCommandContext>;
+
+/// <summary>
+/// Allows an interaction only in the guild configured by <see cref="DiscordConfig.GuildId"/>.
+/// </summary>
+/// <typeparam name="TContext">The interaction context the precondition applies to.</typeparam>
+public abstract class AuthorizeGuildAttribute<TContext> : PreconditionAttribute<TContext>
+    where TContext : IInteractionContext
 {
     /// <inheritdoc/>
-    public override ValueTask<PreconditionResult> EnsureCanExecuteAsync(ApplicationCommandContext context, IServiceProvider? serviceProvider)
+    public override ValueTask<PreconditionResult> EnsureCanExecuteAsync(TContext context, IServiceProvider? serviceProvider)
     {
         ArgumentNullException.ThrowIfNull(serviceProvider);
 

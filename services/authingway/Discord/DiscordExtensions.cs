@@ -2,10 +2,13 @@
 // The NAUR Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using NetCord;
 using NetCord.Hosting.Gateway;
 using NetCord.Hosting.Services;
 using NetCord.Hosting.Services.ApplicationCommands;
+using NetCord.Hosting.Services.ComponentInteractions;
 using NetCord.Services.ApplicationCommands;
+using NetCord.Services.ComponentInteractions;
 
 namespace Naur.Authingway.Discord;
 
@@ -15,7 +18,7 @@ namespace Naur.Authingway.Discord;
 public static class DiscordExtensions
 {
     /// <summary>
-    /// Configures the Discord gateway client and application commands when a token is configured.
+    /// Configures the Discord gateway client, application commands, and modal interactions when a token is configured.
     /// </summary>
     /// <param name="builder">The host application builder to configure. Cannot be null.</param>
     /// <returns>The same <see cref="IHostApplicationBuilder"/> instance for chaining further configuration.</returns>
@@ -33,13 +36,17 @@ public static class DiscordExtensions
             .AddApplicationCommands(options =>
             {
                 options.ResultHandler = ApplicationCommandResultHandler<ApplicationCommandContext>.Ephemeral;
+            })
+            .AddComponentInteractions<ModalInteraction, ModalInteractionContext>(options =>
+            {
+                options.ResultHandler = ComponentInteractionResultHandler<ModalInteractionContext>.Ephemeral;
             });
 
         return builder;
     }
 
     /// <summary>
-    /// Registers the Discord command modules when a token is configured.
+    /// Registers the Discord command and interaction modules when a token is configured.
     /// </summary>
     /// <param name="app">The application to configure. Cannot be null.</param>
     /// <returns>The same <see cref="WebApplication"/> instance for chaining further configuration.</returns>
