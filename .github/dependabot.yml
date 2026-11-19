@@ -7,7 +7,7 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     open-pull-requests-limit: 10
     commit-message:
       prefix: "ci"
@@ -22,7 +22,7 @@ updates:
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     open-pull-requests-limit: 10
     commit-message:
       prefix: "build"
@@ -49,7 +49,7 @@ updates:
   - package-ecosystem: "npm"
     directory: "/services/naurffxiv"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     open-pull-requests-limit: 10
     commit-message:
       prefix: "build"
@@ -89,7 +89,7 @@ updates:
   - package-ecosystem: "npm"
     directory: "/tests/e2e"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     open-pull-requests-limit: 10
     commit-message:
       prefix: "build"
@@ -106,7 +106,7 @@ updates:
     registries:
       - davidfowl-aspire
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     open-pull-requests-limit: 10
     commit-message:
       prefix: "build"
@@ -121,7 +121,7 @@ updates:
   - package-ecosystem: "uv"
     directory: "/services/moddingway"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     open-pull-requests-limit: 10
     commit-message:
       prefix: "build"
@@ -136,7 +136,7 @@ updates:
   - package-ecosystem: "gomod"
     directory: "/services/findingway"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     open-pull-requests-limit: 10
     commit-message:
       prefix: "build"
@@ -151,7 +151,7 @@ updates:
   - package-ecosystem: "gomod"
     directory: "/services/clearingway"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     open-pull-requests-limit: 10
     commit-message:
       prefix: "build"
@@ -166,7 +166,7 @@ updates:
   - package-ecosystem: "gomod"
     directory: "/services/clearingway_legacy"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     open-pull-requests-limit: 10
     commit-message:
       prefix: "build"
@@ -186,7 +186,7 @@ updates:
       - "/services/moddingway/moddingway_api"
       - "/services/naurffxiv"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     open-pull-requests-limit: 10
     commit-message:
       prefix: "build"
