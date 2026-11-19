@@ -32,11 +32,13 @@ var authingway = builder.AddProject<Projects.Naur_Authingway>("authingway")
     .WithEnvironment("Discord__ClientSecret", builder.AddParameter("DiscordClientSecret", secret: true))
     .WithHttpHealthCheck("/health");
 
-authingway.AddEFMigrations("authingway-migrations")
+var authingwayMigrations = authingway.AddEFMigrations("authingway-migrations")
     .RunDatabaseUpdateOnStart()
     .WithReference(authingwayDb)
     .WaitFor(authingwayDb)
-    .PublishAsMigrationBundle(publishContainer: true);
+    .PublishAsMigrationBundle(publishContainer: true, selfContained: true);
+
+authingway.WaitForCompletion(authingwayMigrations);
 
 if (builder.ExecutionContext.IsPublishMode)
 {
