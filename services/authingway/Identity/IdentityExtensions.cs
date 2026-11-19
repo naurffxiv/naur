@@ -6,6 +6,7 @@ using Naur.Authingway.Data;
 using Naur.Authingway.Data.Entities;
 using Naur.Authingway.Configuration.Identity;
 using Naur.Authingway.Configuration.Discord;
+using Naur.Authingway.Identity.Services;
 using OpenIddict.Abstractions;
 
 namespace Naur.Authingway.Identity;
@@ -22,6 +23,8 @@ public static class IdentityExtensions
     /// <returns>The same instance of <see cref="IHostApplicationBuilder"/> with identity services configured.</returns>
     public static IHostApplicationBuilder ConfigureIdentity(this IHostApplicationBuilder builder)
     {
+        builder.Services.AddScoped<ClientRegistrationService>();
+
         return builder.ConfigureOpenIddict();
     }
 

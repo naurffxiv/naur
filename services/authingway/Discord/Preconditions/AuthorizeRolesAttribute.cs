@@ -15,16 +15,25 @@ namespace Naur.Authingway.Discord.Preconditions;
 /// An empty list or a role without a configured, nonzero identifier grants no access.
 /// </summary>
 /// <param name="roles">The allowed roles. Guild and channel restrictions are applied separately.</param>
-public sealed class AuthorizeRolesAttribute(DiscordRole[] roles) : PreconditionAttribute<ApplicationCommandContext>
+public sealed class AuthorizeRolesAttribute(DiscordRole[] roles) : AuthorizeRolesAttribute<ApplicationCommandContext>(roles);
+
+/// <summary>
+/// Allows an interaction for a member holding any of the specified configured roles.
+/// An empty list or a role without a configured, nonzero identifier grants no access.
+/// </summary>
+/// <typeparam name="TContext">The interaction context the precondition applies to.</typeparam>
+/// <param name="roles">The allowed roles. Guild and channel restrictions are applied separately.</param>
+public abstract class AuthorizeRolesAttribute<TContext>(DiscordRole[] roles) : PreconditionAttribute<TContext>
+    where TContext : IInteractionContext
 {
     /// <inheritdoc/>
-    public override ValueTask<PreconditionResult> EnsureCanExecuteAsync(ApplicationCommandContext context, IServiceProvider? serviceProvider)
+    public override ValueTask<PreconditionResult> EnsureCanExecuteAsync(TContext context, IServiceProvider? serviceProvider)
     {
         ArgumentNullException.ThrowIfNull(serviceProvider);
 
         var config = serviceProvider.GetRequiredService<IOptions<DiscordConfig>>().Value;
 
-        var permitted = context.User is GuildUser user
+        var permitted = context.Interaction.User is GuildUser user
             && roles.Any(role => config.Roles.TryGetValue(role, out var id) && id != 0 && user.RoleIds.Contains(id));
 
         return new(permitted
