@@ -28,7 +28,7 @@ public class ClientRegistrationServiceTests(ClientRegistrationService clients, I
         var created = await clients.CreateAsync(Settings("Lifecycle", "https://app.example/cb", Scopes.OpenId));
 
         await Assert.That(created.ClientId).IsNotEmpty();
-        await Assert.That(created.ClientSecret.Length).IsGreaterThanOrEqualTo(43);
+        await Assert.That(created.ClientSecret!.Length).IsGreaterThanOrEqualTo(43);
         await Assert.That(await ValidateSecretAsync(created)).IsTrue();
 
         var found = await clients.FindAsync(created.ClientId);
@@ -41,7 +41,8 @@ public class ClientRegistrationServiceTests(ClientRegistrationService clients, I
         var updated = await clients.UpdateAsync(created.ClientId, Settings("Renamed", "https://other.example/cb", Scopes.Roles));
         var afterUpdate = await clients.FindAsync(created.ClientId);
 
-        await Assert.That(updated).IsTrue();
+        await Assert.That(updated).IsNotNull();
+        await Assert.That(updated!.ClientSecret).IsNull();
         await Assert.That(afterUpdate!.Settings.DisplayName).IsEqualTo("Renamed");
         await Assert.That(afterUpdate.Settings.RedirectUris.Single()).IsEqualTo(new Uri("https://other.example/cb"));
         await Assert.That(afterUpdate.Settings.Scopes.Single()).IsEqualTo(Scopes.Roles);
@@ -65,20 +66,52 @@ public class ClientRegistrationServiceTests(ClientRegistrationService clients, I
         var clientId = Guid.NewGuid().ToString("N");
 
         await Assert.That(await clients.FindAsync(clientId)).IsNull();
-        await Assert.That(await clients.UpdateAsync(clientId, Settings("Missing", "https://app.example/cb", Scopes.OpenId))).IsFalse();
+        await Assert.That(await clients.UpdateAsync(clientId, Settings("Missing", "https://app.example/cb", Scopes.OpenId))).IsNull();
         await Assert.That(await clients.DeleteAsync(clientId)).IsFalse();
     }
 
-    private static ClientSettings Settings(string name, string redirectUri, string scope)
+    /// <summary>
+    /// Verifies that public clients have no secret, and that switching types removes or regenerates the secret.
+    /// </summary>
+    /// <returns>A task representing the test operation.</returns>
+    [Test]
+    public async Task SwitchesBetweenPublicAndConfidential()
     {
-        return ClientSettings.Parse(name, redirectUri, [GrantTypes.AuthorizationCode], [scope], requirePkce: true).Settings!;
+        var created = await clients.CreateAsync(Settings("Public", "https://app.example/cb", Scopes.OpenId, isPublic: true));
+
+        await Assert.That(created.ClientSecret).IsNull();
+        await Assert.That((await clients.FindAsync(created.ClientId))!.ClientType).IsEqualTo(ClientTypes.Public);
+
+        var confidential = await clients.UpdateAsync(created.ClientId, Settings("Public", "https://app.example/cb", Scopes.OpenId));
+
+        await Assert.That(confidential!.ClientSecret).IsNotNull();
+        await Assert.That(await ValidateSecretAsync(confidential)).IsTrue();
+        await Assert.That((await clients.FindAsync(created.ClientId))!.ClientType).IsEqualTo(ClientTypes.Confidential);
+
+        var backToPublic = await clients.UpdateAsync(created.ClientId, Settings("Public", "https://app.example/cb", Scopes.OpenId, isPublic: true));
+        var found = await clients.FindAsync(created.ClientId);
+
+        await Assert.That(backToPublic!.ClientSecret).IsNull();
+        await Assert.That(found!.ClientType).IsEqualTo(ClientTypes.Public);
+        await Assert.That(found.Settings.IsPublic).IsTrue();
+        await Assert.That(await ValidateSecretAsync(confidential)).IsFalse();
+
+        await clients.DeleteAsync(created.ClientId);
+    }
+
+    private static ClientSettings Settings(string name, string redirectUri, string scope, bool isPublic = false)
+    {
+        return ClientSettings.Parse(name, redirectUri, [GrantTypes.AuthorizationCode], [scope], requirePkce: true, isPublic).Settings!;
     }
 
     private async Task<bool> ValidateSecretAsync(ClientCredentials credentials)
     {
         var application = await manager.FindByClientIdAsync(credentials.ClientId);
 
-        return application is not null && await manager.ValidateClientSecretAsync(application, credentials.ClientSecret);
+        return application is not null
+            && credentials.ClientSecret is not null
+            && await manager.HasClientTypeAsync(application, ClientTypes.Confidential)
+            && await manager.ValidateClientSecretAsync(application, credentials.ClientSecret);
     }
 
     private async Task<List<ClientSummary>> ListAllAsync()

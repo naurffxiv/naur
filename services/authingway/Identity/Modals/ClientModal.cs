@@ -46,9 +46,19 @@ public static class ClientModal
     public const string ScopesInput = "scopes";
 
     /// <summary>
-    /// The PKCE checkbox.
+    /// The options checkbox group.
     /// </summary>
-    public const string RequirePkceInput = "require_pkce";
+    public const string OptionsInput = "options";
+
+    /// <summary>
+    /// The public client option.
+    /// </summary>
+    public const string PublicOption = "public";
+
+    /// <summary>
+    /// The PKCE option.
+    /// </summary>
+    public const string RequirePkceOption = "require_pkce";
 
     private const int MaxCustomIdLength = 100;
 
@@ -110,13 +120,15 @@ public static class ClientModal
         ArgumentNullException.ThrowIfNull(components);
 
         var submitted = components.ToList();
+        var options = submitted.GetCheckedValues(OptionsInput);
 
         return ClientSettings.Parse(
             submitted.GetText(DisplayNameInput),
             submitted.GetText(RedirectUrisInput),
             submitted.GetCheckedValues(GrantTypesInput),
             submitted.GetCheckedValues(ScopesInput),
-            submitted.IsChecked(RequirePkceInput));
+            options.Contains(RequirePkceOption),
+            options.Contains(PublicOption));
     }
 
     private static ModalProperties Build(string customId, string title, ClientSettings settings)
@@ -151,8 +163,13 @@ public static class ClientModal
             .WithMinValues(0)
             .WithRequired(false);
 
-        var requirePkce = new CheckboxProperties(RequirePkceInput)
-            .WithDefault(settings.RequirePkce);
+        var options = new CheckboxGroupProperties(OptionsInput,
+            [
+                Option(("Public client", "No client secret, for apps that cannot keep one (SPAs, native apps). Always requires PKCE."), PublicOption, settings.IsPublic),
+                Option(("Require PKCE", "Recommended. Clients must send a code challenge."), RequirePkceOption, settings.RequirePkce)
+            ])
+            .WithMinValues(0)
+            .WithRequired(false);
 
         return new ModalProperties(customId, title,
         [
@@ -161,8 +178,7 @@ public static class ClientModal
                 .WithDescription("Absolute http(s) URIs, one per line."),
             new LabelProperties("Grant types", grantTypes),
             new LabelProperties("Scopes", scopes),
-            new LabelProperties("Require PKCE", requirePkce)
-                .WithDescription("Recommended. Clients must send a code challenge.")
+            new LabelProperties("Options", options)
         ]);
     }
 

@@ -40,11 +40,12 @@ public sealed partial class CreateClientModal(ClientRegistrationService clients,
 
         LogCreated(credentials.ClientId, Context.User.Id);
 
-        await RespondAsync(EphemeralResponse.Message(
-            $"Created **{EphemeralResponse.Escape(result.Settings.DisplayName)}**.\n" +
-            $"Client ID: `{credentials.ClientId}`\n" +
-            $"Client secret: `{credentials.ClientSecret}`\n" +
-            "Copy the secret now. It is stored hashed and cannot be shown again."));
+        var created = $"Created **{EphemeralResponse.Escape(result.Settings.DisplayName)}**.\n" +
+            $"Client ID: `{credentials.ClientId}`";
+
+        await RespondAsync(EphemeralResponse.Message(credentials.ClientSecret is null
+            ? created + "\nThis is a public client, so it has no secret."
+            : created + "\n" + ClientMessages.Secret(credentials.ClientSecret)));
     }
 
     [LoggerMessage(LogLevel.Information, "Client {ClientId} was created by Discord user {UserId}.")]

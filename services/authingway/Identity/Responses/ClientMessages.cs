@@ -9,7 +9,7 @@ using Naur.Authingway.Identity.Models;
 namespace Naur.Authingway.Identity.Responses;
 
 /// <summary>
-/// Formats client information for Discord messages. Secrets are never included.
+/// Formats client information for Discord messages. Secrets are only included when newly generated.
 /// </summary>
 public static class ClientMessages
 {
@@ -49,6 +49,17 @@ public static class ClientMessages
     public static string Invalid(IEnumerable<string> errors)
     {
         return "The client was not saved:\n" + string.Join('\n', errors.Select(error => $"- {error}"));
+    }
+
+    /// <summary>
+    /// Formats a newly generated client secret, which is shown only once.
+    /// </summary>
+    /// <param name="clientSecret">The plain-text client secret.</param>
+    /// <returns>The formatted message.</returns>
+    public static string Secret(string clientSecret)
+    {
+        return $"Client secret: `{clientSecret}`\n" +
+            "Copy the secret now. It is stored hashed and cannot be shown again.";
     }
 
     /// <summary>

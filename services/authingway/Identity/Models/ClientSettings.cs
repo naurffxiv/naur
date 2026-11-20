@@ -44,7 +44,8 @@ public sealed record ClientSettings
         RedirectUris = [],
         GrantTypes = new HashSet<string> { Constants.GrantTypes.AuthorizationCode },
         Scopes = new HashSet<string> { Constants.Scopes.OpenId },
-        RequirePkce = true
+        RequirePkce = true,
+        IsPublic = false
     };
 
     private static readonly string[] s_managedPermissions =
@@ -82,20 +83,27 @@ public sealed record ClientSettings
     public required bool RequirePkce { get; init; }
 
     /// <summary>
+    /// Gets a value indicating whether the client is public, meaning it has no secret.
+    /// </summary>
+    public required bool IsPublic { get; init; }
+
+    /// <summary>
     /// Validates raw form input and converts it into client settings.
     /// </summary>
     /// <param name="displayName">The display name.</param>
     /// <param name="redirectUris">The redirect URIs, one per line.</param>
     /// <param name="grantTypes">The selected grant types.</param>
     /// <param name="scopes">The selected scopes.</param>
-    /// <param name="requirePkce">Whether PKCE is required.</param>
+    /// <param name="requirePkce">Whether PKCE is required. Always true for public clients.</param>
+    /// <param name="isPublic">Whether the client is public.</param>
     /// <returns>The settings, or the validation errors when the input is invalid.</returns>
     public static ClientSettingsResult Parse(
         string? displayName,
         string? redirectUris,
         IEnumerable<string> grantTypes,
         IEnumerable<string> scopes,
-        bool requirePkce)
+        bool requirePkce,
+        bool isPublic = false)
     {
         ArgumentNullException.ThrowIfNull(grantTypes);
         ArgumentNullException.ThrowIfNull(scopes);
@@ -160,7 +168,8 @@ public sealed record ClientSettings
                 RedirectUris = uris,
                 GrantTypes = grants,
                 Scopes = scopeSet,
-                RequirePkce = requirePkce
+                RequirePkce = requirePkce || isPublic,
+                IsPublic = isPublic
             }, []);
     }
 
@@ -200,12 +209,14 @@ public sealed record ClientSettings
             Scopes = SupportedScopes
                 .Where(scope => descriptor.Permissions.Contains(Constants.Permissions.Prefixes.Scope + scope))
                 .ToHashSet(StringComparer.Ordinal),
-            RequirePkce = descriptor.Requirements.Contains(Constants.Requirements.Features.ProofKeyForCodeExchange)
+            RequirePkce = descriptor.Requirements.Contains(Constants.Requirements.Features.ProofKeyForCodeExchange),
+            IsPublic = string.Equals(descriptor.ClientType, Constants.ClientTypes.Public, StringComparison.Ordinal)
         };
     }
 
     /// <summary>
     /// Applies these settings to an application descriptor, replacing only the values managed here.
+    /// The client secret is not managed here.
     /// </summary>
     /// <param name="descriptor">The descriptor to update.</param>
     public void ApplyTo(OpenIddictApplicationDescriptor descriptor)
@@ -213,6 +224,7 @@ public sealed record ClientSettings
         ArgumentNullException.ThrowIfNull(descriptor);
 
         descriptor.DisplayName = DisplayName;
+        descriptor.ClientType = IsPublic ? Constants.ClientTypes.Public : Constants.ClientTypes.Confidential;
 
         descriptor.RedirectUris.Clear();
         descriptor.RedirectUris.UnionWith(RedirectUris);

@@ -37,7 +37,9 @@ public sealed partial class EditClientModal(ClientRegistrationService clients, I
             return;
         }
 
-        if (!await clients.UpdateAsync(clientId, result.Settings))
+        var credentials = await clients.UpdateAsync(clientId, result.Settings);
+
+        if (credentials is null)
         {
             await RespondAsync(EphemeralResponse.Message(ClientMessages.NotFound(clientId)));
             return;
@@ -45,8 +47,12 @@ public sealed partial class EditClientModal(ClientRegistrationService clients, I
 
         LogUpdated(clientId, Context.User.Id);
 
+        var updated = $"Updated **{EphemeralResponse.Escape(result.Settings.DisplayName)}** (`{clientId}`).";
+
         await RespondAsync(EphemeralResponse.Message(
-            $"Updated **{EphemeralResponse.Escape(result.Settings.DisplayName)}** (`{clientId}`). The client secret is unchanged."));
+            credentials.ClientSecret is not null ? $"{updated}\nThe client is now confidential.\n{ClientMessages.Secret(credentials.ClientSecret)}"
+            : result.Settings.IsPublic ? $"{updated} This is a public client, so it has no secret."
+            : $"{updated} The client secret is unchanged."));
     }
 
     [LoggerMessage(LogLevel.Information, "Client {ClientId} was updated by Discord user {UserId}.")]
