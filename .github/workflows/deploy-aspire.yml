@@ -69,6 +69,11 @@ jobs:
         with:
           global-json-file: global.json
 
+      - name: Restore dependencies
+        uses: zyactions/dotnet-restore@bffc71e1a5275122a2795bf2912804f0185db27c # v1.1.0
+        with:
+          workspace: Naur.slnx
+
       - name: Install Aspire CLI
         run: curl -sSL https://aspire.dev/install.sh | bash
 
