@@ -123,5 +123,27 @@ public class ClientSettingsTests
         await Assert.That(roundTrip.GrantTypes.SetEquals(settings.GrantTypes)).IsTrue();
         await Assert.That(roundTrip.Scopes.SetEquals(settings.Scopes)).IsTrue();
         await Assert.That(roundTrip.RequirePkce).IsFalse();
+        await Assert.That(roundTrip.IsPublic).IsFalse();
+        await Assert.That(descriptor.ClientType).IsEqualTo(ClientTypes.Confidential);
+    }
+
+    /// <summary>
+    /// Verifies that public clients always require PKCE and round-trip their client type.
+    /// </summary>
+    /// <returns>A task representing the test operation.</returns>
+    [Test]
+    public async Task PublicClientsRequirePkce()
+    {
+        var settings = ClientSettings.Parse(
+            "App", "https://app.example/cb", [GrantTypes.AuthorizationCode], [Scopes.OpenId], requirePkce: false, isPublic: true).Settings!;
+
+        await Assert.That(settings.IsPublic).IsTrue();
+        await Assert.That(settings.RequirePkce).IsTrue();
+
+        var descriptor = new OpenIddictApplicationDescriptor();
+        settings.ApplyTo(descriptor);
+
+        await Assert.That(descriptor.ClientType).IsEqualTo(ClientTypes.Public);
+        await Assert.That(ClientSettings.FromDescriptor(descriptor).IsPublic).IsTrue();
     }
 }

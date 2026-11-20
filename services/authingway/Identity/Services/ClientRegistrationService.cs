@@ -21,7 +21,7 @@ public sealed class ClientRegistrationService(IOpenIddictApplicationManager mana
     public const int PageSize = 10;
 
     /// <summary>
-    /// Registers a confidential client with a generated identifier and secret.
+    /// Registers a client with a generated identifier, and a generated secret when the client is confidential.
     /// </summary>
     /// <param name="settings">The client settings.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
@@ -32,14 +32,13 @@ public sealed class ClientRegistrationService(IOpenIddictApplicationManager mana
 
         var credentials = new ClientCredentials(
             Guid.NewGuid().ToString("N"),
-            Base64Url.EncodeToString(RandomNumberGenerator.GetBytes(32)));
+            settings.IsPublic ? null : GenerateSecret());
 
         var descriptor = new OpenIddictApplicationDescriptor
         {
             ApplicationType = OpenIddictConstants.ApplicationTypes.Web,
             ClientId = credentials.ClientId,
-            ClientSecret = credentials.ClientSecret,
-            ClientType = OpenIddictConstants.ClientTypes.Confidential
+            ClientSecret = credentials.ClientSecret
         };
 
         settings.ApplyTo(descriptor);
@@ -94,13 +93,14 @@ public sealed class ClientRegistrationService(IOpenIddictApplicationManager mana
     }
 
     /// <summary>
-    /// Replaces the managed settings of a client, preserving its secret and any unmanaged values.
+    /// Replaces the managed settings of a client, preserving any unmanaged values. The secret is kept
+    /// unless the client becomes public, which removes it, or confidential, which generates a new one.
     /// </summary>
     /// <param name="clientId">The client identifier.</param>
     /// <param name="settings">The new settings.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>True when the client was updated; false when it does not exist.</returns>
-    public async Task<bool> UpdateAsync(string clientId, ClientSettings settings, CancellationToken cancellationToken = default)
+    /// <returns>The client credentials with any newly generated secret, or null when the client does not exist.</returns>
+    public async Task<ClientCredentials?> UpdateAsync(string clientId, ClientSettings settings, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(settings);
 
@@ -108,17 +108,29 @@ public sealed class ClientRegistrationService(IOpenIddictApplicationManager mana
 
         if (application is null)
         {
-            return false;
+            return null;
         }
 
         var descriptor = new OpenIddictApplicationDescriptor();
         await manager.PopulateAsync(descriptor, application, cancellationToken);
 
+        string? generatedSecret = null;
+
+        if (settings.IsPublic)
+        {
+            descriptor.ClientSecret = null;
+        }
+        else if (string.IsNullOrEmpty(descriptor.ClientSecret))
+        {
+            generatedSecret = GenerateSecret();
+            descriptor.ClientSecret = generatedSecret;
+        }
+
         settings.ApplyTo(descriptor);
 
         await manager.UpdateAsync(application, descriptor, cancellationToken);
 
-        return true;
+        return new ClientCredentials(clientId, generatedSecret);
     }
 
     /// <summary>
@@ -139,5 +151,10 @@ public sealed class ClientRegistrationService(IOpenIddictApplicationManager mana
         await manager.DeleteAsync(application, cancellationToken);
 
         return true;
+    }
+
+    private static string GenerateSecret()
+    {
+        return Base64Url.EncodeToString(RandomNumberGenerator.GetBytes(32));
     }
 }

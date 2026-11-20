@@ -5,8 +5,8 @@
 namespace Naur.Authingway.Identity.Models;
 
 /// <summary>
-/// The credentials generated for a new client.
+/// The credentials of a client.
 /// </summary>
 /// <param name="ClientId">The client identifier.</param>
-/// <param name="ClientSecret">The plain-text client secret.</param>
-public sealed record ClientCredentials(string ClientId, string ClientSecret);
+/// <param name="ClientSecret">The newly generated plain-text client secret, or null when none was generated.</param>
+public sealed record ClientCredentials(string ClientId, string? ClientSecret);
