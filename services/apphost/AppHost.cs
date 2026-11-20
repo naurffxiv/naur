@@ -24,7 +24,7 @@ var postgres = builder.AddPostgres("postgres")
 
 var authingwayDb = postgres.AddDatabase("authingwaydb", databaseName: "authingway");
 
-var authingway = builder.AddProject<Projects.Naur_Authingway>("authingway")
+var authingway = builder.AddDotnetProject("authingway", "../authingway")
     .WithReference(authingwayDb)
     .WaitFor(authingwayDb)
     .WithEnvironment("Discord__Token", builder.AddParameter("DiscordToken", secret: true))
