@@ -67,7 +67,7 @@
     "eslint-config-prettier": "^10.1.1",
     "glob": "^13.0.6",
     "postcss": "^8.5.23",
-    "prettier": "^3.9.6",
+    "prettier": "^3.10.1",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.23.8",
     "typescript": "^5.9.3",
