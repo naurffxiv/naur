@@ -13,9 +13,9 @@ export default function Banner({
   ...props
 }: BannerProps): ReactElement {
   return (
-    <div className="relative w-full aspect-[3/1] not-prose">
+    <div className="relative w-full aspect-3/1 not-prose">
       <Image
-        className={clsx("object-cover rounded-sm", {
+        className={clsx("object-cover rounded-xs", {
           "object-left": left,
           "object-center": !left,
         })}

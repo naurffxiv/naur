@@ -196,7 +196,7 @@ export default function QuickLinks({
   siblingData.sort(quickLinksSort);
   const siblingDataTree = buildTree(siblingData);
   return (
-    <div className="list-none quick-links-div min-w-[30ch] w-[22rem] prose prose-invert">
+    <div className="list-none quick-links-div min-w-[30ch] w-88 prose prose-invert">
       {recursiveLinks(siblingDataTree, slug).child}
     </div>
   );
