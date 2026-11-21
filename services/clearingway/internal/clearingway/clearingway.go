@@ -5,6 +5,7 @@ import (
 	"clearingway/internal/discord"
 	"clearingway/internal/env"
 	"clearingway/internal/fflogs"
+	"clearingway/internal/lodestone"
 	"context"
 	"log"
 
@@ -15,6 +16,7 @@ type Clearingway struct {
 	Config         *config.BotConfig
 	Discord        *discord.Discord
 	FFLogs         FFLogsInterface
+	Lodestone      LodestoneInterface
 	CommandHandler *CommandHandler
 }
 
@@ -36,9 +38,10 @@ func NewBotInstance(loadedEnv *env.Env) (*Clearingway, error) {
 
 	// ============== INITIALIZE CLEARINGWAY ==============
 	cw := &Clearingway{
-		Config:  loadedConfig,
-		Discord: discordClient,
-		FFLogs:  fflogs.Init(ctx, loadedEnv),
+		Config:    loadedConfig,
+		Discord:   discordClient,
+		FFLogs:    fflogs.Init(ctx, loadedEnv),
+		Lodestone: lodestone.Init(),
 	}
 
 	// ============== INITIALIZE COMMAND HANDLER ==============
@@ -56,6 +59,7 @@ func (cw *Clearingway) initCommandHandler(session *discordgo.Session, loadedEnv 
 	if loadedEnv.ENV == env.Development {
 		log.Printf("Development environment set - registering non-production commands")
 		handler.Register(cw.GetClearsCommand())
+		handler.Register(cw.LodestoneCommand())
 	}
 
 	session.AddHandler(func(session *discordgo.Session, ready *discordgo.Ready) {
