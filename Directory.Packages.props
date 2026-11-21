@@ -15,8 +15,8 @@
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="11.0.0" />
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="11.0.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="11.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="11.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="11.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="11.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="11.0.1" />
     <PackageVersion Include="NetCord.Hosting" Version="1.0.0-beta.30" />
     <PackageVersion Include="NetCord.Hosting.Services" Version="1.0.0-beta.30" />
     <PackageVersion Include="OpenIddict.AspNetCore" Version="7.9.0" />
