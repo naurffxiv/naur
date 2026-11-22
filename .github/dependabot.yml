@@ -33,6 +33,7 @@ updates:
           - "eslint-*"
           - "prettier"
           - "@typescript-eslint/*"
+          - "typescript-eslint"
         update-types: ["minor", "patch"]
       npm-other:
         patterns: ["*"]
@@ -41,6 +42,7 @@ updates:
           - "eslint-*"
           - "prettier"
           - "@typescript-eslint/*"
+          - "typescript-eslint"
         update-types: ["minor", "patch"]
     ignore:
       - dependency-name: "*"
@@ -68,6 +70,7 @@ updates:
           - "eslint-*"
           - "prettier"
           - "@typescript-eslint/*"
+          - "typescript-eslint"
         update-types: ["minor", "patch"]
       npm-other:
         patterns: ["*"]
@@ -81,6 +84,7 @@ updates:
           - "eslint-*"
           - "prettier"
           - "@typescript-eslint/*"
+          - "typescript-eslint"
         update-types: ["minor", "patch"]
     ignore:
       - dependency-name: "*"
