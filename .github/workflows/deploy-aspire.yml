@@ -1,0 +1,116 @@
+name: Deploy Aspire
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/deploy-aspire.yml"
+      - "Directory.Packages.props"
+      - "NuGet.config"
+      - "global.json"
+      - "services/apphost/**"
+      - "services/authingway/**"
+
+concurrency:
+  group: aspire-deploy-authingway
+  cancel-in-progress: false
+
+jobs:
+  detect-changes:
+    name: Detect Service Changes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      apphost: ${{ steps.filter.outputs.apphost }}
+      authingway: ${{ steps.filter.outputs.authingway }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: filter
+        with:
+          filters: |
+            _shared: &shared
+              - '.github/workflows/deploy-aspire.yml'
+              - 'Directory.Packages.props'
+              - 'NuGet.config'
+              - 'global.json'
+            apphost:
+              - *shared
+              - 'services/apphost/**'
+            authingway:
+              - *shared
+              - 'services/authingway/**'
+
+  deploy:
+    needs: [detect-changes]
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      needs.detect-changes.outputs.apphost == 'true' ||
+      needs.detect-changes.outputs.authingway == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: Authingway
+    permissions:
+      contents: read
+      packages: write
+
+    defaults:
+      run:
+        working-directory: services/apphost
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup .NET
+        uses: zyactions/dotnet-setup@8f4b644ff5ff19bba913663df285b7b7278bb724 # v1.0.1
+        with:
+          global-json-file: global.json
+
+      - name: Restore dependencies
+        uses: zyactions/dotnet-restore@bffc71e1a5275122a2795bf2912804f0185db27c # v1.1.0
+        with:
+          workspace: Naur.slnx
+
+      - name: Install Aspire CLI
+        run: curl -sSL https://aspire.dev/install.sh | bash
+
+      - name: Setup SSH agent
+        uses: webfactory/ssh-agent@e83874834305fe9a4a2997156cb26c5de65a8555 # v0.10.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add known hosts
+        run: ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log the server in to GitHub Container Registry
+        env:
+          SERVER: ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "$GHCR_TOKEN" | ssh "$SERVER" docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+
+      - name: Deploy
+        env:
+          Parameters__PostgresPassword: ${{ secrets.AUTHINGWAY_POSTGRES_PASSWORD }}
+          Parameters__DiscordToken: ${{ secrets.AUTHINGWAY_DISCORD_TOKEN }}
+          Parameters__DiscordClientId: ${{ secrets.AUTHINGWAY_DISCORD_CLIENT_ID }}
+          Parameters__DiscordClientSecret: ${{ secrets.AUTHINGWAY_DISCORD_CLIENT_SECRET }}
+          Parameters__CloudflareToken: ${{ secrets.AUTHINGWAY_CLOUDFLARE_TOKEN }}
+          Parameters__SigningCertificate: ${{ secrets.AUTHINGWAY_SIGNING_CERTIFICATE }}
+          Parameters__SigningCertificatePassword: ${{ secrets.AUTHINGWAY_SIGNING_CERTIFICATE_PASSWORD }}
+          Parameters__EncryptionCertificate: ${{ secrets.AUTHINGWAY_ENCRYPTION_CERTIFICATE }}
+          Parameters__EncryptionCertificatePassword: ${{ secrets.AUTHINGWAY_ENCRYPTION_CERTIFICATE_PASSWORD }}
+          DockerSSH__TargetHost: ${{ secrets.SERVER_HOST }}
+          DockerSSH__SshUsername: ${{ secrets.SERVER_USER }}
+          DockerRegistry__RegistryUrl: ghcr.io
+          DockerRegistry__RepositoryPrefix: ${{ github.repository }}
+        run: aspire deploy -e production

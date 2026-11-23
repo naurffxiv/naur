@@ -31,7 +31,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncD
 
         var options = new DistributedApplicationExecutionContextOptions(DistributedApplicationOperation.Run)
         {
-            ServiceProvider = AppHost.Application.Services
+            Services = AppHost.Application.Services
         };
 
         var executionContext = new DistributedApplicationExecutionContext(options);

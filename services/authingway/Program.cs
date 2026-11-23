@@ -2,8 +2,11 @@
 // The NAUR Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Naur.Authingway.Configuration;
 using Naur.Authingway.Core;
 using Naur.Authingway.Data;
+using Naur.Authingway.Discord;
+using Naur.Authingway.Identity;
 
 namespace Naur.Authingway;
 
@@ -20,12 +23,16 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        builder.ConfigureCore()
-            .ConfigureData();
+        builder.ConfigureConfiguration()
+            .ConfigureCore()
+            .ConfigureData()
+            .ConfigureDiscord()
+            .ConfigureIdentity();
 
         var app = builder.Build();
 
-        app.UseCore();
+        app.UseCore()
+            .UseDiscord();
 
         app.Run();
     }
