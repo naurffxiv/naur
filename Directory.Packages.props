@@ -34,6 +34,7 @@
     <PackageVersion Include="TUnit.Assertions" Version="1.87.12" />
   </ItemGroup>
   <ItemGroup Label="Transitive Pins">
+    <PackageVersion Include="Aspire.Hosting.Docker" Version="17.0.0" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="11.0.0" />
     <PackageVersion Include="SSH.NET" Version="2026.0.1" />
   </ItemGroup>
