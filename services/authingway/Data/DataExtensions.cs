@@ -2,9 +2,10 @@
 // The NAUR Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Naur.Authingway.Data.Entities;
 using Naur.Authingway.Data.Extensions;
-using Naur.Authingway.Data.Workers;
 
 namespace Naur.Authingway.Data;
 
@@ -20,14 +21,15 @@ public static class DataExtensions
     /// <returns>The same instance of <see cref="IHostApplicationBuilder"/> with data services configured.</returns>
     public static IHostApplicationBuilder ConfigureData(this IHostApplicationBuilder builder)
     {
-        return builder.ConfigureDbContext()
-            .ConfigureMigrationWorker();
+        return builder.ConfigureDbContext();
     }
 
     private static IHostApplicationBuilder ConfigureDbContext(this IHostApplicationBuilder builder)
     {
         builder.AddNpgsqlDbContext<AppDbContext>("authingwaydb", configureDbContextOptions: options =>
         {
+            options.UseOpenIddict<Application, Authorization, Scope, Token, Guid>();
+
             if (builder.Environment.IsDevelopment())
             {
                 options.EnableSensitiveDataLogging();
@@ -43,13 +45,6 @@ public static class DataExtensions
                 }
             });
         });
-
-        return builder;
-    }
-
-    private static IHostApplicationBuilder ConfigureMigrationWorker(this IHostApplicationBuilder builder)
-    {
-        builder.Services.AddHostedService<DataMigrationWorker>();
 
         return builder;
     }

@@ -7,16 +7,9 @@ import AuthSessionProvider from "@auth/components/Gates/AuthSessionProvider";
 import Footer from "@/components/Layout/Footer/Footer";
 import MUITheme from "@/components/Providers/MUITheme";
 import NavBar from "@/components/Layout/NavBar/NavBar";
-import { Roboto } from "next/font/google";
+import { roboto } from "@/config/fonts";
+import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
 import Script from "next/script";
-
-const roboto = Roboto({
-  weight: ["300", "400", "500", "700"],
-  style: ["normal", "italic"],
-  subsets: ["latin"],
-  fallback: ["system-ui", "arial"],
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "NAUR",
@@ -43,27 +36,29 @@ export default function RootLayout({
           paddingBottom: "env(safe-area-inset-bottom)", // Bottom safe-area for devices like iPhone
         }}
       >
-        <AuthSessionProvider>
-          <MUITheme>
-            <NavBar />
-            <main className="flex-grow">
-              {children}
-              <Script id="disable-preview-tracking">
-                {/* Only load on production environment.*/}
-                {`
+        <AppRouterCacheProvider options={{ enableCssLayer: true }}>
+          <AuthSessionProvider>
+            <MUITheme>
+              <NavBar />
+              <main className="grow">
+                {children}
+                <Script id="disable-preview-tracking">
+                  {/* Only load on production environment.*/}
+                  {`
               if (window.location.host !== 'naurffxiv.com')
                   window.goatcounter = {no_onload: true}
             `}
-              </Script>
-              <Script
-                src="https://gc.zgo.at/count.js"
-                strategy="afterInteractive"
-                data-goatcounter="https://naur.goatcounter.com/count"
-              />
-            </main>
-            <Footer />
-          </MUITheme>
-        </AuthSessionProvider>
+                </Script>
+                <Script
+                  src="https://gc.zgo.at/count.js"
+                  strategy="afterInteractive"
+                  data-goatcounter="https://naur.goatcounter.com/count"
+                />
+              </main>
+              <Footer />
+            </MUITheme>
+          </AuthSessionProvider>
+        </AppRouterCacheProvider>
       </body>
     </html>
   );

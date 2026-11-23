@@ -30,15 +30,23 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: filter
         with:
           filters: |
             _ci: &ci
               - '.github/workflows/ci.yml'
+            _dotnet: &dotnet
+              - 'Directory.Build.props'
+              - 'Directory.Packages.props'
+              - 'global.json'
+              - 'Naur.slnx'
+              - 'NuGet.config'
+              - '.editorconfig'
             naurffxiv:
               - *ci
               - 'services/naurffxiv/**'
+              - 'tests/naurffxiv/**'
               - '.github/workflows/pipeline-node.yml'
               - '.github/workflows/deploy-pr-netlify.yml'
               - '.github/workflows/deploy-netlify.yml'
@@ -49,6 +57,7 @@ jobs:
             moddingway:
               - *ci
               - 'services/moddingway/**'
+              - 'tests/moddingway/**'
               - '.github/workflows/pipeline-python.yml'
             findingway:
               - *ci
@@ -64,10 +73,13 @@ jobs:
               - '.github/workflows/pipeline-go.yml'
             authingway:
               - *ci
+              - *dotnet
               - 'services/authingway/**'
+              - 'tests/authingway/**'
               - '.github/workflows/pipeline-dotnet.yml'
             apphost:
               - *ci
+              - *dotnet
               - 'services/apphost/**'
               - '.github/workflows/pipeline-dotnet.yml'
             e2e_required:

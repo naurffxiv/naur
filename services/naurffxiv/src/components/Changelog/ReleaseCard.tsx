@@ -84,7 +84,7 @@ export default function ReleaseCard({
               {release.version}
             </a>
             {isLatest && (
-              <span className="px-2 py-1 text-xs bg-red-600 rounded">
+              <span className="px-2 py-1 text-xs bg-red-600 rounded-sm">
                 Latest
               </span>
             )}
