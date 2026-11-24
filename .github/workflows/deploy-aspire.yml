@@ -113,4 +113,5 @@ jobs:
           DockerSSH__SshUsername: ${{ secrets.SERVER_USER }}
           DockerRegistry__RegistryUrl: ghcr.io
           DockerRegistry__RepositoryPrefix: ${{ github.repository }}
+          Deployment__PruneImagesAfterDeploy: true
         run: aspire deploy -e production
