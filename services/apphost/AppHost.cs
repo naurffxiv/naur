@@ -2,6 +2,11 @@
 // The NAUR Contributors licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Diagnostics;
+using Aspire.Hosting.Pipelines;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
 builder.AddDockerComposeEnvironment("env")
@@ -53,5 +58,24 @@ if (builder.ExecutionContext.IsPublishMode)
         .WithEnvironment("TUNNEL_TOKEN", builder.AddParameter("CloudflareToken", secret: true))
         .WaitFor(authingway);
 }
+
+builder.Pipeline.AddStep("prune-images-env", async context =>
+{
+    var configuration = context.Services.GetRequiredService<IConfiguration>();
+    var target = $"{configuration["DockerSSH:SshUsername"]}@{configuration["DockerSSH:TargetHost"]}";
+
+    await using var task = await context.ReportingStep.CreateTaskAsync("Pruning unused images", context.CancellationToken);
+
+    var result = await Process.RunAndCaptureTextAsync("ssh", [target, "docker", "image", "prune", "-a", "-f"], context.CancellationToken);
+
+    if (result.ExitStatus.ExitCode == 0)
+    {
+        await task.SucceedAsync(result.StandardOutput.Trim(), context.CancellationToken);
+    }
+    else
+    {
+        await task.WarnAsync($"docker image prune exited with {result.ExitStatus.ExitCode}: {result.StandardError.Trim()}", context.CancellationToken);
+    }
+}, dependsOn: "health-check-env", requiredBy: "deploy-docker-ssh-env");
 
 builder.Build().Run();
