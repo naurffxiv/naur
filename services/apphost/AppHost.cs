@@ -66,24 +66,15 @@ builder.Pipeline.AddStep("prune-images-env", async context =>
 
     await using var task = await context.ReportingStep.CreateTaskAsync("Pruning unused images", context.CancellationToken);
 
-    var startInfo = new ProcessStartInfo("ssh", [target, "docker", "image", "prune", "-a", "-f"])
-    {
-        RedirectStandardOutput = true,
-        RedirectStandardError = true,
-    };
+    var result = await Process.RunAndCaptureTextAsync("ssh", [target, "docker", "image", "prune", "-a", "-f"], context.CancellationToken);
 
-    using var ssh = Process.Start(startInfo)!;
-    var output = await ssh.StandardOutput.ReadToEndAsync(context.CancellationToken);
-    var error = await ssh.StandardError.ReadToEndAsync(context.CancellationToken);
-    await ssh.WaitForExitAsync(context.CancellationToken);
-
-    if (ssh.ExitCode == 0)
+    if (result.ExitStatus.ExitCode == 0)
     {
-        await task.SucceedAsync(output.Trim(), context.CancellationToken);
+        await task.SucceedAsync(result.StandardOutput.Trim(), context.CancellationToken);
     }
     else
     {
-        await task.WarnAsync($"docker image prune exited with {ssh.ExitCode}: {error.Trim()}", context.CancellationToken);
+        await task.WarnAsync($"docker image prune exited with {result.ExitStatus.ExitCode}: {result.StandardError.Trim()}", context.CancellationToken);
     }
 }, dependsOn: "health-check-env", requiredBy: "deploy-docker-ssh-env");
 
