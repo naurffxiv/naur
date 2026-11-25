@@ -30,6 +30,8 @@ public class TestAppHost : IAsyncDiscoveryInitializer, IAsyncDisposable
     {
         Builder = await DistributedApplicationTestingBuilder.CreateAsync<Projects.Naur_AppHost>();
 
+        await ValidateParametersAsync(Builder.Resources.OfType<ParameterResource>());
+
         Builder.Services.ConfigureHttpClientDefaults(http =>
         {
             http.AddStandardResilienceHandler();
@@ -48,9 +50,64 @@ public class TestAppHost : IAsyncDiscoveryInitializer, IAsyncDisposable
     /// <inheritdoc/>
     public async ValueTask DisposeAsync()
     {
-        await Application.DisposeAsync();
-        await Builder.DisposeAsync();
+        if (Application is not null)
+        {
+            await Application.DisposeAsync();
+        }
+
+        if (Builder is not null)
+        {
+            await Builder.DisposeAsync();
+        }
 
         GC.SuppressFinalize(this);
+    }
+
+    private static async Task ValidateParametersAsync(IEnumerable<ParameterResource> parameters)
+    {
+        List<string> errors = [];
+
+        foreach (var parameter in parameters)
+        {
+            string reason;
+            try
+            {
+                var value = await parameter.GetValueAsync(CancellationToken.None);
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    continue;
+                }
+
+                reason = "empty or whitespace";
+            }
+            catch (MissingParameterValueException)
+            {
+                reason = "missing (no configured value or default)";
+            }
+
+            var configurationKey = parameter.IsConnectionString
+                ? $"ConnectionStrings:{parameter.Name}"
+                : $"Parameters:{parameter.Name}";
+
+            if (parameter.TryGetLastAnnotation<ResourceSnapshotAnnotation>(out var snapshot))
+            {
+                configurationKey = snapshot.InitialSnapshot.Properties
+                    .FirstOrDefault(property => property.Name == CustomResourceKnownProperties.Source)?.Value as string
+                    ?? configurationKey;
+            }
+
+            errors.Add($"  - {parameter.Name}: {reason}. Configure '{configurationKey}' "
+                + $"(environment variable '{configurationKey.Replace(":", "__")}').");
+        }
+
+        if (errors.Count > 0)
+        {
+            throw new DistributedApplicationException(
+                $"AppHost parameter validation failed before starting resources:{Environment.NewLine}"
+                + string.Join(Environment.NewLine, errors)
+                + $"{Environment.NewLine}Set the environment variables in CI, or configure AppHost user secrets locally:"
+                + $"{Environment.NewLine}  dotnet user-secrets set \"<configuration-key>\" \"<value>\" --id naur-apphost"
+                + $"{Environment.NewLine}Test runs do not prompt for parameter values.");
+        }
     }
 }

@@ -10,7 +10,7 @@ The goal is to provide a centralized auth service for NAUR developers to work wi
 
 To start developing Authingway you need just a few things:
 
-- [.NET 10 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
+- [.NET 11 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/11.0)
 - [Aspire CLI](https://aspire.dev/get-started/install-cli/)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/), [Podman Desktop](https://podman-desktop.io/), or [Rancher Desktop](https://rancherdesktop.io/)
 

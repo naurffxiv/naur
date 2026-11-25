@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.4
 
 FROM node:22-bookworm-slim AS base
-RUN corepack enable && corepack prepare pnpm@10.29.2 --activate
+RUN corepack enable && corepack prepare pnpm@11.20.0 --activate
 
 # Prune stage: This breaks the app into "json" (dependencies) and "full" (source)
 FROM base AS prune
@@ -30,6 +30,7 @@ FROM base AS dev
 WORKDIR /app
 COPY --from=installer /app/ .
 COPY package.json turbo.json pnpm-workspace.yaml ./
+COPY packages/shared packages/shared
 COPY services/naurffxiv services/naurffxiv
 CMD ["sh", "-c", "pnpm install --ignore-scripts && pnpm --filter naurffxiv dev"]
 
@@ -38,6 +39,7 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=installer /app/ .
 COPY package.json turbo.json pnpm-workspace.yaml ./
+COPY packages/shared packages/shared
 COPY services/naurffxiv services/naurffxiv
 
 # Build with cache mount for Next.js
@@ -50,7 +52,7 @@ WORKDIR /app
 
 # Install curl for healthchecks and clean up in same layer
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends curl && \
+    apt-get install -y --no-install-recommends curl ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production

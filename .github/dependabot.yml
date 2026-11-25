@@ -1,143 +1,94 @@
 version: 2
+registries:
+  davidfowl-aspire:
+    type: nuget-feed
+    url: https://f.feedz.io/davidfowl/aspire/nuget/index.json
+# Security updates only: open-pull-requests-limit: 0 turns off version updates for
+# each ecosystem. Security update PRs have their own limit and still open.
+# schedule is required by the schema but does not affect security updates.
+# https://docs.github.com/en/code-security/dependabot/dependabot-security-updates/configuring-dependabot-security-updates
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
+      interval: "monthly"
+    open-pull-requests-limit: 0
     commit-message:
       prefix: "ci"
     groups:
-      github-actions:
+      security:
+        applies-to: security-updates
         patterns: ["*"]
 
   - package-ecosystem: "npm"
-    directory: "/"
+    directories:
+      - "/"
+      - "/services/naurffxiv"
+      - "/tests/e2e"
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
+      interval: "monthly"
+    open-pull-requests-limit: 0
     commit-message:
       prefix: "build"
     groups:
-      linting:
-        patterns:
-          - "eslint"
-          - "eslint-*"
-          - "prettier"
-          - "@typescript-eslint/*"
-      npm-other:
-        patterns: ["*"]
-        exclude-patterns:
-          - "eslint"
-          - "eslint-*"
-          - "prettier"
-          - "@typescript-eslint/*"
-
-  - package-ecosystem: "npm"
-    directory: "/services/naurffxiv"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
-    commit-message:
-      prefix: "build"
-    groups:
-      next-and-react:
-        patterns:
-          - "next"
-          - "@next/*"
-          - "react"
-          - "react-dom"
-          - "next-mdx-remote"
-      linting:
-        patterns:
-          - "eslint"
-          - "eslint-*"
-          - "prettier"
-          - "@typescript-eslint/*"
-      npm-other:
-        patterns: ["*"]
-        exclude-patterns:
-          - "next"
-          - "@next/*"
-          - "react"
-          - "react-dom"
-          - "next-mdx-remote"
-          - "eslint"
-          - "eslint-*"
-          - "prettier"
-          - "@typescript-eslint/*"
-
-  - package-ecosystem: "npm"
-    directory: "/tests/e2e"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
-    commit-message:
-      prefix: "build"
-    groups:
-      npm-all:
+      security:
+        applies-to: security-updates
         patterns: ["*"]
 
   - package-ecosystem: "nuget"
     directory: "/"
+    registries:
+      - davidfowl-aspire
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
+      interval: "monthly"
+    open-pull-requests-limit: 0
     commit-message:
       prefix: "build"
     groups:
-      aspire:
-        patterns:
-          - "Aspire.*"
-      opentelemetry:
-        patterns:
-          - "OpenTelemetry.*"
-      nuget-other:
+      security:
+        applies-to: security-updates
         patterns: ["*"]
-        exclude-patterns:
-          - "Aspire.*"
-          - "OpenTelemetry.*"
 
   - package-ecosystem: "uv"
     directory: "/services/moddingway"
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
+      interval: "monthly"
+    open-pull-requests-limit: 0
     commit-message:
       prefix: "build"
     groups:
-      uv:
+      security:
+        applies-to: security-updates
         patterns: ["*"]
 
   - package-ecosystem: "gomod"
-    directory: "/services/findingway"
+    directories:
+      - "/services/findingway"
+      - "/services/clearingway"
+      - "/services/clearingway_legacy"
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
+      interval: "monthly"
+    open-pull-requests-limit: 0
     commit-message:
       prefix: "build"
     groups:
-      gomod-findingway:
-        patterns: ["*"]
-
-  - package-ecosystem: "gomod"
-    directory: "/services/clearingway"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
-    commit-message:
-      prefix: "build"
-    groups:
-      gomod-clearingway:
+      security:
+        applies-to: security-updates
         patterns: ["*"]
 
   - package-ecosystem: "docker"
-    directory: "/"
+    directories:
+      - "/services/clearingway_legacy"
+      - "/services/findingway"
+      - "/services/moddingway/moddingway"
+      - "/services/moddingway/moddingway_api"
+      - "/services/naurffxiv"
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
+      interval: "monthly"
+    open-pull-requests-limit: 0
     commit-message:
       prefix: "build"
     groups:
-      docker:
+      security:
+        applies-to: security-updates
         patterns: ["*"]
