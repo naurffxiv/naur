@@ -113,7 +113,7 @@ export const processMdx = cache(
             },
           },
         ],
-        [rehypeImgSize, { dir: "public" }],
+        rehypeImgSize,
         rehypeExtractToc,
         [rehypeExtractTocExport, { name: "toc" }],
         rehypeHeaderSections,
