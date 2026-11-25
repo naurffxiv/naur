@@ -13,7 +13,7 @@ Standard markdown images are automatically routed through `ImageModal`:
 
 - Displayed as a clickable thumbnail; clicking opens the full-size image in a modal.
 - The thumbnail src has its extension swapped to `.avif`. Make sure an `.avif` version of every image exists (run the sharp conversion script if needed).
-- `width` / `height` are injected at build time by `rehype-img-size` — no need to specify them manually.
+- `width` / `height` are injected at build time by `rehypeImgSize` (`src/lib/rehype`) — no need to specify them manually.
 
 ### External links (`[text](https://...)`)
 

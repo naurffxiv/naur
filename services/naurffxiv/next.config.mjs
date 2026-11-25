@@ -11,7 +11,6 @@ const withMDX = createMDX({
     remarkPlugins: ["remark-frontmatter", "remark-toc"],
     rehypePlugins: [
       "rehype-slug",
-      ["rehype-img-size", { dir: "public" }],
       [
         "rehype-autolink-headings",
         {

@@ -12,7 +12,7 @@ import rehypeExtractToc from "@stefanprobst/rehype-extract-toc";
 import type { Toc } from "@stefanprobst/rehype-extract-toc";
 import rehypeExtractTocExport from "@stefanprobst/rehype-extract-toc/mdx";
 import rehypeHeaderSections from "@/lib/rehype/rehypeHeaderSections";
-import rehypeImgSize from "rehype-img-size";
+import rehypeImgSize from "@/lib/rehype/rehypeImgSize";
 import rehypeSlug from "rehype-slug";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
@@ -113,7 +113,7 @@ export const processMdx = cache(
             },
           },
         ],
-        [rehypeImgSize, { dir: "public" }],
+        rehypeImgSize,
         rehypeExtractToc,
         [rehypeExtractTocExport, { name: "toc" }],
         rehypeHeaderSections,
