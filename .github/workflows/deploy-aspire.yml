@@ -57,9 +57,6 @@ jobs:
       contents: read
       packages: write
 
-    env:
-      DEPLOY_PATH: $HOME/aspire/apps/naur.apphost
-
     defaults:
       run:
         working-directory: services/apphost
@@ -96,26 +93,12 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Log the server in to GitHub Container Registry
-        id: server-login
         env:
           SERVER: ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: echo "$GHCR_TOKEN" | ssh "$SERVER" docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
 
-      - name: Keep the files from the last good deploy
-        env:
-          SERVER: ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}
-        run: |
-          ssh "$SERVER" "DEPLOY_PATH=$DEPLOY_PATH sh -s" <<'EOF'
-          cd "$DEPLOY_PATH" 2>/dev/null || exit 0
-          [ -f .deploy-failed ] && exit 0
-          for f in docker-compose.yaml .env; do
-            if [ -f "$f" ]; then cp -p "$f" "$f.previous"; fi
-          done
-          EOF
-
       - name: Deploy
-        id: deploy
         env:
           Parameters__PostgresPassword: ${{ secrets.AUTHINGWAY_POSTGRES_PASSWORD }}
           Parameters__DiscordToken: ${{ secrets.AUTHINGWAY_DISCORD_TOKEN }}
@@ -130,24 +113,4 @@ jobs:
           DockerSSH__SshUsername: ${{ secrets.SERVER_USER }}
           DockerRegistry__RegistryUrl: ghcr.io
           DockerRegistry__RepositoryPrefix: ${{ github.repository }}
-          Deployment__RemoteDeployPath: ${{ env.DEPLOY_PATH }}
         run: aspire deploy -e production
-
-      - name: Remove unused images from the server
-        if: ${{ always() && steps.server-login.outcome == 'success' }}
-        env:
-          SERVER: ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}
-          DEPLOY_OUTCOME: ${{ steps.deploy.outcome }}
-          IMAGE_PREFIX: ghcr.io/${{ github.repository }}
-        run: |
-          ssh "$SERVER" "DEPLOY_PATH=$DEPLOY_PATH DEPLOY_OUTCOME=$DEPLOY_OUTCOME IMAGE_PREFIX=$IMAGE_PREFIX sh -s" <<'EOF'
-          if [ -d "$DEPLOY_PATH" ]; then
-            case "$DEPLOY_OUTCOME" in
-              success) rm -f "$DEPLOY_PATH/.deploy-failed" ;;
-              failure|cancelled) touch "$DEPLOY_PATH/.deploy-failed" ;;
-            esac
-          fi
-          docker image ls --filter "reference=$IMAGE_PREFIX/*" \
-            --format '{{if eq .Tag "<none>"}}{{.ID}}{{else}}{{.Repository}}:{{.Tag}}{{end}}' \
-            | sort -u | xargs -r docker image rm 2>&1 | grep -v 'is using its referenced image\|is being used by' || true
-          EOF
