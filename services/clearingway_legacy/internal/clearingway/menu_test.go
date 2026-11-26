@@ -96,7 +96,7 @@ func TestMenuMainSendRejectsUnknownMenus(t *testing.T) {
 		c.MenuMainSend(s, command("menu", nil, stringOption("menu", option)))
 
 		assert.Empty(t, fake.callsTo(http.MethodPost, "/channels/c1/messages"), option)
-		assert.Equal(t, want, fake.replies()[0], option)
+		assert.Equal(t, []string{want}, fake.replies(), option)
 	}
 }
 

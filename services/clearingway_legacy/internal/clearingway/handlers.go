@@ -364,6 +364,10 @@ func (c *Clearingway) InteractionCreate(s *discordgo.Session, i *discordgo.Inter
 			case CommandMenu:
 				c.MenuEncounterSend(s, i, command[2])
 			case CommandEncounterProcess:
+				if len(command) < 4 {
+					fmt.Printf("Invalid custom ID received: \"%v\"\n", customID)
+					return
+				}
 				c.MenuEncounterProcess(s, i, command[2], command[3])
 			default:
 				fmt.Printf("Invalid custom ID received: \"%v\"\n", customID)
