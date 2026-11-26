@@ -289,6 +289,30 @@ public sealed class ClientCommandsTests(ClientStore store) : IDisposable
         }
     }
 
+    /// <summary>
+    /// Verifies that a create modal submitted from another guild is refused and saves nothing.
+    /// </summary>
+    /// <returns>A task representing the test operation.</returns>
+    [Test]
+    public async Task CreateModalRequiresTheConfiguredGuild()
+    {
+        var config = store.DiscordConfig;
+        var original = config.GuildId;
+        config.GuildId = DiscordInteractions.GuildId + 1;
+        try
+        {
+            var result = await TrySubmitAsync(ClientModal.CreateCustomId, Form("Elsewhere"));
+
+            await Assert.That(result is IFailResult).IsTrue();
+            await Assert.That(_rest.Callbacks).IsEmpty();
+            await Assert.That((await Clients().ListAsync(1)).Total).IsEqualTo(0);
+        }
+        finally
+        {
+            config.GuildId = original;
+        }
+    }
+
     private ClientRegistrationService Clients()
     {
         // A fresh scope, so reads see what the command saved rather than a cached entity.
@@ -340,6 +364,13 @@ public sealed class ClientCommandsTests(ClientStore store) : IDisposable
 
     private async Task SubmitAsync(string customId, params NetCord.JsonModels.JsonComponent[] components)
     {
+        var result = await TrySubmitAsync(customId, components);
+
+        await Assert.That(result is IFailResult).IsFalse();
+    }
+
+    private async Task<IExecutionResult> TrySubmitAsync(string customId, params NetCord.JsonModels.JsonComponent[] components)
+    {
         using var client = DiscordInteractions.CreateClient(_rest);
 
         var result = await s_modals.Value.ExecuteAsync(DiscordInteractions.ModalSubmit(client, customId, components), Services);
@@ -349,6 +380,6 @@ public sealed class ClientCommandsTests(ClientStore store) : IDisposable
             throw new InvalidOperationException("Modal failed", exception.Exception);
         }
 
-        await Assert.That(result is IFailResult).IsFalse();
+        return result;
     }
 }
