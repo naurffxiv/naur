@@ -5,11 +5,12 @@
     "paths": {
       "@/*": ["../../services/naurffxiv/src/*"],
       "@auth/*": ["../../services/naurffxiv/src/auth/*"],
-      "@naur/shared/*": ["../../shared/*/index.ts"]
+      "@naur/shared/*": ["../../packages/shared/*/index.ts"]
     }
   },
   "include": [
     "**/*.ts",
+    "**/*.tsx",
     "../../services/naurffxiv/src/**/*.ts",
     "../../services/naurffxiv/next-env.d.ts"
   ]
