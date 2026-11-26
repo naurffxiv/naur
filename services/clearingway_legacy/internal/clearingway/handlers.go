@@ -927,15 +927,19 @@ func (c *Clearingway) Autocomplete(s *discordgo.Session, i *discordgo.Interactio
 				Value: world,
 			})
 		}
-		return
+	} else {
+		for _, worldCompletion := range c.AutoCompleteTrie.SearchAll(world) {
+			worldCompletionTitle := title.String(worldCompletion)
+			choices = append(choices, &discordgo.ApplicationCommandOptionChoice{
+				Name:  worldCompletionTitle,
+				Value: worldCompletion,
+			})
+		}
 	}
 
-	for _, worldCompletion := range c.AutoCompleteTrie.SearchAll(world) {
-		worldCompletionTitle := title.String(worldCompletion)
-		choices = append(choices, &discordgo.ApplicationCommandOptionChoice{
-			Name:  worldCompletionTitle,
-			Value: worldCompletion,
-		})
+	// Discord rejects autocomplete responses with more than 25 choices.
+	if len(choices) > maxAutocompleteChoices {
+		choices = choices[:maxAutocompleteChoices]
 	}
 
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -948,6 +952,8 @@ func (c *Clearingway) Autocomplete(s *discordgo.Session, i *discordgo.Interactio
 		fmt.Printf("Could not send Discord autocompletions: %+v\n", err)
 	}
 }
+
+const maxAutocompleteChoices = 25
 
 var nonWorldRegex = regexp.MustCompile(`[^a-zA-Z]+`)
 
