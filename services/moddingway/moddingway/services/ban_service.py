@@ -29,7 +29,7 @@ async def ban_member(
          bool: status of the ban
          str: any errors that occurred
     """
-    if len(reason) >= MAX_BAN_REASON_LENGTH:
+    if len(reason) > MAX_BAN_REASON_LENGTH:
         return (
             False,
             f"Unable to ban {user.mention}: reason is too long (above {MAX_BAN_REASON_LENGTH} characters). Please shorten the ban reason.",
@@ -72,7 +72,7 @@ async def ban_user(
          bool: status of the ban
          str: any errors that occurred
     """
-    if len(reason) >= MAX_BAN_REASON_LENGTH:
+    if len(reason) > MAX_BAN_REASON_LENGTH:
         return (
             False,
             f"Unable to ban {user.mention}: reason is too long (above {MAX_BAN_REASON_LENGTH} characters). Please shorten the ban reason.",
