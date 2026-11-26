@@ -47,6 +47,7 @@ def get_users(limit: int, offset: int) -> list[User]:
     with conn.get_cursor() as cursor:
         query = """
         SELECT * FROM users
+        ORDER BY userID
         LIMIT %s OFFSET %s;
         """
 
@@ -203,6 +204,7 @@ def get_mods(limit: int, offset: int) -> list[User]:
         query = """
         SELECT * FROM users
         WHERE userrole = %s
+        ORDER BY userID
         LIMIT %s OFFSET %s;
         """
 
@@ -260,6 +262,7 @@ def get_banned_users(limit: int, offset: int) -> list[User]:
         query = """
         SELECT * FROM users
         WHERE isBanned = %s
+        ORDER BY userID
         LIMIT %s OFFSET %s;
         """
 

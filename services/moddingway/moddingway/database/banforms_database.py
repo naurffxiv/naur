@@ -15,7 +15,10 @@ def get_ban_forms(limit: int, offset: int) -> list[BanForm]:
 
     with conn.get_cursor() as cursor:
         query = """
-        SELECT * FROM forms
+        SELECT
+        f.formID, f.userID, f.reason, f.approval, f.approvedByUserID, f.createdTimestamp
+        FROM forms f
+        ORDER BY f.formID
         LIMIT %s OFFSET %s;
         """
         params = (limit, offset)
