@@ -52,30 +52,30 @@ async def get_ban_form_by_id(form_id: int) -> BanForm | None:
 async def submit_form(request: FormRequest):
     db_user = users_database.get_user(int(request.user_id))
 
-    if db_user:
-        if not db_user.is_banned:
-            return {"detail": f"User {request.user_id} is not currently banned"}
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
 
-        form = BanForm(
-            user_id=db_user.user_id,
-            reason=request.reason,
-            submission_timestamp=datetime.now(UTC),
-        )
+    if not db_user.is_banned:
+        return {"detail": f"User {request.user_id} is not currently banned"}
 
-        if len(form.reason) > MAX_APPEAL_REASON_LENGTH:
-            return {
-                "detail": f"Appeal reason max length is {MAX_APPEAL_REASON_LENGTH} characters. Please shorten the appeal reason."
-            }
+    form = BanForm(
+        user_id=db_user.user_id,
+        reason=request.reason,
+        submission_timestamp=datetime.now(UTC),
+    )
 
-        result = banforms_database.add_form(form)
-
-        if result:
-            # TODO: logging to moddingway
-            return {"detail": f"User {request.user_id}'s form has been submitted"}
-
+    if len(form.reason) > MAX_APPEAL_REASON_LENGTH:
         return {
-            "detail": "There was an issue with the form submission, please try again"
+            "detail": f"Appeal reason max length is {MAX_APPEAL_REASON_LENGTH} characters. Please shorten the appeal reason."
         }
+
+    result = banforms_database.add_form(form)
+
+    if result:
+        # TODO: logging to moddingway
+        return {"detail": f"User {request.user_id}'s form has been submitted"}
+
+    return {"detail": "There was an issue with the form submission, please try again"}
 
 
 @router.patch("")
