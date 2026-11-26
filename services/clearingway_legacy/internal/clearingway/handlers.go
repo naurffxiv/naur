@@ -18,6 +18,9 @@ type pendingRole struct {
 	message string
 }
 
+// readyDelay pauses between ensuring roles and registering commands.
+var readyDelay = 1 * time.Second
+
 func (c *Clearingway) DiscordReady(s *discordgo.Session, event *discordgo.Ready) {
 	fmt.Printf("Initializing Discord...\n")
 
@@ -58,7 +61,7 @@ func (c *Clearingway) DiscordReady(s *discordgo.Session, event *discordgo.Ready)
 			}
 		}
 
-		time.Sleep(1 * time.Second)
+		time.Sleep(readyDelay)
 
 		fmt.Printf("Adding commands...")
 
