@@ -15,7 +15,7 @@ func sendMenu(s *discordgo.Session, i *discordgo.InteractionCreate, g *Guild, me
 		if err != nil {
 			fmt.Printf("Error sending Discord message: %v\n", err)
 		}
-		return err
+		return fmt.Errorf("menu %q not found", menuSelection)
 	}
 	additionalData := menu.AdditionalData
 
@@ -24,7 +24,7 @@ func sendMenu(s *discordgo.Session, i *discordgo.InteractionCreate, g *Guild, me
 		if err != nil {
 			fmt.Printf("Error sending Discord message: %v\n", err)
 		}
-		return err
+		return fmt.Errorf("menu %q is not of type menuMain", menuSelection)
 	}
 
 	_, err := s.ChannelMessageSendComplex(i.ChannelID, additionalData.MessageMainMenu)

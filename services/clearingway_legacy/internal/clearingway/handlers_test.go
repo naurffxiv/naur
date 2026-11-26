@@ -65,6 +65,7 @@ func TestInteractionCreateIgnoresMalformedCustomIDs(t *testing.T) {
 
 	c.InteractionCreate(s, component("menuRemove"))
 	c.InteractionCreate(s, component("nonsense removeColor"))
+	c.InteractionCreate(s, component("menuEncounter encounterProcess pf"))
 
 	assert.Empty(t, fake.Calls())
 }
