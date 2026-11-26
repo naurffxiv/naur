@@ -26,15 +26,17 @@ public class ClientMessagesTests
 
         var text = ClientMessages.Describe(new ClientDetails("abc", ClientTypes.Confidential, settings));
 
+        var newLine = Environment.NewLine;
+
         await Assert.That(text).IsEqualTo(
-            "**My \\*App\\***\n" +
-            "Client ID: `abc`\n" +
-            "Client type: confidential\n" +
-            "Redirect URIs:\n" +
-            "- <https://app.example/cb>\n" +
-            "- <http://localhost:5000/cb>\n" +
-            "Grant types: `authorization_code`, `refresh_token`\n" +
-            "Scopes: `openid`\n" +
+            $"**My \\*App\\***{newLine}" +
+            $"Client ID: `abc`{newLine}" +
+            $"Client type: confidential{newLine}" +
+            $"Redirect URIs:{newLine}" +
+            $"- <https://app.example/cb>{newLine}" +
+            $"- <http://localhost:5000/cb>{newLine}" +
+            $"Grant types: `authorization_code`, `refresh_token`{newLine}" +
+            $"Scopes: `openid`{newLine}" +
             "PKCE required: yes");
     }
 
@@ -49,8 +51,8 @@ public class ClientMessagesTests
 
         var text = ClientMessages.Describe(new ClientDetails("abc", null, settings));
 
-        await Assert.That(text).Contains("Client type: unknown\n");
-        await Assert.That(text).Contains("Scopes: none\n");
+        await Assert.That(text).Contains($"Client type: unknown{Environment.NewLine}");
+        await Assert.That(text).Contains($"Scopes: none{Environment.NewLine}");
         await Assert.That(text).EndsWith("PKCE required: no");
     }
 

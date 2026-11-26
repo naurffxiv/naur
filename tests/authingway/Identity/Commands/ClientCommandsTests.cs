@@ -160,7 +160,9 @@ public sealed class ClientCommandsTests(ClientStore store) : IDisposable
         var created = await CreateAsync("Viewer");
 
         await CommandAsync("client-view", ("client_id", created.ClientId));
-        await Assert.That(_rest.MessageContent).StartsWith($"**Viewer**\nClient ID: `{created.ClientId}`\nClient type: confidential\n");
+        var newLine = Environment.NewLine;
+        await Assert.That(_rest.MessageContent).StartsWith(
+            $"**Viewer**{newLine}Client ID: `{created.ClientId}`{newLine}Client type: confidential{newLine}");
         await CommandAsync("client-view", ("client_id", "nope"));
         await Assert.That(_rest.MessageContent).IsEqualTo("No client with ID `nope` exists.");
     }
@@ -177,7 +179,8 @@ public sealed class ClientCommandsTests(ClientStore store) : IDisposable
 
         var created = await CreateAsync("*Starred*");
         await CommandAsync("client-list");
-        await Assert.That(_rest.MessageContent).IsEqualTo($"**Clients** (page 1 of 1, 1 total)\n- \\*Starred\\*: `{created.ClientId}`\n");
+        await Assert.That(_rest.MessageContent).IsEqualTo(
+            $"**Clients** (page 1 of 1, 1 total)\n- \\*Starred\\*: `{created.ClientId}`{Environment.NewLine}");
         await CommandAsync("client-list", ("page", "2"));
         await Assert.That(_rest.MessageContent).IsEqualTo("Page 2 is empty. There are 1 page(s).");
     }
