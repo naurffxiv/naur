@@ -10,7 +10,7 @@
     "dev": "pnpm check:routes && pnpm exec next dev",
     "build": "pnpm exec next build",
     "start": "pnpm exec next start",
-    "lint": "eslint .",
+    "lint": "eslint . && pnpm --filter naurffxiv-tests lint",
     "test": "pnpm --filter naurffxiv-tests test",
     "typecheck": "tsc --noEmit",
     "prettier:check": "prettier --ignore-path ../../.prettierignore --check .",
