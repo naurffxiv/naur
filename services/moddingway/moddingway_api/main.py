@@ -37,7 +37,6 @@ def configure_logging():
 
 
 app = FastAPI(title="Moddingway API", lifespan=lifespan)
-add_pagination(app)
 
 
 @app.get("/", include_in_schema=False)
@@ -50,7 +49,13 @@ def health_check():
     return {"status": "ok"}
 
 
-app.include_router(user_router, tags=["user"])
-app.include_router(mod_router, tags=["mod"])
-app.include_router(banneduser_router, tags=["ban"])
-app.include_router(banform_router, tags=["forms"])
+# FastAPI keeps included routers as separate entries rather than copying their
+# routes into app.routes, so add_pagination(app) never sees the paginated routes.
+# Add pagination to each router as it is included.
+for router, tag in [
+    (user_router, "user"),
+    (mod_router, "mod"),
+    (banneduser_router, "ban"),
+    (banform_router, "forms"),
+]:
+    app.include_router(add_pagination(router), tags=[tag])
