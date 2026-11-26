@@ -240,7 +240,7 @@ func LegendRoles() *Roles {
 		},
 		{
 			Name: "The Uncoiled Legend", Color: 0x9192fc, Skip: true,
-			Description: "Cleared the Unending Coil of Bahamut (Ultimate), the Weapon's Refrain (Ultimate), the Epic of Alexander (Ultimate), Dragonsong's Refrain (Ultimate), and the Omega Protocol (Ultimate).",
+			Description: "Cleared the Unending Coil of Bahamut (Ultimate), the Weapon's Refrain (Ultimate), the Epic of Alexander (Ultimate), Dragonsong's Reprise (Ultimate), and the Omega Protocol (Ultimate).",
 			ShouldApply: func(opts *ShouldApplyOpts) (bool, string) {
 				clearedEncounters := opts.Encounters.Clears(opts.Rankings)
 
@@ -253,7 +253,7 @@ func LegendRoles() *Roles {
 				if ucob != nil && uwu != nil && tea != nil && dsr != nil && top != nil {
 					clears := map[string]*fflogs.Ranking{}
 
-					for _, clearedEncounter := range []*Encounter{ucob, uwu, tea} {
+					for _, clearedEncounter := range []*Encounter{ucob, uwu, tea, dsr, top} {
 						for _, encounterId := range clearedEncounter.Ids {
 							ranking, ok := opts.Rankings.Rankings[encounterId]
 							if !ok {
@@ -268,7 +268,7 @@ func LegendRoles() *Roles {
 					}
 					clearedString := strings.Builder{}
 					clearedString.WriteString(
-						"Cleared the Unending Coil of Bahamut (Ultimate), the Weapon's Refrain (Ultimate), the Epic of Alexander (Ultimate), Dragonsong's Refrain (Ultimate), and the Omega Protocol (Ultimate):\n",
+						"Cleared the Unending Coil of Bahamut (Ultimate), the Weapon's Refrain (Ultimate), the Epic of Alexander (Ultimate), Dragonsong's Reprise (Ultimate), and the Omega Protocol (Ultimate):\n",
 					)
 					for name, ranking := range clears {
 						rank := ranking.RanksByTime()[0]
@@ -281,7 +281,7 @@ func LegendRoles() *Roles {
 					return true, strings.TrimSuffix(clearedString.String(), "\n")
 				}
 
-				return false, "Did not clear the Unending Coil of Bahamut (Ultimate), the Weapon's Refrain (Ultimate), the Epic of Alexander (Ultimate), Dragonsong's Refrain (Ultimate), and the Omega Protocol (Ultimate)."
+				return false, "Did not clear the Unending Coil of Bahamut (Ultimate), the Weapon's Refrain (Ultimate), the Epic of Alexander (Ultimate), Dragonsong's Reprise (Ultimate), and the Omega Protocol (Ultimate)."
 			},
 		},
 	}}
