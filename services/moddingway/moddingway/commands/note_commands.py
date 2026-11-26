@@ -78,7 +78,7 @@ def create_note_commands(bot: Bot) -> None:
         note_id: int,
     ):
         note_row = await note_service.get_note_by_id(note_id)
-        if note_row:
+        if note_row != note_service.NOTE_NOT_FOUND:
             await interaction.response.send_message(
                 f"Are you sure you want to delete this note? \n{note_row}",
                 view=NoteDeleteView(
@@ -88,7 +88,9 @@ def create_note_commands(bot: Bot) -> None:
             )
 
         else:
-            await interaction.response.send_message("Note not found", ephemeral=True)
+            await interaction.response.send_message(
+                note_service.NOTE_NOT_FOUND, ephemeral=True
+            )
 
     @bot.tree.command()
     @discord.app_commands.check(is_user_moderator)

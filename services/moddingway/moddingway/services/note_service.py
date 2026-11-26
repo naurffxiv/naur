@@ -14,6 +14,8 @@ from moddingway.util import (
 
 logger = logging.getLogger(__name__)
 
+NOTE_NOT_FOUND = "Note not found"
+
 
 async def add_note(
     logging_embed: discord.Embed,
@@ -74,7 +76,7 @@ async def get_note_by_id(
         last_edited_epoch = timestamp_to_epoch(db_note.last_edited_timestamp)
         return f"\n* ID: {db_note.note_id} | Note: {db_note.content} | Note Creator: <@{db_note.created_by}> | Last Editor: <@{db_note.last_editor}> | Last Edited: <t:{last_edited_epoch}:f>"
     else:
-        return "Note not found"
+        return NOTE_NOT_FOUND
 
 
 async def get_user_notes(
