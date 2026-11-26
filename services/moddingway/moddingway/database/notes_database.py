@@ -82,7 +82,7 @@ def list_notes(user_id: int) -> list[NoteDisplay]:
         return [convert_row_to_note_display(row) for row in rows]
 
 
-def get_note(note_id: int) -> NoteDisplay:
+def get_note(note_id: int) -> NoteDisplay | None:
     conn = DatabaseConnection()
 
     with conn.get_cursor() as cursor:
@@ -99,7 +99,7 @@ def get_note(note_id: int) -> NoteDisplay:
         row = cursor.fetchone()
 
         if row is None:
-            raise ValueError(f"Note with id {note_id} not found")
+            return None
 
         return convert_row_to_note_display(row)
 
