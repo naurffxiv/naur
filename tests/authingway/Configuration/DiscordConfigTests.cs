@@ -47,6 +47,30 @@ public class DiscordConfigTests
     }
 
     /// <summary>
+    /// Verifies that unknown Discord settings, such as a misspelled key, fail startup instead of being ignored.
+    /// </summary>
+    /// <returns>A task representing the test operation.</returns>
+    [Test]
+    public async Task RejectsUnknownConfigurationOnStartup()
+    {
+        var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings { DisableDefaults = true });
+        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Discord:GuildId"] = "1",
+            ["Discord:ClientId"] = "123456789",
+            ["Discord:ClientSecret"] = "01234567890123456789012345678901",
+            ["Discord:GuildIdentifier"] = "1"
+        });
+        builder.ConfigureConfiguration();
+
+        using var host = builder.Build();
+
+        await Assert.That(() => host.StartAsync())
+            .Throws<InvalidOperationException>()
+            .WithMessageContaining("GuildIdentifier");
+    }
+
+    /// <summary>
     /// Verifies that valid bound roles and channels pass data-annotation validation.
     /// </summary>
     /// <returns>A task representing the test operation.</returns>

@@ -187,6 +187,42 @@ public class AuthorizeAttributesTests
         await Assert.That(result is IFailResult).IsEqualTo(!expected);
     }
 
+    /// <summary>
+    /// Verifies that a denied interaction explains whether it was rejected for being a direct message or for failing the check.
+    /// </summary>
+    /// <returns>A task representing the test operation.</returns>
+    [Test]
+    public async Task ExplainsWhyAccessWasDenied()
+    {
+        const string DirectMessage = "This command is not available in DMs.";
+        var config = CreateConfig();
+        var guild = new AuthorizeGuildAttribute();
+        var roles = new AuthorizeRolesAttribute([DiscordRole.Admin]);
+        var channels = new AuthorizeChannelsAttribute([DiscordChannelGroup.Admin]);
+
+        await Assert.That(await GetFailureMessageAsync(guild, config, guildId: null)).IsEqualTo(DirectMessage);
+        await Assert.That(await GetFailureMessageAsync(guild, config, guildId: 2))
+            .IsEqualTo("This command is not available in this guild.");
+
+        await Assert.That(await GetFailureMessageAsync(roles, config, guildId: null, roleIds: [])).IsEqualTo(DirectMessage);
+        await Assert.That(await GetFailureMessageAsync(roles, config, roleIds: [999]))
+            .IsEqualTo("You do not have a required role to use this command.");
+
+        await Assert.That(await GetFailureMessageAsync(channels, config, guildId: null, channelId: 999)).IsEqualTo(DirectMessage);
+        await Assert.That(await GetFailureMessageAsync(channels, config, channelId: 999))
+            .IsEqualTo("This command is not available in this channel.");
+    }
+
+    private static async Task<string?> GetFailureMessageAsync(
+        PreconditionAttribute<ApplicationCommandContext> attribute,
+        DiscordConfig config,
+        ulong? guildId = 1,
+        ulong channelId = 100,
+        ulong[]? roleIds = null)
+    {
+        return (await EnsureCanExecuteAsync(attribute, config, guildId, channelId, roleIds) as IFailResult)?.Message;
+    }
+
     private static async Task<bool> IsPermittedAsync(
         PreconditionAttribute<ApplicationCommandContext> attribute,
         DiscordConfig config,
@@ -194,11 +230,20 @@ public class AuthorizeAttributesTests
         ulong channelId = 100,
         ulong[]? roleIds = null)
     {
+        return await EnsureCanExecuteAsync(attribute, config, guildId, channelId, roleIds) is PreconditionSuccessResult;
+    }
+
+    private static async Task<PreconditionResult> EnsureCanExecuteAsync(
+        PreconditionAttribute<ApplicationCommandContext> attribute,
+        DiscordConfig config,
+        ulong? guildId,
+        ulong channelId,
+        ulong[]? roleIds)
+    {
         using var services = CreateServices(config);
         using var client = CreateClient();
-        var result = await attribute.EnsureCanExecuteAsync(CreateContext(client, guildId, channelId, roleIds ?? [10]), services);
 
-        return result is PreconditionSuccessResult;
+        return await attribute.EnsureCanExecuteAsync(CreateContext(client, guildId, channelId, roleIds ?? [10]), services);
     }
 
     private static ServiceProvider CreateServices(DiscordConfig config)

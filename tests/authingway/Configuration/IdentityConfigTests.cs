@@ -99,6 +99,56 @@ public class IdentityConfigTests
         })).Throws<OptionsValidationException>();
     }
 
+    /// <summary>
+    /// Verifies that blank certificate values count as no certificate configuration.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
+    [Test]
+    public async Task AcceptsBlankCertificateConfiguration()
+    {
+        await StartHost(new Dictionary<string, string?>
+        {
+            ["Identity:SigningCertificate"] = "",
+            ["Identity:EncryptionCertificate"] = ""
+        });
+    }
+
+    /// <summary>
+    /// Verifies that a valid certificate is rejected when the other certificate is missing.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
+    [Test]
+    public async Task RejectsValidCertificateWithoutItsPair()
+    {
+        using var source = CreateCertificate(X509KeyUsageFlags.DigitalSignature);
+
+        await Assert.That(async () => await StartHost(new Dictionary<string, string?>
+        {
+            ["Identity:SigningCertificate"] = Encode(source, Password),
+            ["Identity:SigningCertificatePassword"] = Password
+        })).Throws<OptionsValidationException>();
+    }
+
+    /// <summary>
+    /// Verifies that a certificate without a private key is rejected even when the other certificate has one.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
+    [Test]
+    public async Task RejectsCertificateWithoutPrivateKey()
+    {
+        using var signingSource = CreateCertificate(X509KeyUsageFlags.DigitalSignature);
+        using var encryptionSource = CreateCertificate(X509KeyUsageFlags.KeyEncipherment);
+        using var publicOnly = X509CertificateLoader.LoadCertificate(encryptionSource.RawData);
+
+        await Assert.That(async () => await StartHost(new Dictionary<string, string?>
+        {
+            ["Identity:SigningCertificate"] = Encode(signingSource, Password),
+            ["Identity:SigningCertificatePassword"] = Password,
+            ["Identity:EncryptionCertificate"] = Encode(publicOnly, Password),
+            ["Identity:EncryptionCertificatePassword"] = Password
+        })).Throws<OptionsValidationException>();
+    }
+
     private static async Task StartHost(Dictionary<string, string?> identityConfiguration)
     {
         var settings = new HostApplicationBuilderSettings { DisableDefaults = true };

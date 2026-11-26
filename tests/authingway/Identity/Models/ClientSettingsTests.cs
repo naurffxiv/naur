@@ -144,6 +144,101 @@ public class ClientSettingsTests
         settings.ApplyTo(descriptor);
 
         await Assert.That(descriptor.ClientType).IsEqualTo(ClientTypes.Public);
+        await Assert.That(descriptor.Requirements.Contains(Requirements.Features.ProofKeyForCodeExchange)).IsTrue();
         await Assert.That(ClientSettings.FromDescriptor(descriptor).IsPublic).IsTrue();
+        await Assert.That(ClientSettings.FromDescriptor(descriptor).RequirePkce).IsTrue();
+    }
+
+    /// <summary>
+    /// Verifies that new clients default to a confidential authorization code client with PKCE.
+    /// </summary>
+    /// <returns>A task representing the test operation.</returns>
+    [Test]
+    public async Task DefaultsToConfidentialAuthorizationCodeClientWithPkce()
+    {
+        var settings = ClientSettings.Default;
+
+        await Assert.That(settings.DisplayName).IsEqualTo(string.Empty);
+        await Assert.That(settings.RedirectUris).IsEmpty();
+        await Assert.That(settings.GrantTypes.SetEquals([GrantTypes.AuthorizationCode])).IsTrue();
+        await Assert.That(settings.Scopes.SetEquals([Scopes.OpenId])).IsTrue();
+        await Assert.That(settings.RequirePkce).IsTrue();
+        await Assert.That(settings.IsPublic).IsFalse();
+    }
+
+    /// <summary>
+    /// Verifies that input exactly at the display name and redirect URI limits is accepted.
+    /// </summary>
+    /// <returns>A task representing the test operation.</returns>
+    [Test]
+    public async Task AcceptsInputAtTheLimits()
+    {
+        var result = ClientSettings.Parse(
+            new string('a', ClientSettings.MaxDisplayNameLength),
+            RedirectUris(ClientSettings.MaxRedirectUris),
+            [GrantTypes.AuthorizationCode],
+            [],
+            true);
+
+        await Assert.That(result.Errors).IsEmpty();
+        await Assert.That(result.Settings!.RedirectUris.Count).IsEqualTo(ClientSettings.MaxRedirectUris);
+    }
+
+    /// <summary>
+    /// Verifies that each kind of invalid input reports its own error, and only that error.
+    /// </summary>
+    /// <param name="displayName">The display name.</param>
+    /// <param name="redirectUris">The redirect URIs.</param>
+    /// <param name="grants">The selected grant types.</param>
+    /// <param name="expected">The expected error.</param>
+    /// <returns>A task representing the test operation.</returns>
+    [Test]
+    [Arguments("", "https://app.example/cb", new[] { GrantTypes.AuthorizationCode }, "A display name is required.")]
+    [Arguments("App", "", new[] { GrantTypes.AuthorizationCode }, "At least one redirect URI is required.")]
+    [Arguments("App", "/relative", new[] { GrantTypes.AuthorizationCode }, "`/relative` is not an absolute HTTPS URI, or an HTTP URI for localhost or 127.0.0.1, without a fragment.")]
+    [Arguments("App", "https://app.example/cb", new[] { GrantTypes.RefreshToken }, "The authorization code grant is required.")]
+    [Arguments("App", "https://app.example/cb", new[] { GrantTypes.AuthorizationCode, GrantTypes.ClientCredentials }, "Only supported grant types and scopes can be selected.")]
+    public async Task ReportsTheSpecificError(string displayName, string redirectUris, string[] grants, string expected)
+    {
+        var result = ClientSettings.Parse(displayName, redirectUris, grants, [Scopes.OpenId], requirePkce: true);
+
+        await Assert.That(result.Errors.SequenceEqual([expected])).IsTrue();
+    }
+
+    /// <summary>
+    /// Verifies the errors reported for input over the limits.
+    /// </summary>
+    /// <returns>A task representing the test operation.</returns>
+    [Test]
+    public async Task ReportsLimitErrors()
+    {
+        var result = ClientSettings.Parse(
+            new string('a', ClientSettings.MaxDisplayNameLength + 1),
+            RedirectUris(ClientSettings.MaxRedirectUris + 1),
+            [GrantTypes.AuthorizationCode],
+            [],
+            true);
+
+        await Assert.That(result.Errors.SequenceEqual(
+        [
+            $"The display name must be at most {ClientSettings.MaxDisplayNameLength} characters.",
+            $"At most {ClientSettings.MaxRedirectUris} redirect URIs are allowed."
+        ])).IsTrue();
+    }
+
+    /// <summary>
+    /// Verifies that descriptor mapping rejects a null descriptor.
+    /// </summary>
+    /// <returns>A task representing the test operation.</returns>
+    [Test]
+    public async Task RejectsNullDescriptor()
+    {
+        await Assert.That(() => ClientSettings.FromDescriptor(null!)).Throws<ArgumentNullException>();
+        await Assert.That(() => ClientSettings.Default.ApplyTo(null!)).Throws<ArgumentNullException>();
+    }
+
+    private static string RedirectUris(int count)
+    {
+        return string.Join('\n', Enumerable.Range(0, count).Select(i => $"https://app.example/{i}"));
     }
 }
