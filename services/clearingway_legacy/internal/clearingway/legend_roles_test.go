@@ -42,6 +42,8 @@ func TestLegendRolesForSpecificUltimates(t *testing.T) {
 	assert.Equal(t, []string{"The Double Legend", "The Man"}, matching(LegendRoles(), clearsOf(ucob, uwu)))
 	assert.Equal(t, []string{"The Triple Legend", "The Man", "The Myth"}, matching(LegendRoles(), clearsOf(ucob, uwu, tea)))
 	assert.Equal(t, []string{"The Double Legend"}, matching(LegendRoles(), clearsOf(dsrN, topN)))
+	assert.Equal(t, []string{"The Penta Legend"}, matching(LegendRoles(), clearsOf(tea, dsrN, topN, fru, dm)))
+	assert.Equal(t, []string{"The Sexa Legend"}, matching(LegendRoles(), clearsOf(uwu, tea, dsrN, topN, fru, dm)))
 }
 
 func TestTheLegendMessageListsTheClear(t *testing.T) {
