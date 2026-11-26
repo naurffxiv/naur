@@ -45,7 +45,7 @@ jobs:
           service: ${{ inputs.service }}
           step-number: 10
           step-name: "Prettier"
-          command: pnpm exec prettier --check --ignore-unknown "services/${{ inputs.service }}/**/*"
+          command: pnpm exec prettier --check --ignore-unknown --no-error-on-unmatched-pattern "services/${{ inputs.service }}/**/*" "tests/${{ inputs.service }}/**/*"
           output-file: prettier.txt
 
       - name: TypeScript
