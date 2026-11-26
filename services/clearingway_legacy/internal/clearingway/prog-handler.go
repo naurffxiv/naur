@@ -255,7 +255,7 @@ func (c *Clearingway) UpdateProgForCharacterInGuild(
 
 		if shouldApply {
 			for _, role := range rolesToApply {
-				if role.Skip {
+				if !role.Skip {
 					if !role.PresentInRoles(member.Roles) {
 						err := role.AddToCharacter(guild.Id, discordUserId, c.Discord.Session)
 						if err != nil {
@@ -267,7 +267,7 @@ func (c *Clearingway) UpdateProgForCharacterInGuild(
 			}
 
 			for _, role := range rolesToRemove {
-				if role.Skip {
+				if !role.Skip {
 					if role.PresentInRoles(member.Roles) {
 						err := role.RemoveFromCharacter(guild.Id, discordUserId, c.Discord.Session)
 						if err != nil {
