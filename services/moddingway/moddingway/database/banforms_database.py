@@ -128,10 +128,10 @@ def update_form(form_id, approval, approved_by) -> tuple[bool, int] | None:
         query = """
         SELECT f.approval, f.formID
         FROM forms f
-        WHERE formID = {form_id}
+        WHERE formID = %s
         """
 
-        cursor.execute(query)
+        cursor.execute(query, (form_id,))
         res = cursor.fetchone()
 
         if res is None:
