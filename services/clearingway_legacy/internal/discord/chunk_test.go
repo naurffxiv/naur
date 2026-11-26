@@ -78,3 +78,29 @@ func TestWrite(t *testing.T) {
 		})
 	}
 }
+
+func TestWriteEmptyStringCreatesNoChunks(t *testing.T) {
+	chunks := NewChunks()
+	chunks.Write("")
+
+	assert.Empty(t, chunks.Chunks)
+}
+
+func TestWriteAppendsToCurrentChunkUntilFull(t *testing.T) {
+	chunks := NewChunks()
+	chunks.Write(strings.Repeat("a", 1000))
+	chunks.Write(strings.Repeat("b", 1000))
+
+	assert.Len(t, chunks.Chunks, 2)
+	assert.Equal(t, strings.Repeat("a", 1000)+strings.Repeat("b", 500), chunks.Chunks[0].String())
+	assert.Equal(t, strings.Repeat("b", 500), chunks.Chunks[1].String())
+}
+
+func TestWriteSplitsOnLastSpaceWhenNoNewline(t *testing.T) {
+	chunks := NewChunks()
+	chunks.Write(strings.Repeat("word ", 400))
+
+	assert.Len(t, chunks.Chunks, 2)
+	assert.Equal(t, strings.Repeat("word ", 300), chunks.Chunks[0].String())
+	assert.Equal(t, strings.Repeat("word ", 100), chunks.Chunks[1].String())
+}
