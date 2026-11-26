@@ -106,3 +106,17 @@ def create_embed(mocker: MockerFixture):
         return mocked_user
 
     return __create_embed
+
+
+@pytest.fixture
+def default_now():
+    """The time mock_datetime_now pins datetime.now() to."""
+    return DEFAULT_DATETIME_NOW
+
+
+@pytest.fixture
+def embed_fields():
+    def __embed_fields(embed: discord.Embed) -> list[tuple[str, str]]:
+        return [(field.name, field.value) for field in embed.fields]
+
+    return __embed_fields

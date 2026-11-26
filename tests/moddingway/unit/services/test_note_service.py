@@ -75,3 +75,38 @@ async def test_get_note_by_id__plain_note_includes_last_edited_timestamp(
     assert "Last Editor: <@222>" in result
     assert f"Last Edited: <t:{DEFAULT_LAST_EDITED_EPOCH}:f>" in result
     assert "[warning]" not in result
+
+
+@pytest.mark.asyncio
+async def test_get_note_by_id__not_found(mocker: MockerFixture):
+    get_note = mocker.patch(
+        "moddingway.database.notes_database.get_note", return_value=None
+    )
+
+    assert await note_service.get_note_by_id(42) == "Note not found"
+    get_note.assert_called_once_with(42)
+
+
+@pytest.mark.asyncio
+async def test_get_user_notes__looks_up_by_database_user(
+    mocker: MockerFixture, create_db_user
+):
+    get_user = mocker.patch(
+        "moddingway.database.users_database.get_user", return_value=None
+    )
+    list_notes = mocker.patch(
+        "moddingway.database.notes_database.list_notes", return_value=[]
+    )
+
+    assert (
+        await note_service.get_user_notes(mocker.Mock(id=12345))
+        == "User not found in database"
+    )
+    get_user.assert_called_once_with(12345)
+
+    get_user.return_value = create_db_user(user_id=7)
+    assert (
+        await note_service.get_user_notes(mocker.Mock(id=12345))
+        == "No notes found for user <@12345>"
+    )
+    list_notes.assert_called_once_with(7)
