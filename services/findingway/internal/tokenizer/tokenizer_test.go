@@ -3,6 +3,7 @@ package tokenizer
 import (
 	"slices"
 	"testing"
+	"time"
 )
 
 func TestSplitListingIntoTokens(t *testing.T) {
@@ -118,6 +119,9 @@ func TestUrlToToken(t *testing.T) {
 		{"https://example.com/plan/abc123#2", "abc123"},
 		{"https://example.com/plan", "plan"},
 		{"https://example.com/plan/", "examplecom"},
+		{"https://example.com/ab", "ab"},
+		{"https://kefkab.in/#top", "kefkabin"},
+		{"https:///abc", "abc"},
 	}
 
 	for _, tt := range tests {
@@ -150,5 +154,13 @@ func TestParseEntry(t *testing.T) {
 				t.Errorf("parseEntry(%q) = (%q, %q), want (%q, %q)", tt.entry, timestamp, description, tt.wantTimestamp, tt.wantDescription)
 			}
 		})
+	}
+}
+
+func TestParseEntryFallsBackToTodayForTodaysDayNumber(t *testing.T) {
+	timestamp, _ := parseEntry("graven prog", NowToInt())
+	want := time.Now().UTC().Format(time.DateOnly)
+	if timestamp != want {
+		t.Errorf("parseEntry with NowToInt() = %q, want today %q", timestamp, want)
 	}
 }
