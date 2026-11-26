@@ -33,3 +33,16 @@ test("compareVersions — different segment lengths (v1.2 vs v1.2.0)", () => {
   const b = { tag_name: "v1.2.0" } as GitHubRelease;
   expect(compareVersions(a, b)).toBe(0);
 });
+
+test("compareVersions — extra non-zero segment is newer (v1.2 vs v1.2.1)", () => {
+  const a = { tag_name: "v1.2" } as GitHubRelease;
+  const b = { tag_name: "v1.2.1" } as GitHubRelease;
+  expect(compareVersions(a, b)).toBeGreaterThan(0);
+  expect(compareVersions(b, a)).toBeLessThan(0);
+});
+
+test("compareVersions — first segments equal, later segment differs", () => {
+  const a = { tag_name: "v1.2.0" } as GitHubRelease;
+  const b = { tag_name: "v1.3.0" } as GitHubRelease;
+  expect(compareVersions(a, b)).toBeGreaterThan(0);
+});

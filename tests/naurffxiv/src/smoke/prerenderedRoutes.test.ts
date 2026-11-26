@@ -43,3 +43,15 @@ test("publicPrerenderedRoutes leaves out protected, auth and non-page routes", (
 test("publicPrerenderedRoutes returns nothing for an empty manifest", () => {
   expect(publicPrerenderedRoutes({ routes: {} })).toEqual([]);
 });
+
+test("publicPrerenderedRoutes sorts routes regardless of manifest order", () => {
+  expect(
+    publicPrerenderedRoutes({
+      routes: {
+        "/ultimate/kefka": { srcRoute: "/[difficulty]/[[...slug]]" },
+        "/changelog": { srcRoute: "/changelog" },
+        "/": { srcRoute: "/" },
+      },
+    }),
+  ).toEqual(["/", "/changelog", "/ultimate/kefka"]);
+});
